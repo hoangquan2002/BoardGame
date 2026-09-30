@@ -143,12 +143,12 @@ export const HomePage: React.FC<HomePageProps> = ({
             </strong>
             .
           </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={onConfirmResumeStoredSession}
               style={{
-                flex: 1,
+                flex: '1 1 180px',
                 minHeight: '44px',
                 padding: '10px',
                 borderRadius: '10px',
@@ -166,7 +166,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               type="button"
               onClick={onDismissStoredSession}
               style={{
-                flex: 1,
+                flex: '1 1 120px',
                 minHeight: '44px',
                 padding: '10px',
                 borderRadius: '10px',
@@ -285,7 +285,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {/* Hành động Vào phòng */}
-        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
           <input
             type="text"
             value={roomCode}
@@ -298,6 +298,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             disabled={isLoading}
             style={{
               flex: 1,
+              minWidth: 0,
               height: '48px',
               padding: '0 12px',
               borderRadius: '12px',
@@ -318,13 +319,15 @@ export const HomePage: React.FC<HomePageProps> = ({
             onClick={handleJoin}
             disabled={isLoading}
             style={{
-              minWidth: '110px',
+              flexShrink: 0,
+              minWidth: '96px',
+              whiteSpace: 'nowrap',
               minHeight: '48px',
-              padding: '0 16px',
+              padding: '0 14px',
               borderRadius: '12px',
               backgroundColor: '#059669',
               color: '#ffffff',
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: 700,
               border: 'none',
               cursor: isLoading ? 'not-allowed' : 'pointer',
