@@ -1,0 +1,219 @@
+{
+  "disorders": [
+    {
+      "id": "anxiety",
+      "nameEn": "Anxiety",
+      "nameVi": "Lo âu",
+      "count": 5,
+      "punishment": {
+        "textVi": "Cho kẻ gây hại xem bài\nKẻ gây hại có thể lấy 1 lá bài",
+        "textEn": "Show hand to inflictor\nInflictor may take 1 card",
+        "effect": {
+          "type": "ATTACKER_STEALS_CHOSEN_CARD",
+          "params": {
+            "count": 1,
+            "revealHand": true
+          }
+        }
+      }
+    },
+    {
+      "id": "anorexia",
+      "nameEn": "Anorexia",
+      "nameVi": "Chứng biếng ăn",
+      "count": 4,
+      "punishment": {
+        "textVi": "Chỉ có thể chữa trị bằng liệu pháp\nKhông được rút bài trong 1 vòng",
+        "textEn": "Only cured with therapy\nDo not draw cards for 1 round",
+        "effect": {
+          "type": "PREVENT_DRAW",
+          "params": {
+            "rounds": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "depression",
+      "nameEn": "Depression",
+      "nameVi": "Trầm cảm",
+      "count": 5,
+      "punishment": {
+        "textVi": "Nghỉ chơi 1 vòng",
+        "textEn": "Sit out 1 round",
+        "effect": {
+          "type": "SKIP_TURN",
+          "params": {
+            "rounds": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "gambling-addiction",
+      "nameEn": "Gambling Addiction",
+      "nameVi": "Nghiện cờ bạc",
+      "count": 5,
+      "punishment": {
+        "textVi": "Kẻ gây hại có thể rút ngẫu nhiên 3 lá bài từ tay bạn",
+        "textEn": "Inflictor may draw 3 cards from your hand at random",
+        "effect": {
+          "type": "ATTACKER_STEALS_RANDOM_CARDS",
+          "params": {
+            "count": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "impotence",
+      "nameEn": "Impotence",
+      "nameVi": "Liệt dương",
+      "count": 5,
+      "punishment": {
+        "textVi": "Không thể đánh bài ở lượt chơi tiếp theo",
+        "textEn": "Do not put down cards for 1 round",
+        "effect": {
+          "type": "PREVENT_PLAY_CARDS",
+          "params": {
+            "rounds": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "madness",
+      "nameEn": "Madness",
+      "nameVi": "Điên loạn",
+      "count": 4,
+      "punishment": {
+        "textVi": "Loại bỏ tất cả lá bài Thuốc trên Thể Trạng",
+        "textEn": "Discard all drugs on Psyche",
+        "effect": {
+          "type": "DISCARD_ALL_DRUGS_FROM_PSYCHE",
+          "params": {}
+        }
+      }
+    },
+    {
+      "id": "suicidal-thoughts",
+      "nameEn": "Suicidal Thoughts",
+      "nameVi": "Suy nghĩ tự tử",
+      "count": 5,
+      "punishment": {
+        "textVi": "Loại bỏ toàn bộ bài đang cầm trên tay",
+        "textEn": "Discard entire hand",
+        "effect": {
+          "type": "DISCARD_ENTIRE_HAND",
+          "params": {}
+        }
+      }
+    },
+    {
+      "id": "tremors",
+      "nameEn": "Tremors",
+      "nameVi": "Chứng run",
+      "count": 5,
+      "therapyImmune": true,
+      "punishment": {
+        "textVi": "Không thể chữa trị bằng liệu pháp\nBỏ 3 lá bài trong 3 giây, hoặc mất toàn bộ bài trên tay",
+        "textEn": "Immune to therapy\nDiscard 3 cards in 3 seconds, or else lose entire hand",
+        "effect": {
+          "type": "DISCARD_CARDS_OR_ENTIRE_HAND",
+          "params": {
+            "count": 3,
+            "timeoutSeconds": 3
+          }
+        }
+      }
+    }
+  ],
+  "drugs": [
+    {
+      "id": "chlorpromazine",
+      "nameEn": "Chlorpromazine",
+      "nameVi": "Chlorpromazine",
+      "treats": "madness",
+      "sideEffects": [
+        "tremors"
+      ],
+      "count": 5
+    },
+    {
+      "id": "clozapine",
+      "nameEn": "Clozapine",
+      "nameVi": "Clozapine",
+      "treats": "suicidal-thoughts",
+      "sideEffects": [
+        "madness"
+      ],
+      "count": 5
+    },
+    {
+      "id": "fluoxetine",
+      "nameEn": "Fluoxetine",
+      "nameVi": "Fluoxetine",
+      "treats": "depression",
+      "sideEffects": [
+        "impotence",
+        "suicidal-thoughts",
+        "anorexia"
+      ],
+      "count": 5
+    },
+    {
+      "id": "lithium",
+      "nameEn": "Lithium",
+      "nameVi": "Lithium",
+      "treats": "gambling-addiction",
+      "sideEffects": [
+        "impotence"
+      ],
+      "count": 5
+    },
+    {
+      "id": "lorazepam",
+      "nameEn": "Lorazepam",
+      "nameVi": "Lorazepam",
+      "treats": "anxiety",
+      "sideEffects": [
+        "suicidal-thoughts",
+        "depression",
+        "madness"
+      ],
+      "count": 5
+    },
+    {
+      "id": "pramipexole",
+      "nameEn": "Pramipexole",
+      "nameVi": "Pramipexole",
+      "treats": "tremors",
+      "sideEffects": [
+        "gambling-addiction",
+        "depression",
+        "madness"
+      ],
+      "count": 6
+    },
+    {
+      "id": "sildenafil",
+      "nameEn": "Sildenafil",
+      "nameVi": "Sildenafil",
+      "treats": "impotence",
+      "sideEffects": [
+        "anxiety"
+      ],
+      "count": 5
+    }
+  ],
+  "episodes": {
+    "count": 10
+  },
+  "therapies": {
+    "count": 5
+  },
+  "spice": {
+    "highTolerance": 5,
+    "misdiagnosis": 5
+  }
+}
