@@ -13,7 +13,7 @@
 | T3 | Server phòng online | ✅ | Đã review + đã sửa 4 lỗi (sập khi thiếu ack, token crypto, ngắt socket cũ, 1 socket 2 phòng); 55/55 test pass, tự thử lại server không sập |
 | T4 | Client mobile (PWA) | ✅ | Đã review: build/lint/test pass (85/85). Lỗi: tab thứ 2 cướp phiên (localStorage dùng chung); bảng test thủ công không khớp thực tế → Phần 1 prompt T6a |
 | T4b | Bàn chơi dạng sòng bài + xoay ngang | ⬜ | Làm ngay sau T5, trước T7. Prompt viết sau khi review T5 |
-| T5 | Deploy Render + test điện thoại thật | 🟡 | Hoàn thành Phần 1 (bỏ bot random, sửa trùng tên bot, giới hạn 4 người) + cấu hình Render (render.yaml, packageManager, host 0.0.0.0, an toàn nội dung, test build sạch PORT=10000 OK). Đã chuẩn bị commit nhánh main, chờ người dùng push & tạo service Render |
+| T5 | Deploy Render + test điện thoại thật | ✅ | Đã deploy thành công lên Render (https://boardgame-02k2.onrender.com). /healthz 200 OK, trang chủ 200 OK, socket tạo phòng và thêm máy thành công. |
 | T6a | Người chơi máy: hạ tầng + mức Thường | ✅ | Đã review: build/lint/test pass (96/96); tự thử trình duyệt 375px (tab thường + ẩn danh + 2 máy) chơi hết ván 48s, không kẹt; bot Thường thắng 81,2% (seed khác: 83,2%/2000 ván). 2 lỗi nhỏ (lộ mức "random" qua socket, trùng tên máy) → Phần 1 prompt T5 |
 | T6b | Người chơi máy: mức Khó (AI tìm kiếm) | ⬜ | Cần T6a |
 | T7 | Âm thanh + rung | ⬜ | Cần T4 |

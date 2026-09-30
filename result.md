@@ -95,9 +95,16 @@ Trạng thái: XONG | Task: T5 | Commit cuối: c86797c
 - **Remote**: `origin` -> `https://github.com/hoangquan2002/BoardGame.git`.
 - **Trạng thái Push**: ✅ Người dùng đã push thành công toàn bộ mã nguồn lên GitHub tại `https://github.com/hoangquan2002/BoardGame` (commit `c86797c`).
 
-#### 6. Trạng thái trên Render Dashboard
-- **Hiện trạng**: Người dùng đang tiến hành tạo Web Service trên Render theo bảng cấu hình ở Mục 2.
-- (Chờ người dùng cung cấp URL công khai sau khi deploy để agent kiểm tra tự động /healthz và socket).
+#### 6. Kết quả kiểm tra từ xa trên Render thật
+- **URL dịch vụ**: `https://boardgame-02k2.onrender.com`
+- **Health Check (`GET /healthz`)**: ✅ **200 OK** (nội dung: `OK`, header: `x-render-origin-server: Render`).
+- **Trang chủ (`GET /`)**: ✅ **200 OK** (phục vụ ứng dụng React PWA mobile-first hoàn chỉnh).
+- **Tạo phòng qua Socket.IO**: ✅ Kết nối Socket.IO thành công và gọi `room:create` tạo phòng mới thành công (`roomCode: 97R4P`, `playerId: p_495507d0`).
+- **Thêm máy qua Socket.IO**: ✅ Gọi `room:addBot { level: 'normal' }` trên server Render thành công (`playerId: p_d20d87a6`).
+- **An toàn nội dung trên Render**:
+  - `GET /assets/card-photos/SideEffectsPNP-EN.pdf` ➔ **404 Not Found**
+  - `GET /.env` ➔ **404 Not Found**
+  - `GET /../../package.json` ➔ **404 Not Found**
 
 #### 7. Checklist test 2 điện thoại thật cho người dùng (sau khi deploy)
 Sau khi Render deploy thành công và cấp URL `https://<ten-app>.onrender.com`:
@@ -147,5 +154,5 @@ Sau khi Render deploy thành công và cấp URL `https://<ten-app>.onrender.com
 ---
 
 ### Vấn đề / câu hỏi còn mở
-- Chờ URL từ Render Dashboard sau khi người dùng tạo service để tiến hành kiểm tra kết nối thực tế.
-- Sẵn sàng chuyển tiếp sang **Task T4b: Bàn chơi dạng sòng bài + hỗ trợ xoay ngang** sau khi hoàn thành deploy.
+- Không còn vấn đề mở. Web Service trên Render đã hoạt động hoàn hảo và vượt qua toàn bộ các bước kiểm tra tự động từ xa.
+- Sẵn sàng chuyển tiếp sang **Task T4b: Bàn chơi dạng sòng bài + hỗ trợ xoay ngang**.
