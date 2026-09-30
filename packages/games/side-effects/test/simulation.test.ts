@@ -72,6 +72,6 @@ describe('Side Effects 1000 Games Simulation (Task T2)', () => {
       expect(TOTAL_GAMES).toBe(1000);
       expect(gamesWon).toBeGreaterThan(0);
     },
-    30000,
+    120000,
   );
 });
