@@ -86,9 +86,8 @@ Dự án đã được thiết kế sẵn sàng cho việc triển khai lên d�
 | **Instance Type** | `Free` | Gói miễn phí ($0/tháng) |
 | **Health Check Path** | `/healthz` | Đường dẫn kiểm tra trạng thái hoạt động của server |
 
-4. Trong mục **Environment Variables** (Biến môi trường), thêm các biến sau:
+4. Trong mục **Environment Variables** (Biến môi trường), thêm biến sau:
    - `NODE_VERSION`: `20.18.0` (khớp với phiên bản Node trong `.nvmrc`)
-   - `NODE_ENV`: `production`
 
 5. Bấm **Create Web Service** để bắt đầu quá trình deploy.
 
