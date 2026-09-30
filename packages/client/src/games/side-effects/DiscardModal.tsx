@@ -53,23 +53,23 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
           border: '1px solid #334155',
           width: '100%',
           maxWidth: '400px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '20px 16px',
+          maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          padding: '12px 16px',
+          gap: '10px',
+          boxSizing: 'border-box',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#f87171' }}>
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#f87171' }}>
             Bỏ bớt bài trên tay
           </h3>
-          <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
+          <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
             Bạn đang có {hand.length} lá (giới hạn tối đa là 6 lá). Hãy chọn đúng{' '}
             <strong style={{ color: '#f87171' }}>{neededCount} lá</strong> để bỏ.
           </p>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
             Đã chọn: {selectedIds.length}/{neededCount} lá
           </div>
         </div>
@@ -78,12 +78,14 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
-            gap: '10px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+            gap: '8px',
             justifyItems: 'center',
-            maxHeight: '340px',
+            maxHeight: 'min(180px, 45vh)',
             overflowY: 'auto',
             padding: '4px',
+            flex: 1,
+            minHeight: '80px',
           }}
         >
           {hand.map((card) => {
@@ -126,7 +128,7 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
           })}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => onConfirmDiscard(selectedIds)}

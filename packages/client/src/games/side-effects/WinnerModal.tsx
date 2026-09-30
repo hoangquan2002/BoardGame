@@ -39,15 +39,18 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
           boxShadow: '0 0 40px rgba(234, 179, 8, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.5)',
           width: '100%',
           maxWidth: '380px',
-          padding: '32px 20px',
+          maxHeight: '94vh',
+          overflowY: 'auto',
+          padding: '20px 16px',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '16px',
+          gap: '12px',
+          boxSizing: 'border-box',
         }}
       >
-        <div style={{ fontSize: '56px', animation: 'bounce 1s infinite' }}>🏆</div>
+        <div style={{ fontSize: '42px', animation: 'bounce 1s infinite' }}>🏆</div>
 
         <div>
           <span style={{ fontSize: '13px', fontWeight: 800, color: '#facc15', textTransform: 'uppercase', letterSpacing: '1px' }}>

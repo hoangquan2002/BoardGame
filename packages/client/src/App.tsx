@@ -28,6 +28,8 @@ export const App: React.FC = () => {
     sendAction,
   } = useSession();
 
+  const isPlaying = Boolean(session && roomState && roomState.status !== 'lobby' && gameView);
+
   return (
     <div
       style={{
@@ -35,7 +37,7 @@ export const App: React.FC = () => {
         flexDirection: 'column',
         minHeight: '100vh',
         width: '100%',
-        maxWidth: '480px',
+        maxWidth: isPlaying ? '1024px' : '480px',
         margin: '0 auto',
         boxSizing: 'border-box',
         paddingTop: 'env(safe-area-inset-top)',

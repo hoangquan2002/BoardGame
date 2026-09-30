@@ -89,34 +89,35 @@ export const TradeModal: React.FC<TradeModalProps> = ({
               border: '1px solid #334155',
               width: '100%',
               maxWidth: '420px',
-              maxHeight: '90vh',
+              maxHeight: '94vh',
               overflowY: 'auto',
-              padding: '20px 16px',
+              padding: '12px 16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '10px',
+              boxSizing: 'border-box',
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', marginBottom: '4px' }}>🤝</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#38bdf8' }}>
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: '24px', marginBottom: '2px' }}>🤝</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
                 Lời mời đổi bài
               </h3>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
                 <strong>{otherName}</strong> muốn đổi với bạn các lá bài sau:
               </p>
             </div>
 
             {/* Các lá bài người đề xuất đưa ra */}
-            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '6px 0' }}>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0', flexShrink: 0 }}>
               {offeredCardInstances.map((c) => (
                 <CardView key={c.instanceId} card={c} size="compact" />
               ))}
             </div>
 
             {/* Chọn lá bài đáp lại (có thể 0 lá) */}
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '6px', flexShrink: 0 }}>
                 Chọn lá bài của bạn muốn trao đổi lại (có thể không chọn lá nào):
               </div>
               <div
@@ -124,8 +125,10 @@ export const TradeModal: React.FC<TradeModalProps> = ({
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
                   gap: '8px',
-                  maxHeight: '200px',
+                  maxHeight: 'min(150px, 35vh)',
                   overflowY: 'auto',
+                  flex: 1,
+                  minHeight: '60px',
                 }}
               >
                 {myHand.map((c) => {
@@ -466,20 +469,20 @@ export const TradeModal: React.FC<TradeModalProps> = ({
           border: '1px solid #334155',
           width: '100%',
           maxWidth: '420px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          padding: '20px 16px',
+          maxHeight: '94vh',
+          padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
+          gap: '10px',
+          boxSizing: 'border-box',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#38bdf8' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
               Thương Lượng (Đổi bài)
             </h3>
-            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
               Có thể thực hiện bất kỳ lúc nào, kể cả ngoài lượt
             </span>
           </div>
@@ -500,11 +503,11 @@ export const TradeModal: React.FC<TradeModalProps> = ({
         </div>
 
         {/* Chọn đối thủ */}
-        <div>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+        <div style={{ flexShrink: 0 }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '4px' }}>
             Chọn người muốn đổi:
           </label>
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
             {opponents.map((opp) => {
               const isSelected = opp.id === selectedTargetId;
               const name = playerNames[opp.id] || opp.id;
@@ -514,12 +517,12 @@ export const TradeModal: React.FC<TradeModalProps> = ({
                   type="button"
                   onClick={() => setSelectedTargetId(opp.id)}
                   style={{
-                    padding: '8px 12px',
-                    borderRadius: '10px',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
                     backgroundColor: isSelected ? '#2563eb' : '#0f172a',
                     border: isSelected ? '1px solid #60a5fa' : '1px solid #334155',
                     color: '#ffffff',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     fontWeight: isSelected ? 700 : 500,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
@@ -533,18 +536,20 @@ export const TradeModal: React.FC<TradeModalProps> = ({
         </div>
 
         {/* Chọn bài đưa ra */}
-        <div>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#cbd5e1', marginBottom: '6px' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#cbd5e1', marginBottom: '4px', flexShrink: 0 }}>
             Chọn lá bài bạn muốn đưa ra ({selectedOfferIds.length} lá đã chọn):
           </label>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
-              gap: '8px',
-              maxHeight: '220px',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))',
+              gap: '6px',
+              maxHeight: 'min(150px, 35vh)',
               overflowY: 'auto',
-              padding: '4px',
+              padding: '2px',
+              flex: 1,
+              minHeight: '60px',
             }}
           >
             {myHand.map((c) => {

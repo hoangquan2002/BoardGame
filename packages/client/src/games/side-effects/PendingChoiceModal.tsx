@@ -80,20 +80,20 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
               border: '1px solid #334155',
               width: '100%',
               maxWidth: '420px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '20px 16px',
+              maxHeight: '94vh',
+              padding: '12px 16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '10px',
+              boxSizing: 'border-box',
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', marginBottom: '4px' }}>👁️</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#f43f5e' }}>
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: '24px', marginBottom: '2px' }}>👁️</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#f43f5e' }}>
                 Hình phạt Lo âu
               </h3>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
                 {victimName} phải ngửa toàn bộ bài trên tay cho bạn xem. Hãy chọn{' '}
                 <strong style={{ color: '#38bdf8' }}>1 lá</strong> để lấy về tay mình!
               </p>
@@ -124,12 +124,14 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
-                    gap: '10px',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+                    gap: '8px',
                     justifyItems: 'center',
-                    maxHeight: '340px',
+                    maxHeight: 'min(180px, 45vh)',
                     overflowY: 'auto',
                     padding: '4px',
+                    flex: 1,
+                    minHeight: '80px',
                   }}
                 >
                   {revealedCards.map((card) => {
@@ -259,20 +261,20 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
               border: '2px solid #ef4444',
               width: '100%',
               maxWidth: '420px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              padding: '20px 16px',
+              maxHeight: '94vh',
+              padding: '12px 16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '10px',
+              boxSizing: 'border-box',
             }}
           >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', marginBottom: '4px' }}>⚡</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#ef4444' }}>
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: '24px', marginBottom: '2px' }}>⚡</div>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#ef4444' }}>
                 Hình phạt Chứng run
               </h3>
-              <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
                 Bỏ nhanh <strong>3 lá bài</strong> trên tay, nếu hết giờ bạn sẽ bị{' '}
                 <strong style={{ color: '#ef4444' }}>mất toàn bộ bài trên tay</strong>!
               </p>
@@ -280,8 +282,8 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
               {timeLeft !== null && (
                 <div
                   style={{
-                    marginTop: '8px',
-                    fontSize: '18px',
+                    marginTop: '4px',
+                    fontSize: '16px',
                     fontWeight: 900,
                     color: timeLeft <= 3 ? '#ef4444' : '#eab308',
                     animation: timeLeft <= 3 ? 'pulse 0.5s infinite' : 'none',
@@ -317,12 +319,14 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))',
-                    gap: '10px',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+                    gap: '8px',
                     justifyItems: 'center',
-                    maxHeight: '340px',
+                    maxHeight: 'min(180px, 45vh)',
                     overflowY: 'auto',
                     padding: '4px',
+                    flex: 1,
+                    minHeight: '80px',
                   }}
                 >
                   {myHand.map((card) => {
