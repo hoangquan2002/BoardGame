@@ -79,7 +79,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return map;
   }, [roomState.players]);
 
+  // Bản đồ xác định người chơi là bot (từ RoomPlayerInfo.isBot)
+  const botPlayerMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const p of roomState.players) {
+      map[p.playerId] = Boolean(p.isBot);
+    }
+    return map;
+  }, [roomState.players]);
+
   const activePlayerName = playerNames[gameView.activePlayerId] || gameView.activePlayerId;
+  const isActiveBot = botPlayerMap[gameView.activePlayerId];
 
   const me = gameView.players.find((p) => p.id === myId);
   const myHand = me?.hand ?? [];
@@ -218,339 +228,650 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return Array.from(sideEffectsSet);
   };
 
+  const renderOpponentSeat = (
+    opponent: SEPlayerViewPlayer,
+    position: (typeof assignedSeats)[number]['position'],
+  ) => {
+    const giveTarget = opponentTargets.some(
+      (t) => t.targetPlayerId === opponent.id && t.type === 'GIVE_DISORDER',
+    );
+    const episodeTargetDisorderIds = opponentTargets
+      .filter(
+        (t) =>
+          t.targetPlayerId === opponent.id &&
+          t.type === 'EPISODE' &&
+          Boolean(t.disorderInstanceId),
+      )
+      .map((t) => t.disorderInstanceId!);
+
+    return (
+      <OpponentSeat
+        key={opponent.id}
+        opponent={opponent}
+        playerName={playerNames[opponent.id] || opponent.id}
+        isActive={opponent.id === gameView.activePlayerId}
+        position={position}
+        isDisconnected={roomState.players.find((p) => p.playerId === opponent.id)?.connected === false}
+        isBot={botPlayerMap[opponent.id]}
+        giveTarget={giveTarget}
+        episodeTargetDisorderIds={episodeTargetDisorderIds}
+        onSelectSeatTarget={handleSelectOpponentTarget}
+        onSelectDisorderTarget={handleSelectOpponentTarget}
+        onOpenDetails={(id) => setSelectedOpponentDetailId(id)}
+        isLandscape={isLandscape}
+      />
+    );
+  };
+
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
-        maxWidth: isLandscape ? '920px' : '480px',
+        maxWidth: isLandscape ? '960px' : '480px',
         margin: '0 auto',
-        padding: isLandscape ? '6px 12px' : '8px 10px',
-        gap: isLandscape ? '6px' : '8px',
+        padding: isLandscape ? '4px 8px' : '8px 10px',
+        gap: isLandscape ? '4px' : '8px',
         boxSizing: 'border-box',
-        minHeight: '100vh',
+        minHeight: isLandscape ? 'auto' : '100vh',
+        height: isLandscape ? '100vh' : 'auto',
+        maxHeight: isLandscape ? '100vh' : 'none',
+        overflow: isLandscape ? 'hidden' : 'visible',
         justifyContent: 'space-between',
       }}
     >
-      {/* 1. KHU VỰC ĐỐI THỦ: GHẾ SÒNG BÀI XẾP THEO CHIỀU KIM ĐỒNG HỒ */}
-      <section
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: seatedOpponents.length === 1 ? 'center' : 'space-between',
-          gap: '6px',
-          boxSizing: 'border-box',
-        }}
-      >
-        {seatedOpponents.map(({ opponent, position }) => {
-          const giveTarget = opponentTargets.some(
-            (t) => t.targetPlayerId === opponent.id && t.type === 'GIVE_DISORDER',
-          );
-          const episodeTargetDisorderIds = opponentTargets
-            .filter(
-              (t) =>
-                t.targetPlayerId === opponent.id &&
-                t.type === 'EPISODE' &&
-                Boolean(t.disorderInstanceId),
-            )
-            .map((t) => t.disorderInstanceId!);
-
-          return (
+      {/* 1. KHU VỰC ĐỐI THỦ */}
+      {isLandscape ? (
+        /* HÀNG GHẾ ĐỐI THỦ KHI XOAY NGANG: Trải dài ở trên như sòng bài */
+        <section
+          style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: seatedOpponents.length === 1 ? 'center' : 'space-between',
+            gap: '6px',
+            boxSizing: 'border-box',
+            flexShrink: 0,
+          }}
+        >
+          {seatedOpponents.map(({ opponent, position }) => (
             <div
               key={opponent.id}
               style={{
-                flex: seatedOpponents.length === 1 ? '0 1 340px' : '1 1 0px',
+                flex: seatedOpponents.length === 1 ? '0 1 360px' : '1 1 0px',
                 minWidth: 0,
               }}
             >
-              <OpponentSeat
-                opponent={opponent}
-                playerName={playerNames[opponent.id] || opponent.id}
-                isActive={opponent.id === gameView.activePlayerId}
-                position={position}
-                isDisconnected={roomState.players.find((p) => p.playerId === opponent.id)?.connected === false}
-                giveTarget={giveTarget}
-                episodeTargetDisorderIds={episodeTargetDisorderIds}
-                onSelectSeatTarget={handleSelectOpponentTarget}
-                onSelectDisorderTarget={handleSelectOpponentTarget}
-                onOpenDetails={(id) => setSelectedOpponentDetailId(id)}
-                isLandscape={isLandscape}
-              />
+              {renderOpponentSeat(opponent, position)}
             </div>
-          );
-        })}
-      </section>
+          ))}
+        </section>
+      ) : (
+        /* KHU VỰC ĐỐI THỦ DỌC: 3 đối thủ xếp 2 hàng gọn gàng, không tràn ngang và không mất tên bệnh */
+        <section
+          style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            boxSizing: 'border-box',
+          }}
+        >
+          {seatedOpponents.length === 3 ? (
+            <>
+              {/* Hàng 1: Ghế trên (top) chiếm cả hàng */}
+              {(() => {
+                const topSeat = seatedOpponents.find((s) => s.position === 'top') || seatedOpponents[1]!;
+                return (
+                  <div style={{ width: '100%' }}>
+                    {renderOpponentSeat(topSeat.opponent, topSeat.position)}
+                  </div>
+                );
+              })()}
 
-      {/* 2. KHU VỰC GIỮA BÀN: NỈ SÒNG BÀI, CHỒNG RÚT/BỎ, LƯỢT, ĐÃ ĐÁNH, NÚT HÀNH ĐỘNG */}
-      <section
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#1e293b',
-          borderRadius: '14px',
-          padding: isLandscape ? '6px 10px' : '8px 10px',
-          border: '1px solid #334155',
-          gap: isLandscape ? '4px' : '6px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Hàng thông tin lượt & số lá đã đánh */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
+              {/* Hàng 2: Ghế trái (left) và ghế phải (right) thành hàng thứ 2 */}
+              <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                {(() => {
+                  const leftSeat = seatedOpponents.find((s) => s.position === 'left') || seatedOpponents[0]!;
+                  const rightSeat = seatedOpponents.find((s) => s.position === 'right') || seatedOpponents[2]!;
+                  return (
+                    <>
+                      <div style={{ flex: '1 1 0px', minWidth: 0 }}>
+                        {renderOpponentSeat(leftSeat.opponent, leftSeat.position)}
+                      </div>
+                      <div style={{ flex: '1 1 0px', minWidth: 0 }}>
+                        {renderOpponentSeat(rightSeat.opponent, rightSeat.position)}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </>
+          ) : (
+            /* 1 hoặc 2 đối thủ */
+            <div
               style={{
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                fontSize: isLandscape ? '11px' : '12px',
-                fontWeight: 800,
-                backgroundColor: isMyTurn ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)',
-                color: isMyTurn ? '#4ade80' : '#94a3b8',
-                border: isMyTurn ? '1px solid #22c55e' : '1px solid #475569',
+                width: '100%',
+                display: 'flex',
+                justifyContent: seatedOpponents.length === 1 ? 'center' : 'space-between',
+                gap: '6px',
               }}
             >
-              {isMyTurn
-                ? '🎯 Lượt của bạn'
-                : `Lượt của ${activePlayerName.startsWith('Máy ') ? '🤖 ' : ''}${activePlayerName}`}
-            </span>
+              {seatedOpponents.map(({ opponent, position }) => (
+                <div
+                  key={opponent.id}
+                  style={{
+                    flex: seatedOpponents.length === 1 ? '0 1 350px' : '1 1 0px',
+                    minWidth: 0,
+                  }}
+                >
+                  {renderOpponentSeat(opponent, position)}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-            {gameView.preventPlayCards && isMyTurn && (
-              <span
-                style={{
-                  fontSize: '10px',
-                  color: '#f87171',
-                  fontWeight: 700,
-                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                  padding: '1px 5px',
-                  borderRadius: '4px',
-                }}
-              >
-                ⚡ Liệt (không thể đánh)
-              </span>
-            )}
-          </div>
-
-          <span style={{ fontSize: isLandscape ? '11px' : '12px', color: '#cbd5e1', fontWeight: 600 }}>
-            Đã đánh: <strong>{gameView.cardsPlayedThisTurn}/2 lá</strong>
-          </span>
-        </div>
-
-        {/* Hàng giữa: Chồng bài + Các nút bấm trên cùng 1 hàng khi xoay ngang */}
+      {/* 2. KHU VỰC DƯỚI BÀN CHƠI */}
+      {isLandscape ? (
+        /* KHI XOAY NGANG: CHIA 2 CỘT (Trái: Giữa bàn; Phải: Thể trạng + Bài tay) */
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
             gap: '8px',
+            width: '100%',
+            flex: 1,
+            alignItems: 'stretch',
+            boxSizing: 'border-box',
+            minHeight: 0,
           }}
         >
-          {/* Chồng rút & Chồng bỏ */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Chồng rút */}
-            <div
-              style={{
-                height: isLandscape ? '38px' : '44px',
-                padding: '0 8px',
-                borderRadius: '6px',
-                background: 'linear-gradient(145deg, #1e3a8a 0%, #172554 100%)',
-                border: '1.5px solid #3b82f6',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: '#93c5fd',
-                fontWeight: 800,
-                fontSize: '12px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-              }}
-            >
-              <span>🎴</span>
-              <span>{gameView.drawPileCount}</span>
+          {/* CỘT TRÁI: GIỮA BÀN (CENTER TABLE) */}
+          <div
+            style={{
+              flex: '0 0 215px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              backgroundColor: '#1e293b',
+              borderRadius: '10px',
+              padding: '6px 8px',
+              border: '1px solid #334155',
+              boxSizing: 'border-box',
+              minHeight: 0,
+            }}
+          >
+            {/* Lượt + Đã đánh */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <span
+                style={{
+                  padding: '2px 6px',
+                  borderRadius: '9999px',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  backgroundColor: isMyTurn ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                  color: isMyTurn ? '#4ade80' : '#94a3b8',
+                  border: isMyTurn ? '1px solid #22c55e' : '1px solid #475569',
+                  textAlign: 'center',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {isMyTurn ? '🎯 Lượt của bạn' : `Lượt: ${isActiveBot ? '🤖 ' : ''}${activePlayerName}`}
+              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10.5px', color: '#cbd5e1' }}>
+                <span>Đã đánh: <strong>{gameView.cardsPlayedThisTurn}/2 lá</strong></span>
+                {gameView.preventPlayCards && isMyTurn && (
+                  <span style={{ fontSize: '9px', color: '#f87171', fontWeight: 700 }}>⚡ Liệt</span>
+                )}
+              </div>
             </div>
 
-            {/* Chồng bỏ */}
-            <div
-              style={{
-                height: isLandscape ? '38px' : '44px',
-                padding: '0 8px',
-                borderRadius: '6px',
-                backgroundColor: '#0f172a',
-                border: '1.5px dashed #475569',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: '#cbd5e1',
-                fontSize: '11px',
-                fontWeight: 700,
-              }}
-            >
-              <span>🗑️</span>
-              <span>{gameView.discardPileCount}</span>
-              {gameView.topDiscard && (
+            {/* Chồng rút & Chồng bỏ */}
+            <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+              <div
+                style={{
+                  flex: 1,
+                  height: '32px',
+                  borderRadius: '6px',
+                  background: 'linear-gradient(145deg, #1e3a8a 0%, #172554 100%)',
+                  border: '1px solid #3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px',
+                  color: '#93c5fd',
+                  fontWeight: 800,
+                  fontSize: '11px',
+                }}
+                title="Chồng rút"
+              >
+                <span>🎴</span>
+                <span>{gameView.drawPileCount}</span>
+              </div>
+
+              <div
+                style={{
+                  flex: 1,
+                  height: '32px',
+                  borderRadius: '6px',
+                  backgroundColor: '#0f172a',
+                  border: '1px dashed #475569',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px',
+                  color: '#cbd5e1',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                }}
+                title={gameView.topDiscard ? `Chồng bỏ: ${getCardDisplayNameVi(gameView.topDiscard)}` : 'Chồng bỏ'}
+              >
+                <span>🗑️</span>
+                <span>{gameView.discardPileCount}</span>
+              </div>
+            </div>
+
+            {/* Các nút: Kết thúc lượt, Đổi bài, Nhật ký */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <button
+                type="button"
+                onClick={handleEndTurnClick}
+                disabled={!isMyTurn || gameView.pendingChoice !== null}
+                data-testid="end-turn-button"
+                style={{
+                  height: '32px',
+                  borderRadius: '6px',
+                  backgroundColor: isMyTurn ? (endTurnAllowed ? '#059669' : '#ea580c') : '#334155',
+                  color: '#ffffff',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: isMyTurn ? 'pointer' : 'not-allowed',
+                  opacity: isMyTurn ? 1 : 0.6,
+                  boxShadow: isMyTurn ? '0 2px 6px rgba(5, 150, 105, 0.3)' : 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {mustDiscardCount(gameView, myId) > 0 ? `Bỏ ${mustDiscardCount(gameView, myId)} lá` : 'Kết thúc lượt'}
+              </button>
+
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTradeModal(true)}
+                  style={{
+                    flex: 1,
+                    height: '28px',
+                    borderRadius: '6px',
+                    backgroundColor: myActiveTrade ? '#0284c7' : '#334155',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    border: myActiveTrade ? '1.5px solid #38bdf8' : 'none',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  🤝 Đổi bài
+                  {myActiveTrade && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        right: '-2px',
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        backgroundColor: '#ef4444',
+                      }}
+                    />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLogsModal(true)}
+                  style={{
+                    width: '32px',
+                    height: '28px',
+                    borderRadius: '6px',
+                    backgroundColor: '#1e293b',
+                    color: '#94a3b8',
+                    border: '1px solid #334155',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                  title="Xem nhật ký"
+                >
+                  📜
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* CỘT PHẢI: KHU CỦA MÌNH (THỂ TRẠNG + BÀI TRÊN TAY) */}
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '4px',
+              minWidth: 0,
+              boxSizing: 'border-box',
+            }}
+          >
+            {/* Banner hướng dẫn khi đang chọn lá */}
+            {selectedCardId && (
+              <div
+                style={{
+                  padding: '2px 6px',
+                  backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  borderRadius: '5px',
+                  color: '#7dd3fc',
+                  fontSize: '10px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span>
+                  Đang chọn: <strong>{getCardDisplayNameVi(myHand.find((c) => c.instanceId === selectedCardId)!)}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCardId(null)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#fda4af',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Huỷ
+                </button>
+              </div>
+            )}
+
+            {/* Thể Trạng của mình */}
+            <PsycheView
+              psyche={myPsyche}
+              isSelf={true}
+              targetSlots={myTargetSlots}
+              onSelectSlot={handleSelectSelfSlot}
+              isLandscape={true}
+            />
+
+            {/* Toàn bộ bài trên tay hiện cùng lúc: không cuộn ngang */}
+            <HandView
+              hand={myHand}
+              selectedCardId={selectedCardId}
+              onSelectCard={handleSelectCard}
+              isLandscape={true}
+            />
+          </div>
+        </div>
+      ) : (
+        /* KHI CẦM DỌC: GIỮA BÀN + KHU CỦA MÌNH CHỒNG DỌC CHUẨN MỰC */
+        <>
+          {/* 2. KHU VỰC GIỮA BÀN DỌC */}
+          <section
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#1e293b',
+              borderRadius: '12px',
+              padding: '8px 10px',
+              border: '1px solid #334155',
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              boxSizing: 'border-box',
+              width: '100%',
+            }}
+          >
+            {/* Hàng 1: Trạng thái lượt, số lá đã đánh & Chồng rút / Chồng bỏ */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
                 <span
                   style={{
-                    fontSize: '9.5px',
-                    color: '#94a3b8',
-                    maxWidth: '80px',
+                    padding: '2px 8px',
+                    borderRadius: '9999px',
+                    fontSize: '11.5px',
+                    fontWeight: 800,
+                    backgroundColor: isMyTurn ? 'rgba(34, 197, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                    color: isMyTurn ? '#4ade80' : '#94a3b8',
+                    border: isMyTurn ? '1px solid #22c55e' : '1px solid #475569',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  ({getCardDisplayNameVi(gameView.topDiscard)})
+                  {isMyTurn ? '🎯 Lượt của bạn' : `Lượt của ${isActiveBot ? '🤖 ' : ''}${activePlayerName}`}
                 </span>
-              )}
-            </div>
-          </div>
+                <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, flexShrink: 0 }}>
+                  {gameView.cardsPlayedThisTurn}/2 lá
+                </span>
+                {gameView.preventPlayCards && isMyTurn && (
+                  <span
+                    style={{
+                      fontSize: '9.5px',
+                      color: '#f87171',
+                      fontWeight: 700,
+                      backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                      padding: '1px 4px',
+                      borderRadius: '3px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ⚡ Liệt
+                  </span>
+                )}
+              </div>
 
-          {/* Các nút hành động chính: Kết thúc lượt, Đổi bài, Nhật ký */}
-          <div style={{ display: 'flex', gap: '6px', flex: 1, justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={handleEndTurnClick}
-              disabled={!isMyTurn || gameView.pendingChoice !== null}
-              data-testid="end-turn-button"
-              style={{
-                minHeight: isLandscape ? '38px' : '42px',
-                padding: isLandscape ? '6px 12px' : '8px 14px',
-                borderRadius: '10px',
-                backgroundColor: isMyTurn ? (endTurnAllowed ? '#059669' : '#ea580c') : '#334155',
-                color: '#ffffff',
-                fontSize: isLandscape ? '12px' : '13px',
-                fontWeight: 700,
-                border: 'none',
-                cursor: isMyTurn ? 'pointer' : 'not-allowed',
-                opacity: isMyTurn ? 1 : 0.6,
-                boxShadow: isMyTurn ? '0 4px 10px rgba(5, 150, 105, 0.3)' : 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {mustDiscardCount(gameView, myId) > 0
-                ? `Bỏ ${mustDiscardCount(gameView, myId)} lá`
-                : 'Kết thúc lượt'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowTradeModal(true)}
-              style={{
-                minHeight: isLandscape ? '38px' : '42px',
-                padding: isLandscape ? '6px 10px' : '8px 10px',
-                borderRadius: '10px',
-                backgroundColor: myActiveTrade ? '#0284c7' : '#334155',
-                color: '#ffffff',
-                fontSize: isLandscape ? '11px' : '12px',
-                fontWeight: 700,
-                border: myActiveTrade ? '1.5px solid #38bdf8' : 'none',
-                cursor: 'pointer',
-                position: 'relative',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              🤝 Đổi bài
-              {myActiveTrade && (
-                <span
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                {/* Chồng rút */}
+                <div
                   style={{
-                    position: 'absolute',
-                    top: '-3px',
-                    right: '-3px',
-                    width: '9px',
-                    height: '9px',
-                    borderRadius: '50%',
-                    backgroundColor: '#ef4444',
+                    height: '34px',
+                    padding: '0 7px',
+                    borderRadius: '6px',
+                    background: 'linear-gradient(145deg, #1e3a8a 0%, #172554 100%)',
+                    border: '1.5px solid #3b82f6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    color: '#93c5fd',
+                    fontWeight: 800,
+                    fontSize: '11.5px',
                   }}
-                />
-              )}
-            </button>
+                  title="Chồng rút"
+                >
+                  <span>🎴</span>
+                  <span>{gameView.drawPileCount}</span>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => setShowLogsModal(true)}
-              style={{
-                minHeight: isLandscape ? '38px' : '42px',
-                padding: isLandscape ? '6px 8px' : '8px 10px',
-                borderRadius: '10px',
-                backgroundColor: '#1e293b',
-                color: '#94a3b8',
-                border: '1px solid #334155',
-                fontSize: isLandscape ? '11px' : '12px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              📜
-            </button>
-          </div>
-        </div>
-      </section>
+                {/* Chồng bỏ */}
+                <div
+                  style={{
+                    height: '34px',
+                    padding: '0 7px',
+                    borderRadius: '6px',
+                    backgroundColor: '#0f172a',
+                    border: '1.5px dashed #475569',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    color: '#cbd5e1',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                  }}
+                  title={gameView.topDiscard ? `Chồng bỏ: ${getCardDisplayNameVi(gameView.topDiscard)}` : 'Chồng bỏ'}
+                >
+                  <span>🗑️</span>
+                  <span>{gameView.discardPileCount}</span>
+                </div>
+              </div>
+            </div>
 
-      {/* 3. KHU VỰC DƯỚI CÙNG: THỂ TRẠNG VÀ BÀI TRÊN TAY CỦA MÌNH */}
-      <footer
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: isLandscape ? '4px' : '6px',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Banner hướng dẫn khi đang chọn lá */}
-        {selectedCardId && (
-          <div
+            {/* Hàng 2: Các nút hành động chính (Kết thúc lượt, Đổi bài, Nhật ký) */}
+            <div style={{ display: 'flex', gap: '6px', width: '100%', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={handleEndTurnClick}
+                disabled={!isMyTurn || gameView.pendingChoice !== null}
+                data-testid="end-turn-button"
+                style={{
+                  flex: 1,
+                  minHeight: '38px',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: isMyTurn ? (endTurnAllowed ? '#059669' : '#ea580c') : '#334155',
+                  color: '#ffffff',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: isMyTurn ? 'pointer' : 'not-allowed',
+                  opacity: isMyTurn ? 1 : 0.6,
+                  boxShadow: isMyTurn ? '0 3px 8px rgba(5, 150, 105, 0.3)' : 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {mustDiscardCount(gameView, myId) > 0 ? `Bỏ ${mustDiscardCount(gameView, myId)} lá` : 'Kết thúc lượt'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowTradeModal(true)}
+                style={{
+                  minHeight: '38px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  backgroundColor: myActiveTrade ? '#0284c7' : '#334155',
+                  color: '#ffffff',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  border: myActiveTrade ? '1.5px solid #38bdf8' : 'none',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                🤝 Đổi bài
+                {myActiveTrade && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-2px',
+                      right: '-2px',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ef4444',
+                    }}
+                  />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLogsModal(true)}
+                style={{
+                  minHeight: '38px',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  backgroundColor: '#1e293b',
+                  color: '#94a3b8',
+                  border: '1px solid #334155',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+                title="Xem nhật ký"
+              >
+                📜
+              </button>
+            </div>
+          </section>
+
+          {/* 3. KHU VỰC DƯỚI CÙNG: THỂ TRẠNG VÀ BÀI TRÊN TAY CỦA MÌNH */}
+          <footer
             style={{
-              padding: '4px 8px',
-              backgroundColor: 'rgba(56, 189, 248, 0.15)',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
-              borderRadius: '6px',
-              color: '#7dd3fc',
-              fontSize: '11px',
-              textAlign: 'center',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              flexDirection: 'column',
               gap: '6px',
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           >
-            <span>
-              Đang chọn: <strong>{getCardDisplayNameVi(myHand.find((c) => c.instanceId === selectedCardId)!)}</strong>
-            </span>
-            <span style={{ color: '#94a3b8' }}>•</span>
-            <span style={{ color: '#4ade80' }}>Chạm mục tiêu xanh để đánh</span>
-            <button
-              type="button"
-              onClick={() => setSelectedCardId(null)}
-              style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: '#fda4af',
-                fontSize: '11px',
-                cursor: 'pointer',
-                fontWeight: 700,
-                textDecoration: 'underline',
-              }}
-            >
-              Huỷ
-            </button>
-          </div>
-        )}
+            {/* Banner hướng dẫn khi đang chọn lá */}
+            {selectedCardId && (
+              <div
+                style={{
+                  padding: '4px 8px',
+                  backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  borderRadius: '6px',
+                  color: '#7dd3fc',
+                  fontSize: '11px',
+                  textAlign: 'center',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>
+                  Đang chọn: <strong>{getCardDisplayNameVi(myHand.find((c) => c.instanceId === selectedCardId)!)}</strong>
+                </span>
+                <span style={{ color: '#94a3b8' }}>•</span>
+                <span style={{ color: '#4ade80' }}>Chạm mục tiêu xanh để đánh</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCardId(null)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#fda4af',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Huỷ
+                </button>
+              </div>
+            )}
 
-        {/* Thể Trạng của mình */}
-        <PsycheView
-          psyche={myPsyche}
-          isSelf={true}
-          targetSlots={myTargetSlots}
-          onSelectSlot={handleSelectSelfSlot}
-          isLandscape={isLandscape}
-        />
+            {/* Thể Trạng của mình */}
+            <PsycheView
+              psyche={myPsyche}
+              isSelf={true}
+              targetSlots={myTargetSlots}
+              onSelectSlot={handleSelectSelfSlot}
+              isLandscape={false}
+            />
 
-        {/* Toàn bộ bài trên tay hiện cùng lúc: không cuộn ngang */}
-        <HandView
-          hand={myHand}
-          selectedCardId={selectedCardId}
-          onSelectCard={handleSelectCard}
-          isLandscape={isLandscape}
-        />
-      </footer>
+            {/* Toàn bộ bài trên tay hiện cùng lúc: không cuộn ngang */}
+            <HandView
+              hand={myHand}
+              selectedCardId={selectedCardId}
+              onSelectCard={handleSelectCard}
+              isLandscape={false}
+            />
+          </footer>
+        </>
+      )}
 
       {/* 4. MODAL CHI TIẾT ĐỐI THỦ KHI CHẠM VÀO GHẾ */}
       {detailOpponent && (
@@ -588,10 +909,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
                   {(() => {
                     const selName = playerNames[detailOpponent.id] || detailOpponent.id;
-                    const isSelBot =
-                      selName.startsWith('Máy ') ||
-                      selName.includes('(Thường)') ||
-                      selName.includes('(Khó)');
+                    const isSelBot = botPlayerMap[detailOpponent.id];
                     return isSelBot ? `🤖 ${selName}` : selName;
                   })()}
                 </h3>

@@ -55,7 +55,7 @@ export const HandView: React.FC<HandViewProps> = ({
     }
 
     // Chiều cao và độ rộng tối đa mỗi lá để đảm bảo 12 lá không tràn ngang
-    const cardHeight = isLandscape ? (useTwoRows ? '56px' : '64px') : (useTwoRows ? '68px' : '78px');
+    const cardHeight = isLandscape ? (useTwoRows ? '44px' : '52px') : (useTwoRows ? '66px' : '76px');
 
     return (
       <div
@@ -65,23 +65,27 @@ export const HandView: React.FC<HandViewProps> = ({
         data-selected={isSelected ? 'true' : 'false'}
         style={{
           flex: '1 1 0px',
-          maxWidth: useTwoRows ? '58px' : '72px',
-          minWidth: '40px',
+          maxWidth: isLandscape ? (useTwoRows ? '76px' : '88px') : (useTwoRows ? '58px' : '72px'),
+          minWidth: '38px',
           height: cardHeight,
           boxSizing: 'border-box',
-          borderRadius: '8px',
+          borderRadius: '6px',
           background: bgGradient,
           border: isSelected ? '2px solid #38bdf8' : `1.5px solid ${borderColor}`,
           boxShadow: isSelected
-            ? '0 0 16px rgba(56, 189, 248, 0.8), 0 4px 10px rgba(0,0,0,0.5)'
-            : '0 2px 6px rgba(0,0,0,0.3)',
-          transform: isSelected ? 'translateY(-8px) scale(1.08)' : 'none',
+            ? '0 0 12px rgba(56, 189, 248, 0.8), 0 3px 8px rgba(0,0,0,0.5)'
+            : '0 2px 4px rgba(0,0,0,0.3)',
+          transform: isSelected
+            ? isLandscape
+              ? 'translateY(-4px) scale(1.05)'
+              : 'translateY(-8px) scale(1.08)'
+            : 'none',
           transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '4px 3px',
+          padding: isLandscape ? '2px 2px' : '4px 3px',
           userSelect: 'none',
           position: 'relative',
           zIndex: isSelected ? 30 : 1,
@@ -92,11 +96,11 @@ export const HandView: React.FC<HandViewProps> = ({
         <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
           <span
             style={{
-              fontSize: '8px',
+              fontSize: isLandscape ? '7px' : '8px',
               fontWeight: 900,
               color: headerColor,
               textTransform: 'uppercase',
-              letterSpacing: '0.3px',
+              letterSpacing: '0.2px',
               lineHeight: 1,
             }}
           >
@@ -117,13 +121,13 @@ export const HandView: React.FC<HandViewProps> = ({
         >
           <span
             style={{
-              fontSize: isLandscape ? '9px' : '10px',
+              fontSize: isLandscape ? '8.5px' : '10px',
               fontWeight: 700,
               color: '#f8fafc',
               lineHeight: 1.15,
               wordBreak: 'break-word',
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: isLandscape ? 2 : 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             }}

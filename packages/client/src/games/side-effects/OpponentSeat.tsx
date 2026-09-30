@@ -13,6 +13,7 @@ export interface OpponentSeatProps {
   isActive: boolean;
   position?: SeatPosition;
   isDisconnected?: boolean;
+  isBot?: boolean;
   giveTarget?: boolean;
   episodeTargetDisorderIds?: string[];
   onSelectSeatTarget?: (playerId: string) => void;
@@ -21,12 +22,29 @@ export interface OpponentSeatProps {
   isLandscape?: boolean;
 }
 
+/**
+ * Viết tắt tên bệnh lý khi không gian hạn hẹp (vẫn rõ nghĩa và phân biệt được)
+ */
+export function getShortDisorderNameVi(nameVi: string): string {
+  switch (nameVi) {
+    case 'Nghiện cờ bạc':
+      return 'Ng. cờ bạc';
+    case 'Chứng biếng ăn':
+      return 'Biếng ăn';
+    case 'Suy nghĩ tự tử':
+      return 'Ý nghĩ tự tử';
+    default:
+      return nameVi;
+  }
+}
+
 export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   opponent,
   playerName,
   isActive,
   position = 'top',
   isDisconnected = false,
+  isBot,
   giveTarget = false,
   episodeTargetDisorderIds = [],
   onSelectSeatTarget,
@@ -34,10 +52,14 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   onOpenDetails,
   isLandscape = false,
 }) => {
-  const isBot =
-    playerName.startsWith('Máy ') ||
-    playerName.includes('(Thường)') ||
-    playerName.includes('(Khó)');
+  // Xác định bot từ prop isBot truyền từ roomState, fallback nếu không có
+  const isBotPlayer =
+    isBot !== undefined
+      ? isBot
+      : playerName.startsWith('Máy ') ||
+        playerName.includes('(Thường)') ||
+        playerName.includes('(Khó)');
+
   const untreatedCount = opponent.psyche.filter((s) => s.drug === null).length;
   const hasRevealedCards = opponent.revealedHand && opponent.revealedHand.length > 0;
 
@@ -61,14 +83,14 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
 
   // Kiểu dáng viền và đổ bóng
   let borderStyle = '1px solid #334155';
-  let boxShadowStyle = '0 2px 8px rgba(0,0,0,0.25)';
+  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.25)';
 
   if (giveTarget) {
     borderStyle = '2px solid #4ade80';
-    boxShadowStyle = '0 0 14px rgba(74, 222, 128, 0.7)';
+    boxShadowStyle = '0 0 12px rgba(74, 222, 128, 0.7)';
   } else if (isActive) {
     borderStyle = '2px solid #3b82f6';
-    boxShadowStyle = '0 0 12px rgba(59, 130, 246, 0.6)';
+    boxShadowStyle = '0 0 10px rgba(59, 130, 246, 0.6)';
   }
 
   return (
@@ -80,9 +102,9 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: isLandscape ? '6px 8px' : '6px 8px',
+        padding: isLandscape ? '4px 6px' : '5px 7px',
         backgroundColor: isActive ? 'rgba(30, 58, 138, 0.45)' : '#1e293b',
-        borderRadius: '12px',
+        borderRadius: '10px',
         border: borderStyle,
         boxShadow: boxShadowStyle,
         cursor: 'pointer',
@@ -91,15 +113,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         userSelect: 'none',
         transition: 'all 0.15s ease',
         minWidth: 0,
-        gap: '4px',
+        width: '100%',
+        gap: isLandscape ? '2px' : '3px',
       }}
     >
       {/* 1. Header ghế: Tên người chơi, robot, online, lượt, số lá */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0, flex: 1 }}>
           <span
             style={{
-              fontSize: isLandscape ? '11px' : '12px',
+              fontSize: isLandscape ? '10px' : '11px',
               fontWeight: 800,
               color: '#f8fafc',
               overflow: 'hidden',
@@ -107,17 +130,18 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
               whiteSpace: 'nowrap',
             }}
           >
-            {isBot ? `🤖 ${playerName}` : playerName}
+            {isBotPlayer ? `🤖 ${playerName}` : playerName}
           </span>
           {isDisconnected && (
             <span
               style={{
-                fontSize: '9px',
-                padding: '1px 4px',
-                borderRadius: '4px',
+                fontSize: '8px',
+                padding: '1px 3px',
+                borderRadius: '3px',
                 backgroundColor: 'rgba(239, 68, 68, 0.3)',
                 color: '#fca5a5',
                 fontWeight: 700,
+                flexShrink: 0,
               }}
             >
               Mất kn
@@ -125,16 +149,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
           {isActive && (
             <span
               style={{
-                fontSize: '9.5px',
+                fontSize: '8.5px',
                 fontWeight: 900,
                 color: '#60a5fa',
                 backgroundColor: 'rgba(59, 130, 246, 0.25)',
-                padding: '1px 5px',
-                borderRadius: '4px',
+                padding: '1px 4px',
+                borderRadius: '3px',
                 border: '1px solid #3b82f6',
               }}
             >
@@ -143,12 +167,12 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
           )}
           <span
             style={{
-              fontSize: isLandscape ? '10px' : '11px',
+              fontSize: isLandscape ? '9px' : '10px',
               fontWeight: 700,
               color: '#cbd5e1',
               backgroundColor: '#0f172a',
-              padding: '1px 5px',
-              borderRadius: '4px',
+              padding: '1px 4px',
+              borderRadius: '3px',
               border: '1px solid #334155',
             }}
           >
@@ -158,64 +182,70 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
       </div>
 
       {/* 2. Dòng "Còn X bệnh chưa chữa" & Huy hiệu hình phạt */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
         <span
           style={{
-            fontSize: '10px',
+            fontSize: isLandscape ? '8.5px' : '9.5px',
             fontWeight: 700,
             color: untreatedCount === 0 ? '#4ade80' : untreatedCount === 1 ? '#facc15' : '#fda4af',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
         >
           {untreatedCount === 0
-            ? '🎉 0 bệnh chưa chữa'
-            : `Còn ${untreatedCount} bệnh chưa chữa`}
+            ? '🎉 0 bệnh'
+            : `Còn ${untreatedCount} bệnh`}
         </span>
 
         {/* Các hình phạt đang chịu */}
         {(opponent.skipTurns > 0 ||
           opponent.preventPlayCardsTurns > 0 ||
           opponent.preventDrawTurns > 0) && (
-          <div style={{ display: 'flex', gap: '3px' }}>
+          <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }}>
             {opponent.skipTurns > 0 && (
               <span
                 style={{
-                  fontSize: '9px',
+                  fontSize: '8px',
                   fontWeight: 700,
                   color: '#fbbf24',
                   backgroundColor: 'rgba(251, 191, 36, 0.2)',
-                  padding: '1px 4px',
+                  padding: '1px 3px',
                   borderRadius: '3px',
                 }}
+                title="Mất lượt"
               >
-                😴 Nghỉ ({opponent.skipTurns})
+                😴 {opponent.skipTurns}
               </span>
             )}
             {opponent.preventPlayCardsTurns > 0 && (
               <span
                 style={{
-                  fontSize: '9px',
+                  fontSize: '8px',
                   fontWeight: 700,
                   color: '#f87171',
                   backgroundColor: 'rgba(248, 113, 113, 0.2)',
-                  padding: '1px 4px',
+                  padding: '1px 3px',
                   borderRadius: '3px',
                 }}
+                title="Không được đánh bài"
               >
-                ⚡ Liệt ({opponent.preventPlayCardsTurns})
+                ⚡ {opponent.preventPlayCardsTurns}
               </span>
             )}
             {opponent.preventDrawTurns > 0 && (
               <span
                 style={{
-                  fontSize: '9px',
+                  fontSize: '8px',
                   fontWeight: 700,
                   color: '#fb923c',
                   backgroundColor: 'rgba(251, 146, 60, 0.2)',
-                  padding: '1px 4px',
+                  padding: '1px 3px',
                   borderRadius: '3px',
                 }}
+                title="Không được rút bài"
               >
-                🍽️ Biếng ({opponent.preventDrawTurns})
+                🍽️ {opponent.preventDrawTurns}
               </span>
             )}
           </div>
@@ -227,22 +257,23 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '3px',
+          gap: isLandscape ? '2px' : '2px',
           backgroundColor: '#0f172a',
-          padding: '4px 6px',
-          borderRadius: '8px',
+          padding: isLandscape ? '2px 4px' : '3px 5px',
+          borderRadius: '6px',
           border: '1px solid #334155',
         }}
       >
         {opponent.psyche.length === 0 ? (
-          <span style={{ fontSize: '10px', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
+          <span style={{ fontSize: '9px', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
             Chưa có Bệnh Lý nào
           </span>
         ) : (
           opponent.psyche.map((slot) => {
             const isTreated = slot.drug !== null;
             const disorderDef = getDisorderDef(slot.disorder.cardId);
-            const disorderName = disorderDef?.nameVi || getDisorderNameVi(slot.disorder.cardId);
+            const rawDisorderName = disorderDef?.nameVi || getDisorderNameVi(slot.disorder.cardId);
+            const disorderName = getShortDisorderNameVi(rawDisorderName);
             const isEpisodeTarget = episodeTargetDisorderIds.includes(slot.disorder.instanceId);
 
             return (
@@ -253,8 +284,8 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '2px 4px',
-                  borderRadius: '5px',
+                  padding: isLandscape ? '1px 3px' : '2px 4px',
+                  borderRadius: '4px',
                   backgroundColor: isEpisodeTarget
                     ? 'rgba(74, 222, 128, 0.25)'
                     : isTreated
@@ -265,23 +296,25 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                     : isTreated
                       ? '1px solid rgba(16, 185, 129, 0.4)'
                       : '1px solid rgba(244, 63, 94, 0.4)',
-                  boxShadow: isEpisodeTarget ? '0 0 8px rgba(74, 222, 128, 0.7)' : 'none',
+                  boxShadow: isEpisodeTarget ? '0 0 6px rgba(74, 222, 128, 0.7)' : 'none',
                   cursor: isEpisodeTarget ? 'pointer' : 'default',
                   transition: 'all 0.15s ease',
-                  gap: '4px',
+                  gap: '3px',
                 }}
               >
                 {/* Tên Bệnh Lý tiếng Việt */}
                 <span
                   style={{
-                    fontSize: isLandscape ? '9.5px' : '10.5px',
+                    fontSize: isLandscape ? '8.5px' : '9.5px',
                     fontWeight: 700,
                     color: isTreated ? '#cbd5e1' : '#fda4af',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     flex: 1,
+                    minWidth: 0,
                   }}
+                  title={rawDisorderName}
                 >
                   ⚠️ {disorderName}
                 </span>
@@ -290,13 +323,13 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                 {isEpisodeTarget ? (
                   <span
                     style={{
-                      fontSize: '9px',
+                      fontSize: '8px',
                       fontWeight: 900,
                       backgroundColor: '#16a34a',
                       color: '#ffffff',
-                      padding: '1px 6px',
-                      borderRadius: '4px',
-                      letterSpacing: '0.3px',
+                      padding: '1px 5px',
+                      borderRadius: '3px',
+                      letterSpacing: '0.2px',
                       flexShrink: 0,
                     }}
                   >
@@ -305,16 +338,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                 ) : isTreated ? (
                   <span
                     style={{
-                      fontSize: '9px',
+                      fontSize: '8px',
                       fontWeight: 700,
                       color: '#6ee7b7',
                       backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                      padding: '1px 5px',
-                      borderRadius: '4px',
+                      padding: '1px 4px',
+                      borderRadius: '3px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
-                      maxWidth: '120px',
+                      maxWidth: isLandscape ? '65px' : '75px',
                       flexShrink: 0,
                     }}
                   >
@@ -323,16 +356,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                 ) : (
                   <span
                     style={{
-                      fontSize: '8.5px',
+                      fontSize: '8px',
                       fontWeight: 700,
                       color: '#f87171',
                       backgroundColor: 'rgba(239, 68, 68, 0.2)',
                       padding: '1px 4px',
-                      borderRadius: '4px',
+                      borderRadius: '3px',
                       flexShrink: 0,
                     }}
                   >
-                    Chưa chữa
+                    Chưa
                   </span>
                 )}
               </div>
@@ -346,28 +379,29 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '2px',
+            alignItems: 'center',
+            gap: '3px',
             backgroundColor: 'rgba(244, 63, 94, 0.15)',
             border: '1px dashed #f43f5e',
-            borderRadius: '6px',
-            padding: '3px 6px',
+            borderRadius: '4px',
+            padding: '1px 4px',
+            overflow: 'hidden',
           }}
         >
-          <span style={{ fontSize: '9px', fontWeight: 700, color: '#fca5a5' }}>
-            👁️ Bài bị lộ ({opponent.revealedHand!.length} lá):
+          <span style={{ fontSize: '8px', fontWeight: 700, color: '#fca5a5', flexShrink: 0 }}>
+            👁️ Lộ:
           </span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+          <div style={{ display: 'flex', gap: '2px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
             {opponent.revealedHand!.map((c) => (
               <span
                 key={c.instanceId}
                 style={{
-                  fontSize: '9px',
+                  fontSize: '8px',
                   fontWeight: 600,
                   backgroundColor: '#1e293b',
                   color: '#f8fafc',
-                  padding: '1px 4px',
-                  borderRadius: '3px',
+                  padding: '1px 3px',
+                  borderRadius: '2px',
                   border: '1px solid #475569',
                 }}
               >
@@ -384,12 +418,12 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
           style={{
             backgroundColor: '#16a34a',
             color: '#ffffff',
-            fontSize: '9.5px',
+            fontSize: '8.5px',
             fontWeight: 900,
             textAlign: 'center',
-            padding: '3px 6px',
-            borderRadius: '5px',
-            letterSpacing: '0.5px',
+            padding: '2px 4px',
+            borderRadius: '4px',
+            letterSpacing: '0.3px',
           }}
         >
           ➕ CHẠM ĐỂ ĐƯA BỆNH LÝ
@@ -398,3 +432,4 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
     </div>
   );
 };
+

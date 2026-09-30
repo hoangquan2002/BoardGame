@@ -5,6 +5,7 @@ import {
   getDisorderNameVi,
   type PsycheSlot,
 } from '@boardgame/game-side-effects';
+import { getShortDisorderNameVi } from './OpponentSeat.js';
 
 export interface TargetSlotInfo {
   disorderInstanceId: string;
@@ -33,7 +34,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px',
+        gap: isLandscape ? '2px' : '4px',
         width: '100%',
         boxSizing: 'border-box',
       }}
@@ -41,7 +42,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span
           style={{
-            fontSize: isLandscape ? '11px' : '12px',
+            fontSize: isLandscape ? '10px' : '11.5px',
             fontWeight: 700,
             color: '#94a3b8',
             textTransform: 'uppercase',
@@ -50,7 +51,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           {isSelf ? 'Thể Trạng của bạn' : 'Thể Trạng'} ({psyche.length} Bệnh Lý)
         </span>
         {allTreated && (
-          <span style={{ fontSize: '10.5px', color: '#4ade80', fontWeight: 800 }}>
+          <span style={{ fontSize: isLandscape ? '9.5px' : '10.5px', color: '#4ade80', fontWeight: 800 }}>
             🎉 ĐÃ ĐIỀU TRỊ TOÀN BỘ (SẮP THẮNG!)
           </span>
         )}
@@ -61,7 +62,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '6px',
+          gap: isLandscape ? '4px' : '6px',
           width: '100%',
           boxSizing: 'border-box',
         }}
@@ -73,7 +74,8 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           );
           const isTargetable = Boolean(target);
           const disorderDef = getDisorderDef(slot.disorder.cardId);
-          const disorderName = disorderDef?.nameVi || getDisorderNameVi(slot.disorder.cardId);
+          const rawDisorderName = disorderDef?.nameVi || getDisorderNameVi(slot.disorder.cardId);
+          const disorderName = isLandscape ? getShortDisorderNameVi(rawDisorderName) : rawDisorderName;
 
           return (
             <div
@@ -85,9 +87,9 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
               }}
               data-testid={`psyche-slot-${slot.disorder.instanceId}`}
               style={{
-                flex: '1 1 70px',
-                minWidth: '65px',
-                maxWidth: isLandscape ? '130px' : '110px',
+                flex: isLandscape ? '1 1 55px' : '1 1 70px',
+                minWidth: isLandscape ? '55px' : '65px',
+                maxWidth: isLandscape ? '120px' : '110px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -96,18 +98,18 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                   : isTreated
                     ? 'rgba(6, 78, 59, 0.4)'
                     : 'rgba(76, 5, 25, 0.45)',
-                borderRadius: '8px',
-                padding: '4px 6px',
+                borderRadius: '6px',
+                padding: isLandscape ? '2px 4px' : '4px 6px',
                 border: isTargetable
                   ? '2px solid #4ade80'
                   : isTreated
                     ? '1.5px solid #059669'
                     : '1.5px solid #be123c',
                 boxShadow: isTargetable
-                  ? '0 0 12px rgba(74, 222, 128, 0.7)'
+                  ? '0 0 10px rgba(74, 222, 128, 0.7)'
                   : '0 2px 4px rgba(0,0,0,0.2)',
                 cursor: isTargetable ? 'pointer' : 'default',
-                transform: isTargetable ? 'scale(1.03)' : 'none',
+                transform: isTargetable ? 'scale(1.02)' : 'none',
                 transition: 'all 0.15s ease',
                 boxSizing: 'border-box',
                 position: 'relative',
@@ -117,10 +119,10 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span
                   style={{
-                    fontSize: '8px',
+                    fontSize: isLandscape ? '7.5px' : '8px',
                     fontWeight: 800,
-                    padding: '1px 4px',
-                    borderRadius: '3px',
+                    padding: '1px 3px',
+                    borderRadius: '2px',
                     backgroundColor: isTreated ? '#10b981' : '#ef4444',
                     color: '#ffffff',
                   }}
@@ -130,16 +132,17 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
               </div>
 
               {/* Tên Bệnh Lý */}
-              <div style={{ marginTop: '2px', marginBottom: '2px' }}>
+              <div style={{ marginTop: '1px', marginBottom: '1px' }}>
                 <span
                   style={{
-                    fontSize: isLandscape ? '9.5px' : '10.5px',
+                    fontSize: isLandscape ? '8.5px' : '10px',
                     fontWeight: 700,
                     color: '#f8fafc',
                     lineHeight: 1.15,
                     display: 'block',
                     wordBreak: 'break-word',
                   }}
+                  title={rawDisorderName}
                 >
                   ⚠️ {disorderName}
                 </span>
