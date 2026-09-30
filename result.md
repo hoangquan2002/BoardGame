@@ -1,4 +1,4 @@
-Trạng thái: XONG | Task: T5 | Commit cuối: 18c6ceb
+Trạng thái: XONG | Task: T5 | Commit cuối: c86797c
 
 # Kết quả task
 
@@ -91,17 +91,13 @@ Trạng thái: XONG | Task: T5 | Commit cuối: 18c6ceb
   - Cả `node_modules/`, `.env*`, và `dist/` đều không nằm trong git tracking.
 
 #### 5. Đổi tên nhánh & Lệnh push lên GitHub
-- **Tên nhánh**: Đã đổi tên nhánh local từ `master` thành `main`.
-- **Remote**: Đã thêm remote `origin`: `https://github.com/hoangquan2002/BoardGame.git`.
-- **Trạng thái Push**: Do môi trường hệ điều hành Windows sử dụng `Git Credential Manager` (`manager`) yêu cầu cửa sổ đăng nhập tương tác từ người dùng (trình duyệt hoặc Personal Access Token), tiến trình push ngầm tự động sẽ bị treo chờ input.
-- **Lệnh để người dùng chạy trên terminal máy mình**:
-  ```bash
-  git push -u origin main
-  ```
+- **Tên nhánh**: `main`.
+- **Remote**: `origin` -> `https://github.com/hoangquan2002/BoardGame.git`.
+- **Trạng thái Push**: ✅ Người dùng đã push thành công toàn bộ mã nguồn lên GitHub tại `https://github.com/hoangquan2002/BoardGame` (commit `c86797c`).
 
 #### 6. Trạng thái trên Render Dashboard
-- **Hiện trạng**: **Chờ người dùng tạo service trên Render** theo bảng cấu hình ở Mục 2.
-- (Chưa có URL công khai để test từ xa, agent không tự điền kết quả giả định).
+- **Hiện trạng**: Người dùng đang tiến hành tạo Web Service trên Render theo bảng cấu hình ở Mục 2.
+- (Chờ người dùng cung cấp URL công khai sau khi deploy để agent kiểm tra tự động /healthz và socket).
 
 #### 7. Checklist test 2 điện thoại thật cho người dùng (sau khi deploy)
 Sau khi Render deploy thành công và cấp URL `https://<ten-app>.onrender.com`:
@@ -151,5 +147,5 @@ Sau khi Render deploy thành công và cấp URL `https://<ten-app>.onrender.com
 ---
 
 ### Vấn đề / câu hỏi còn mở
-- Chờ người dùng chạy lệnh `git push -u origin main` với tài khoản GitHub của mình và tạo service trên Render (theo Blueprint hoặc thủ công).
+- Chờ URL từ Render Dashboard sau khi người dùng tạo service để tiến hành kiểm tra kết nối thực tế.
 - Sẵn sàng chuyển tiếp sang **Task T4b: Bàn chơi dạng sòng bài + hỗ trợ xoay ngang** sau khi hoàn thành deploy.
