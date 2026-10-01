@@ -192,7 +192,7 @@ async function main() {
       }
 
       // Đánh bài: thử duyệt qua các lá bài trên tay
-      let playedCard = false;
+      let _playedCard = false;
       const handCards = page.locator('[data-testid^="hand-card-"]');
       const handCount = await handCards.count();
 
@@ -246,7 +246,7 @@ async function main() {
           await page.mouse.click(validAction.x, validAction.y);
           await page.waitForTimeout(1000);
           await capture(page, `an_danh_thanh_cong_luot_${turnCounter}`, `An thực hiện đánh bài thành công vào mục tiêu`);
-          playedCard = true;
+          _playedCard = true;
           break; // Chỉ đánh 1 lá rồi kết thúc hoặc lặp tiếp
         }
 

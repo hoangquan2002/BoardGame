@@ -5,6 +5,8 @@ import { Card } from './Card.js';
 export interface HandViewProps {
   hand: CardInstance[];
   selectedCardId: string | null;
+  cardWidth?: number;
+  hasSelection?: boolean;
   onSelectCard: (instanceId: string) => void;
   onHoldCard?: (cardId: string) => void;
   isLandscape?: boolean;
@@ -13,6 +15,8 @@ export interface HandViewProps {
 export const HandView: React.FC<HandViewProps> = ({
   hand,
   selectedCardId,
+  cardWidth = 78,
+  hasSelection = false,
   onSelectCard,
   onHoldCard,
   isLandscape = false,
@@ -37,16 +41,15 @@ export const HandView: React.FC<HandViewProps> = ({
   }, []);
 
   const numCards = hand.length;
-  // Chiều rộng lá trên tay: 58px khi ngang, 50px khi dọc để vừa vặn không tràn
-  const cardWidth = isLandscape ? 58 : 50;
-  const cardHeight = isLandscape ? 90 : 76;
+  // Chiều cao theo tỷ lệ gốc 520x864
+  const cardHeight = Math.round((cardWidth * 864) / 520);
 
-  // Tính khoảng cách lộ giữa các lá so le:
-  // Đảm bảo tối thiểu 24px (theo tiêu chí S2) và tối đa 65% cardWidth
-  const overlapStep =
-    numCards > 1
-      ? Math.max(24, Math.min(cardWidth * 0.65, (containerWidth - cardWidth - 8) / (numCards - 1)))
-      : 0;
+  // Tính khoảng cách lộ giữa các lá so le (Phần 2 mục E):
+  // Đảm bảo tối thiểu 24px để chạm được, và lá đang chọn có zIndex cao nhất để lộ hết
+  const availableSpan = Math.max(0, containerWidth - cardWidth);
+  const rawStep = numCards > 1 ? availableSpan / (numCards - 1) : 0;
+  // Giới hạn khoảng lộ tối đa khoảng 60% cardWidth để tạo cảm giác bài xếp quạt/chồng so le
+  const overlapStep = numCards > 1 ? Math.max(24, Math.min(cardWidth * 0.6, rawStep)) : 0;
 
   return (
     <div
@@ -56,23 +59,21 @@ export const HandView: React.FC<HandViewProps> = ({
         flexDirection: 'column',
         width: '100%',
         boxSizing: 'border-box',
-        gap: '4px',
+        gap: isLandscape ? '1px' : '2px',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
+      {/* Nhãn nhỏ mờ (Phần 2 mục F: bỏ dòng hướng dẫn lộn xộn cạnh Bài trên tay) */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <span
           style={{
             fontSize: '11px',
-            fontWeight: 800,
-            color: '#94a3b8',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            fontWeight: 600,
+            color: '#64748b',
+            letterSpacing: '0.3px',
+            lineHeight: 1,
           }}
         >
           Bài trên tay ({numCards} lá)
-        </span>
-        <span style={{ fontSize: '11px', color: '#64748b' }}>
-          Chạm để chọn · Nhấn giữ để xem to
         </span>
       </div>
 
@@ -81,14 +82,14 @@ export const HandView: React.FC<HandViewProps> = ({
         style={{
           position: 'relative',
           width: '100%',
-          height: `${cardHeight + 14}px`,
+          height: `${cardHeight + 12}px`,
           boxSizing: 'border-box',
           overflow: 'visible',
         }}
       >
         {hand.map((card, idx) => {
           const isSelected = card.instanceId === selectedCardId;
-          const leftPos = idx * overlapStep;
+          const leftPos = Math.round(idx * overlapStep);
 
           return (
             <div
@@ -102,8 +103,9 @@ export const HandView: React.FC<HandViewProps> = ({
                 bottom: 0,
                 width: `${cardWidth}px`,
                 height: `${cardHeight}px`,
+                // Lá đang chọn có zIndex cao nhất để lộ hết trọn vẹn (Mục E)
                 zIndex: isSelected ? 50 : idx + 1,
-                transform: isSelected ? 'translateY(-12px) scale(1.05)' : 'none',
+                transform: isSelected ? 'translateY(-12px)' : 'none',
                 transition: 'transform 0.15s ease, z-index 0.15s ease',
                 cursor: 'pointer',
               }}
@@ -112,13 +114,10 @@ export const HandView: React.FC<HandViewProps> = ({
                 cardId={card.cardId}
                 size="normal"
                 isSelected={isSelected}
-                showSideEffects={card.type === 'drug'}
+                dimmed={hasSelection && !isSelected}
                 style={{
                   width: `${cardWidth}px`,
                   height: `${cardHeight}px`,
-                  boxShadow: isSelected
-                    ? '0 10px 20px rgba(56, 189, 248, 0.5)'
-                    : '0 4px 8px rgba(0,0,0,0.4)',
                 }}
                 onClick={() => onSelectCard(card.instanceId)}
                 onHold={() => onHoldCard?.(card.cardId)}

@@ -14,20 +14,20 @@ export function createMockGameData(searchParams: URLSearchParams): {
 
   const myId = 'user-me';
 
-  // 12 lá bài mẫu trên tay
+  // 12 lá bài mẫu trên tay (đủ 4 loại: drug, disorder, episode, therapy, và có tên dài nhất)
   const allSampleCards: CardInstance[] = [
-    { instanceId: 'h-1', cardId: 'fluoxetine#1', type: 'drug' },
-    { instanceId: 'h-2', cardId: 'lorazepam#2', type: 'drug' },
+    { instanceId: 'h-1', cardId: 'chlorpromazine#1', type: 'drug' },
+    { instanceId: 'h-2', cardId: 'gambling-addiction#1', type: 'disorder' },
     { instanceId: 'h-3', cardId: 'episode#1', type: 'episode' },
-    { instanceId: 'h-4', cardId: 'pramipexole#3', type: 'drug' },
-    { instanceId: 'h-5', cardId: 'therapy#1', type: 'therapy' },
-    { instanceId: 'h-6', cardId: 'lithium#4', type: 'drug' },
-    { instanceId: 'h-7', cardId: 'anxiety#5', type: 'disorder' },
-    { instanceId: 'h-8', cardId: 'chlorpromazine#6', type: 'drug' },
-    { instanceId: 'h-9', cardId: 'gambling-addiction#7', type: 'disorder' },
-    { instanceId: 'h-10', cardId: 'sildenafil#8', type: 'drug' },
-    { instanceId: 'h-11', cardId: 'clozapine#9', type: 'drug' },
-    { instanceId: 'h-12', cardId: 'depression#10', type: 'disorder' },
+    { instanceId: 'h-4', cardId: 'therapy#1', type: 'therapy' },
+    { instanceId: 'h-5', cardId: 'pramipexole#1', type: 'drug' },
+    { instanceId: 'h-6', cardId: 'suicidal-thoughts#1', type: 'disorder' },
+    { instanceId: 'h-7', cardId: 'lorazepam#2', type: 'drug' },
+    { instanceId: 'h-8', cardId: 'anxiety#1', type: 'disorder' },
+    { instanceId: 'h-9', cardId: 'fluoxetine#2', type: 'drug' },
+    { instanceId: 'h-10', cardId: 'sildenafil#3', type: 'drug' },
+    { instanceId: 'h-11', cardId: 'clozapine#4', type: 'drug' },
+    { instanceId: 'h-12', cardId: 'depression#2', type: 'disorder' },
   ];
   const myHand = allSampleCards.slice(0, Math.min(12, Math.max(4, handParam)));
 
@@ -38,11 +38,11 @@ export function createMockGameData(searchParams: URLSearchParams): {
       drug: { instanceId: 'psy-dr-1', cardId: 'fluoxetine#1', type: 'drug' },
     },
     {
-      disorder: { instanceId: 'psy-d-2', cardId: 'anxiety#2', type: 'disorder' },
+      disorder: { instanceId: 'psy-d-2', cardId: 'suicidal-thoughts#2', type: 'disorder' },
       drug: null,
     },
     {
-      disorder: { instanceId: 'psy-d-3', cardId: 'madness#3', type: 'disorder' },
+      disorder: { instanceId: 'psy-d-3', cardId: 'anxiety#2', type: 'disorder' },
       drug: null,
     },
     {
@@ -68,11 +68,11 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 5,
       psyche: [
         {
-          disorder: { instanceId: 'b1-d-1', cardId: 'insomnia#1', type: 'disorder' },
-          drug: { instanceId: 'b1-dr-1', cardId: 'zolpidem#1', type: 'drug' },
+          disorder: { instanceId: 'b1-d-1', cardId: 'madness#1', type: 'disorder' },
+          drug: { instanceId: 'b1-dr-1', cardId: 'chlorpromazine#2', type: 'drug' },
         },
         {
-          disorder: { instanceId: 'b1-d-2', cardId: 'suicidal-thoughts#2', type: 'disorder' },
+          disorder: { instanceId: 'b1-d-2', cardId: 'suicidal-thoughts#3', type: 'disorder' },
           drug: null,
         },
       ],
@@ -86,11 +86,11 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 6,
       psyche: [
         {
-          disorder: { instanceId: 'ub-d-1', cardId: 'bipolar#1', type: 'disorder' },
+          disorder: { instanceId: 'ub-d-1', cardId: 'depression#3', type: 'disorder' },
           drug: { instanceId: 'ub-dr-1', cardId: 'lithium#1', type: 'drug' },
         },
         {
-          disorder: { instanceId: 'ub-d-2', cardId: 'madness#2', type: 'disorder' },
+          disorder: { instanceId: 'ub-d-2', cardId: 'gambling-addiction#2', type: 'disorder' },
           drug: null,
         },
       ],
@@ -104,7 +104,7 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 4,
       psyche: [
         {
-          disorder: { instanceId: 'b2-d-1', cardId: 'depression#2', type: 'disorder' },
+          disorder: { instanceId: 'b2-d-1', cardId: 'anorexia#1', type: 'disorder' },
           drug: null,
         },
       ],

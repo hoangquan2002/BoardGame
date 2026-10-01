@@ -46,7 +46,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       typeVi: 'Bệnh Lý',
       color: '#ef4444',
       punishmentVi: disorder.punishment.textVi,
-      imagePath: `/cards/${disorder.id}.webp`,
+      imagePath: `/cards/${disorder.id}.jpg`,
     };
   }
 
@@ -68,7 +68,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       treatsVi: treatedDisorder?.nameVi ?? drug.treats,
       sideEffectDisorderIds: drug.sideEffects,
       sideEffectsVi,
-      imagePath: `/cards/${drug.id}.webp`,
+      imagePath: `/cards/${drug.id}.jpg`,
     };
   }
 
@@ -81,7 +81,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       type: 'episode',
       typeVi: 'Triệu Chứng',
       color: '#f97316',
-      imagePath: '/cards/episode.webp',
+      imagePath: '/cards/episode.jpg',
     };
   }
 
@@ -94,7 +94,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       type: 'therapy',
       typeVi: 'Liệu Pháp',
       color: '#10b981',
-      imagePath: '/cards/therapy.webp',
+      imagePath: '/cards/therapy.jpg',
     };
   }
 
@@ -107,7 +107,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       type: 'spice',
       typeVi: 'Gia Vị',
       color: '#8b5cf6',
-      imagePath: '/cards/back.webp',
+      imagePath: '/cards/back.jpg',
     };
   }
   if (baseId === 'highTolerance') {
@@ -118,7 +118,7 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
       type: 'spice',
       typeVi: 'Gia Vị',
       color: '#8b5cf6',
-      imagePath: '/cards/back.webp',
+      imagePath: '/cards/back.jpg',
     };
   }
 
@@ -130,6 +130,6 @@ export function getCardInfoVi(rawCardId: string): CardInfoVi {
     type: 'disorder',
     typeVi: 'Lá bài',
     color: '#64748b',
-    imagePath: '/cards/back.webp',
+    imagePath: '/cards/back.jpg',
   };
 }

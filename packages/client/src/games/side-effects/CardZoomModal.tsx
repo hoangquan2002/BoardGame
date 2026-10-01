@@ -31,9 +31,9 @@ export const CardZoomModal: React.FC<CardZoomModalProps> = ({ cardId, onClose })
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.82)',
-        backdropFilter: 'blur(4px)',
-        WebkitBackdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.88)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -43,6 +43,38 @@ export const CardZoomModal: React.FC<CardZoomModalProps> = ({ cardId, onClose })
         touchAction: 'none',
       }}
     >
+      {/* Nút đóng nhỏ ở góc màn hình, KHÔNG dính vào lá (Phần 2 mục B5) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        aria-label="Đóng phóng to"
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          color: '#f8fafc',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+          fontSize: '18px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+          zIndex: 10000,
+          lineHeight: 1,
+        }}
+      >
+        ✕
+      </button>
+
+      {/* Vùng lá phóng to: to nhất có thể (≈ 90% viewport), không viền đỏ */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -51,36 +83,11 @@ export const CardZoomModal: React.FC<CardZoomModalProps> = ({ cardId, onClose })
           justifyContent: 'center',
           maxWidth: '90vw',
           maxHeight: '90vh',
-          aspectRatio: '300 / 537',
+          aspectRatio: '520 / 864',
           position: 'relative',
         }}
       >
         <Card cardId={cardId} size="zoom" testId="card-zoom" />
-        <button
-          onClick={onClose}
-          aria-label="Đóng phóng to"
-          style={{
-            position: 'absolute',
-            top: '-14px',
-            right: '-14px',
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: '#ef4444',
-            color: '#ffffff',
-            border: '2px solid #ffffff',
-            fontSize: '16px',
-            fontWeight: 800,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            zIndex: 10,
-          }}
-        >
-          ×
-        </button>
       </div>
     </div>
   );

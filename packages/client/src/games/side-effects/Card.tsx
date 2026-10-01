@@ -25,9 +25,7 @@ export const Card: React.FC<CardProps> = ({
   isSelected = false,
   isTarget = false,
   dimmed = false,
-  badge,
   showBack = false,
-  showSideEffects = false,
   onClick,
   onHold,
   style,
@@ -40,7 +38,7 @@ export const Card: React.FC<CardProps> = ({
   const touchStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const info: CardInfoVi = getCardInfoVi(cardId);
-  const imageSrc = showBack ? '/cards/back.webp' : info.imagePath;
+  const imageSrc = showBack ? '/cards/back.jpg' : info.imagePath;
 
   // Xử lý nhấn giữ >= 400ms để phóng to
   const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
@@ -110,74 +108,53 @@ export const Card: React.FC<CardProps> = ({
     }
   };
 
-  // Kích thước tương ứng từng size
-  const sizeStyles: Record<CardSize, React.CSSProperties> = {
-    mini: {
-      width: '36px',
-      height: '56px',
-      fontSize: '11px',
-      borderRadius: '4px',
-    },
-    small: {
-      width: '52px',
-      height: '84px',
-      fontSize: '11px',
-      borderRadius: '5px',
-    },
-    normal: {
-      width: '68px',
-      height: '110px',
-      fontSize: '11px',
-      borderRadius: '6px',
-    },
-    zoom: {
-      width: 'min(90vw, 420px)',
-      height: 'auto',
-      aspectRatio: '300 / 537',
-      maxHeight: '90vh',
-      borderRadius: '10px',
-    },
-  };
+  // Tỷ lệ gốc trong PDF manifest: 520 / 864 = 0.60185 (mặt sau 496 / 822 = 0.6034)
+  const isBack = showBack || cardId === 'back';
+  const cardAspectRatio = isBack ? '496 / 822' : '520 / 864';
 
-  const baseStyle: React.CSSProperties = {
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-    backgroundColor: '#0f172a',
-    cursor: onClick ? 'pointer' : 'default',
-    userSelect: 'none',
-    WebkitUserSelect: 'none',
-    WebkitTouchCallout: 'none',
-    touchAction: 'manipulation',
-    transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease',
-    opacity: dimmed ? 0.35 : 1,
-    transform: isSelected ? 'translateY(-10px) scale(1.04)' : undefined,
-    border: isSelected
-      ? '2px solid #38bdf8'
-      : isTarget
-        ? '2px solid #22c55e'
-        : `1.5px solid ${info.color || 'rgba(255,255,255,0.12)'}`,
-    boxShadow: isSelected
-      ? '0 8px 16px rgba(56, 189, 248, 0.4)'
-      : isTarget
-        ? '0 0 12px rgba(34, 197, 94, 0.5)'
-        : '0 2px 4px rgba(0,0,0,0.3)',
-    ...sizeStyles[size],
-    ...style,
-  };
+  // Bo góc <= 4px
+  const borderRadius = '4px';
 
-  // Render modal zoom: Góp ý A - chỉ hiện trọn cả lá to nhất có thể, bỏ khối chú thích chữ
+  // Trạng thái theo Phần 2 mục B3 & F:
+  // - Outline / box-shadow bên ngoài lá
+  // - Nhô lên translateY(-12px)
+  // - Opacity 0.4 cho thứ không phải mục tiêu
+  let outlineStyle = 'none';
+  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.45)';
+  let transformStyle = style?.transform;
+
+  if (isSelected) {
+    outlineStyle = '2px solid #38bdf8';
+    boxShadowStyle = '0 8px 18px rgba(0,0,0,0.6)';
+    transformStyle = 'translateY(-12px)';
+  } else if (isTarget) {
+    outlineStyle = '2px solid #22c55e';
+    boxShadowStyle = '0 0 12px rgba(34, 197, 94, 0.6)';
+  }
+
+  // Phóng to (size=zoom): hiện trọn cả lá, to nhất có thể, KHÔNG viền đỏ, KHÔNG chữ che
   if (size === 'zoom') {
     return (
       <div
         data-testid={testId ?? 'card-zoom'}
         style={{
-          ...baseStyle,
-          border: `2px solid ${info.color}`,
-          boxShadow: '0 24px 48px rgba(0,0,0,0.9)',
-          padding: 0,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 'auto',
+          height: 'min(90vh, 864px)',
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          aspectRatio: cardAspectRatio,
+          borderRadius: '4px',
+          overflow: 'hidden',
+          backgroundColor: '#0b1f1a',
+          boxShadow: '0 20px 48px rgba(0,0,0,0.85)',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none',
+          ...style,
         }}
       >
         {!imgError ? (
@@ -190,7 +167,8 @@ export const Card: React.FC<CardProps> = ({
               height: '100%',
               objectFit: 'contain',
               display: 'block',
-              pointerEvents: 'none',
+              borderRadius: '4px',
+              pointerEvents: 'auto',
             }}
           />
         ) : (
@@ -198,13 +176,13 @@ export const Card: React.FC<CardProps> = ({
             style={{
               width: '100%',
               height: '100%',
-              backgroundColor: info.color,
+              backgroundColor: info.color || '#1e293b',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              padding: '20px',
+              padding: '24px',
               textAlign: 'center',
               boxSizing: 'border-box',
             }}
@@ -212,16 +190,16 @@ export const Card: React.FC<CardProps> = ({
             <div style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px' }}>
               {info.nameVi}
             </div>
-            <div style={{ fontSize: '13px', opacity: 0.9 }}>
+            <div style={{ fontSize: '14px', opacity: 0.9 }}>
               {info.typeVi}
             </div>
             {info.treatsVi && (
-              <div style={{ fontSize: '12px', marginTop: '6px' }}>
+              <div style={{ fontSize: '13px', marginTop: '8px' }}>
                 Trị: {info.treatsVi}
               </div>
             )}
             {info.sideEffectsVi && info.sideEffectsVi.length > 0 && (
-              <div style={{ fontSize: '12px', marginTop: '4px' }}>
+              <div style={{ fontSize: '13px', marginTop: '6px' }}>
                 Tác dụng phụ: {info.sideEffectsVi.join(', ')}
               </div>
             )}
@@ -231,12 +209,12 @@ export const Card: React.FC<CardProps> = ({
     );
   }
 
-  // Render các size bình thường: mini / small / normal
+  // Các size thông thường: mini / small / normal
+  // QUY TẮC BẤT BIẾN: KHÔNG CÓ BẤT KỲ CHỮ / HUY HIỆU / DẢI MÀU NÀO ĐÈ LÊN ẢNH LÁ
   return (
     <div
       data-testid={testId}
       className={className}
-      style={baseStyle}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       onTouchStart={handleTouchStart}
@@ -246,6 +224,29 @@ export const Card: React.FC<CardProps> = ({
       onMouseDown={handleTouchStart}
       onMouseUp={handleTouchEnd}
       onMouseLeave={handleTouchEnd}
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
+        borderRadius,
+        aspectRatio: cardAspectRatio,
+        outline: outlineStyle,
+        outlineOffset: '1px',
+        boxShadow: boxShadowStyle,
+        transform: transformStyle,
+        opacity: dimmed ? 0.4 : 1,
+        backgroundColor: '#0b1f1a',
+        cursor: onClick ? 'pointer' : 'default',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        touchAction: 'manipulation',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease',
+        ...style,
+      }}
     >
       {!imgError ? (
         <img
@@ -255,9 +256,10 @@ export const Card: React.FC<CardProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
-            pointerEvents: 'none',
+            objectFit: 'contain',
             display: 'block',
+            borderRadius,
+            pointerEvents: 'auto',
           }}
         />
       ) : (
@@ -265,89 +267,23 @@ export const Card: React.FC<CardProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            backgroundColor: info.color,
+            backgroundColor: info.color || '#334155',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
+            alignItems: 'center',
             padding: '4px',
             boxSizing: 'border-box',
+            textAlign: 'center',
+            color: '#ffffff',
           }}
         >
-          <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#fff', lineHeight: 1.15 }}>
+          <div style={{ fontSize: '11px', fontWeight: 700, lineHeight: 1.2 }}>
             {info.nameVi}
           </div>
-          <div style={{ fontSize: '11px', opacity: 0.9, color: '#fff' }}>{info.typeVi}</div>
-        </div>
-      )}
-
-      {/* Dải tên tiếng Việt ở cạnh dưới: không cắt ellipsis, cho phép xuống 2 dòng để đọc đủ chữ */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.92)',
-          color: '#f8fafc',
-          fontSize: '11px',
-          fontWeight: 700,
-          padding: '2px 3px',
-          textAlign: 'center',
-          lineHeight: 1.15,
-          wordBreak: 'break-word',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          borderTop: `1px solid ${info.color}`,
-          boxSizing: 'border-box',
-        }}
-      >
-        {info.nameVi}
-      </div>
-
-      {/* Dòng Tác dụng phụ trên lá Thuốc nếu được yêu cầu */}
-      {showSideEffects && info.sideEffectsVi && info.sideEffectsVi.length > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '26px',
-            left: 0,
-            right: 0,
-            backgroundColor: 'rgba(76, 5, 25, 0.92)',
-            color: '#fca5a5',
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '1px 3px',
-            textAlign: 'center',
-            lineHeight: 1.15,
-            borderTop: '1px solid #f43f5e',
-            pointerEvents: 'none',
-          }}
-        >
-          TDP: {info.sideEffectsVi.join(', ')}
-        </div>
-      )}
-
-      {/* Badge nhãn (ví dụ số lượng, hoặc trạng thái) */}
-      {badge && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '2px',
-            right: '2px',
-            backgroundColor: 'rgba(0,0,0,0.85)',
-            color: '#38bdf8',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '1px 5px',
-            borderRadius: '999px',
-            border: '1px solid #38bdf8',
-            pointerEvents: 'none',
-          }}
-        >
-          {badge}
+          <div style={{ fontSize: '11px', opacity: 0.85, marginTop: '2px' }}>
+            {info.typeVi}
+          </div>
         </div>
       )}
     </div>

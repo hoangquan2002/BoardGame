@@ -19,7 +19,7 @@ describe('getCardInfoVi', () => {
       expect(info.nameVi).toBe(d.nameVi);
       expect(info.punishmentVi).toBe(d.punishment.textVi);
       expect(info.color).toBe('#ef4444');
-      expect(info.imagePath).toBe(`/cards/${d.id}.webp`);
+      expect(info.imagePath).toBe(`/cards/${d.id}.jpg`);
     }
   });
 
@@ -33,7 +33,7 @@ describe('getCardInfoVi', () => {
       expect(info.treatsVi).toBeDefined();
       expect(info.sideEffectsVi?.length).toBeGreaterThan(0);
       expect(info.color).toBe('#3b82f6');
-      expect(info.imagePath).toBe(`/cards/${drug.id}.webp`);
+      expect(info.imagePath).toBe(`/cards/${drug.id}.jpg`);
     }
   });
 
@@ -42,12 +42,53 @@ describe('getCardInfoVi', () => {
     expect(ep.nameVi).toBe('Triệu Chứng');
     expect(ep.typeVi).toBe('Triệu Chứng');
     expect(ep.color).toBe('#f97316');
-    expect(ep.imagePath).toBe('/cards/episode.webp');
+    expect(ep.imagePath).toBe('/cards/episode.jpg');
 
     const th = getCardInfoVi('therapy#1');
     expect(th.nameVi).toBe('Liệu Pháp');
     expect(th.typeVi).toBe('Liệu Pháp');
     expect(th.color).toBe('#10b981');
-    expect(th.imagePath).toBe('/cards/therapy.webp');
+    expect(th.imagePath).toBe('/cards/therapy.jpg');
+  });
+
+  it('mọi cardId (trừ Gia Vị) có mục trong manifest.json, file tồn tại và sha256 trùng khớp', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const crypto = await import('node:crypto');
+
+    const manifestPath = path.resolve(__dirname, '../../../../packages/client/public/cards/manifest.json');
+    expect(fs.existsSync(manifestPath)).toBe(true);
+
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+
+    const requiredCardIds = [
+      ...cardsData.disorders.map((d: { id: string }) => d.id),
+      ...cardsData.drugs.map((dr: { id: string }) => dr.id),
+      'episode',
+      'therapy',
+      'back',
+    ];
+
+    for (const cardId of requiredCardIds) {
+      const entry = manifest[cardId];
+      expect(entry, `Thiếu mục manifest cho cardId=${cardId}`).toBeDefined();
+      expect(entry.file).toBe(`${cardId}.jpg`);
+
+      const filePath = path.resolve(path.dirname(manifestPath), entry.file);
+      expect(fs.existsSync(filePath), `File không tồn tại: ${filePath}`).toBe(true);
+
+      const fileBuffer = fs.readFileSync(filePath);
+      const computedSha256 = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+      expect(computedSha256).toBe(entry.sha256);
+
+      if (cardId === 'back') {
+        expect(entry.width).toBe(496);
+        expect(entry.height).toBe(822);
+      } else {
+        expect(entry.width).toBe(520);
+        expect(entry.height).toBe(864);
+      }
+    }
   });
 });
+

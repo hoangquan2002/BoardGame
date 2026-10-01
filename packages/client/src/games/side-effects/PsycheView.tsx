@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
-  getDisorderNameVi,
+  getDisorderDef,
   getDrugDef,
   type PsycheSlot,
 } from '@boardgame/game-side-effects';
@@ -15,6 +15,8 @@ export interface PsycheViewProps {
   psyche: PsycheSlot[];
   isSelf?: boolean;
   targetSlots?: TargetSlotInfo[];
+  cardWidth?: number;
+  hasSelection?: boolean;
   onSelectSlot?: (disorderInstanceId: string) => void;
   onHoldCard?: (cardId: string) => void;
   isLandscape?: boolean;
@@ -24,62 +26,79 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
   psyche,
   isSelf = true,
   targetSlots = [],
+  cardWidth = 72,
+  hasSelection = false,
   onSelectSlot,
   onHoldCard,
   isLandscape = false,
 }) => {
-  const allTreated = psyche.length > 0 && psyche.every((s) => s.drug !== null);
+  // Tính tỷ lệ chuẩn 520x864
+  const cardHeight = Math.round((cardWidth * 864) / 520);
+  // Thuốc lệch xuống 25% chiều cao lá để lộ tên bệnh (Phần 2 mục D)
+  const staggerOffset = Math.round(cardHeight * 0.25);
 
-  // Kích thước lá trong Thể Trạng: tối ưu vừa vặn trong màn hình dọc 375x667 cho cả 4 người
-  const cardWidth = isLandscape ? 58 : 48;
-  const cardHeight = isLandscape ? 90 : 72;
-  const staggerOffset = isLandscape ? 24 : 18;
+  // Số bệnh chưa chữa
+  const untreatedCount = psyche.filter((s) => s.drug === null).length;
+
+  // Tính các bệnh lý mở cửa do tác dụng phụ của Thuốc đã dùng
+  const possibleSideEffects = useMemo(() => {
+    const set = new Set<string>();
+    for (const slot of psyche) {
+      if (slot.drug) {
+        const drugDef = getDrugDef(slot.drug.cardId);
+        if (drugDef) {
+          for (const se of drugDef.sideEffects) {
+            const disorderDef = getDisorderDef(se);
+            set.add(disorderDef?.nameVi ?? se);
+          }
+        }
+      }
+    }
+    return Array.from(set);
+  }, [psyche]);
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: isLandscape ? '3px' : '6px',
+        gap: '2px',
         width: '100%',
         boxSizing: 'border-box',
       }}
     >
+      {/* Tiêu đề nhỏ màu mờ (Phần 2 mục F) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span
           style={{
             fontSize: '11px',
-            fontWeight: 800,
-            color: '#94a3b8',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            fontWeight: 600,
+            color: '#64748b',
+            letterSpacing: '0.3px',
+            lineHeight: 1,
           }}
         >
-          {isSelf ? 'Thể Trạng của bạn' : 'Thể Trạng'} ({psyche.length} Bệnh Lý)
+          {isSelf ? 'Thể Trạng' : 'Thể Trạng đối thủ'} ({psyche.length} ô)
         </span>
-        {allTreated && (
+        {untreatedCount === 0 && psyche.length > 0 && (
           <span
             style={{
               fontSize: '11px',
               color: '#4ade80',
-              fontWeight: 800,
-              backgroundColor: 'rgba(34, 197, 94, 0.15)',
-              padding: '2px 8px',
-              borderRadius: '999px',
-              border: '1px solid #22c55e',
+              fontWeight: 700,
             }}
           >
-            ĐÃ CHỮA TẤT CẢ (SẮP THẮNG)
+            Đã chữa hết bệnh
           </span>
         )}
       </div>
 
-      {/* Danh sách các ô Thể Trạng: xếp bậc thang so le (Góp ý B) */}
+      {/* Danh sách các ô Thể Trạng bậc thang: Thuốc nằm TRÊN Bệnh Lý, lệch xuống 25% (Mục D) */}
       <div
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: isLandscape ? '6px' : '8px',
+          flexWrap: 'nowrap',
+          gap: isLandscape ? '3px' : '4px',
           width: '100%',
           boxSizing: 'border-box',
           alignItems: 'flex-start',
@@ -91,10 +110,10 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
             (t) => t.disorderInstanceId === slot.disorder.instanceId,
           );
           const isTargetable = Boolean(target);
-          const drugDef = slot.drug ? getDrugDef(slot.drug.cardId) : undefined;
-          const openedSideEffects = drugDef?.sideEffects?.map((s) => getDisorderNameVi(s)).join(', ');
+          const dimmed = hasSelection && !isTargetable;
 
-          const slotHeight = isTreated ? cardHeight + staggerOffset : cardHeight;
+          // Chiều cao ô: có thuốc thì thêm độ lệch staggerOffset + khoảng cho vạch "Đã chữa"
+          const slotHeight = isTreated ? cardHeight + staggerOffset + 12 : cardHeight;
 
           return (
             <div
@@ -110,9 +129,9 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 width: `${cardWidth}px`,
                 height: `${slotHeight}px`,
                 cursor: isTargetable ? 'pointer' : 'default',
-                transform: isTargetable ? 'scale(1.03)' : 'none',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                 flexShrink: 0,
+                boxSizing: 'border-box',
+                transition: 'opacity 0.15s ease',
               }}
             >
               {/* LÁ BỆNH LÝ Ở DƯỚI (z-index 1) */}
@@ -129,13 +148,14 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 <Card
                   cardId={slot.disorder.cardId}
                   size="normal"
-                  style={{ width: `${cardWidth}px`, height: `${cardHeight}px` }}
                   isTarget={isTargetable}
+                  dimmed={dimmed}
+                  style={{ width: `${cardWidth}px`, height: `${cardHeight}px` }}
                   onHold={() => onHoldCard?.(slot.disorder.cardId)}
                 />
               </div>
 
-              {/* LÁ THUỐC Ở TRÊN, LỆCH XUỐNG DƯỚI (z-index 2) - Góp ý B */}
+              {/* LÁ THUỐC Ở TRÊN, LỆCH XUỐNG DƯỚI 25% (z-index 2) - Mục D */}
               {slot.drug && (
                 <div
                   style={{
@@ -145,89 +165,68 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                     width: `${cardWidth}px`,
                     height: `${cardHeight}px`,
                     zIndex: 2,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
                   }}
                 >
                   <Card
                     cardId={slot.drug.cardId}
                     size="normal"
+                    dimmed={dimmed}
                     style={{
                       width: `${cardWidth}px`,
                       height: `${cardHeight}px`,
-                      border: '2px solid #22c55e',
                     }}
                     onHold={() => onHoldCard?.(slot.drug!.cardId)}
                   />
-                  {/* Huy hiệu ĐÃ CHỮA */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '2px',
-                      left: '2px',
-                      backgroundColor: 'rgba(34, 197, 94, 0.95)',
-                      color: '#ffffff',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      padding: '1px 5px',
-                      borderRadius: '4px',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    Đã chữa
-                  </div>
-
-                  {/* Dòng Mở cửa cho: tác dụng phụ (Phần 1 mục 2) */}
-                  {openedSideEffects && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        bottom: '25px',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: 'rgba(76, 5, 25, 0.95)',
-                        color: '#fca5a5',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '1px 3px',
-                        textAlign: 'center',
-                        lineHeight: 1.15,
-                        pointerEvents: 'none',
-                        borderTop: '1px solid #f43f5e',
-                      }}
-                    >
-                      Mở cửa: {openedSideEffects}
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Nhãn nút hành động mục tiêu nếu có (TREAT / THERAPY) */}
-              {isTargetable && target && (
+              {/* DẤU HIỆU "ĐÃ CHỮA" ĐẶT BÊN NGOÀI ẢNH (Mục D) */}
+              {isTreated && (
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: '-22px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: '#16a34a',
-                    color: '#ffffff',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2px',
                     fontSize: '11px',
-                    fontWeight: 800,
-                    textAlign: 'center',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    whiteSpace: 'nowrap',
-                    zIndex: 10,
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                    fontWeight: 700,
+                    color: '#4ade80',
+                    lineHeight: 1,
                   }}
                 >
-                  {target.label}
+                  <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4ade80' }} />
+                  Đã chữa
                 </div>
               )}
             </div>
           );
         })}
       </div>
+
+      {/* DÒNG THÔNG TIN THỂ TRẠNG BÊN DƯỚI (Phần 2 mục C): >= 12px */}
+      {isSelf && (
+        <div
+          style={{
+            fontSize: '12px',
+            color: '#cbd5e1',
+            lineHeight: isLandscape ? 1.15 : 1.25,
+            padding: 0,
+          }}
+        >
+          <span style={{ fontWeight: 700, color: untreatedCount === 0 ? '#4ade80' : '#fda4af' }}>
+            {untreatedCount === 0 ? 'Đã chữa hết bệnh' : `Còn ${untreatedCount} bệnh`}
+          </span>
+          {possibleSideEffects.length > 0 && (
+            <span style={{ color: '#94a3b8' }}>
+              {' · '}Có thể bị đưa: <strong style={{ color: '#fca5a5' }}>{possibleSideEffects.join(', ')}</strong>
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -118,7 +118,8 @@ là chuẩn.
 - Nhãn loại, nút, thông báo, nhật ký: 100% tiếng Việt. Không hiện id (`depression#5`) hay chữ tiếng Anh.
 
 **Thuốc phải thấy tác dụng phụ ở mọi nơi:**
-- Trên tay: dòng "Tác dụng phụ: Lo âu, Chứng run".
+- Trên tay: khi chọn lá Thuốc, dải thông tin phía trên bài tay ghi "Tác dụng phụ: Lo âu, Chứng run" (cập nhật 2026-10-01:
+  không viết chữ đè lên ảnh lá).
 - Trong Thể Trạng (của mình và đối thủ): khi đã dùng Thuốc, hiện "mở cửa cho: Lo âu, Chứng run", tức là những Bệnh Lý người
   khác **có thể đưa** vào người này.
 - Khi mình cầm lá Bệnh Lý: ghế nào đang "mở cửa" cho bệnh đó thì sáng lên (đã có qua `getValidTargets`).
@@ -155,13 +156,16 @@ là chuẩn.
    - Cắt **1 lá mỗi trang** theo toạ độ lưới (đo 1 lần, kiểm tra trên mọi trang). Lập bảng `trang → id lá` bằng cách **nhìn ảnh**,
      đối chiếu `cards.json`. Không đoán; trang nào không chắc thì ghi vào báo cáo.
    - Bỏ qua lá Gia Vị (không dùng trong MVP), nhưng vẫn ghi trang nào là Gia Vị.
-   - Xuất `packages/client/public/cards/<id>.webp`, khoảng 300×420px, mỗi ảnh ≤ 60KB, và 1 ảnh mặt sau `back.webp`.
+   - ~~Xuất `<id>.webp` 300×420, ≤ 60KB~~ → **Cập nhật 2026-10-01 (người dùng chốt: lá không được khác nguồn):** mỗi ô
+     lưới trong PDF là 1 ảnh JPEG nhúng 520×864 (mặt sau 496×822). Lấy **nguyên byte** ảnh nhúng (`extract_image`), lưu
+     `<id>.jpg`, không render lại, không cắt, không đổi cỡ, không nén lại. Kèm `manifest.json` (kích thước, sha256).
    - Script đặt ở `scripts/extract-cards.py` (Python + PyMuPDF + Pillow, chỉ để chạy tay trên máy dev). Ghi cách chạy trong
      README. Commit ảnh đã xuất; không bắt build Render phải chạy Python.
    - Làm **contact sheet** (tất cả ảnh + id bên dưới) để người quản lý duyệt nhanh. Không commit contact sheet.
 2. **Service worker**: ảnh bài cache kiểu CacheFirst lúc chạy, không đưa vào precache nếu tổng > 1MB.
 3. **Component `Card`** dùng chung: `size = mini | small | normal | zoom`.
-   - `mini` / `small`: ảnh + tên tiếng Việt 1 dòng (ảnh nhỏ không đọc được chữ in).
+   - `mini` / `small`: ảnh trọn lá (`object-fit: contain`, đúng tỷ lệ gốc). **Không** có chữ/nhãn/huy hiệu đè lên ảnh;
+     tên tiếng Việt và tác dụng phụ đặt **bên ngoài** lá (cập nhật 2026-10-01).
    - `zoom`: **chỉ ảnh lá, hiện trọn cả lá**, không có khối chữ chú thích (người dùng chốt 2026-10-01: chữ che mất lá, mà lá
      Việt hoá đã in đủ thông tin). Ảnh lỗi → khung màu + tên tiếng Việt.
    - Ảnh lỗi/chưa tải → khung màu theo loại + tên, không vỡ bố cục.

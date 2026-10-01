@@ -1,0 +1,146 @@
+{
+  "episode": {
+    "id": "episode",
+    "file": "episode.jpg",
+    "page": 1,
+    "width": 520,
+    "height": 864,
+    "sha256": "129e351b112d1360acb7993d945e18a5fa8846d8f79a89bce7251827c9757cff"
+  },
+  "therapy": {
+    "id": "therapy",
+    "file": "therapy.jpg",
+    "page": 2,
+    "width": 520,
+    "height": 864,
+    "sha256": "cf1038a9f916506960fe5f3ab3fd0d74865613d8fd8334e775ab471ea0d7cb6d"
+  },
+  "chlorpromazine": {
+    "id": "chlorpromazine",
+    "file": "chlorpromazine.jpg",
+    "page": 5,
+    "width": 520,
+    "height": 864,
+    "sha256": "ca1e633d24ecc2461f5e63006a17c84977ff6f73176544520fcf7753f7b264f7"
+  },
+  "clozapine": {
+    "id": "clozapine",
+    "file": "clozapine.jpg",
+    "page": 6,
+    "width": 520,
+    "height": 864,
+    "sha256": "2f68f3a5a0816706a537442f69231ef58cdecea8d9ca09c8f034f8c7bf26b25a"
+  },
+  "fluoxetine": {
+    "id": "fluoxetine",
+    "file": "fluoxetine.jpg",
+    "page": 7,
+    "width": 520,
+    "height": 864,
+    "sha256": "c07d105cfd3313adda03da50ab5aeea3c084e243477cb4e93a2e431f1b434874"
+  },
+  "lithium": {
+    "id": "lithium",
+    "file": "lithium.jpg",
+    "page": 8,
+    "width": 520,
+    "height": 864,
+    "sha256": "45b2989fc6515837e33613293d0bf388b0e0f04da8df1e6d4155d2b8c0022637"
+  },
+  "lorazepam": {
+    "id": "lorazepam",
+    "file": "lorazepam.jpg",
+    "page": 9,
+    "width": 520,
+    "height": 864,
+    "sha256": "345f65d912b62102a192be6fd6479cdc93c25ff050216be702aa1996a4bb9420"
+  },
+  "pramipexole": {
+    "id": "pramipexole",
+    "file": "pramipexole.jpg",
+    "page": 10,
+    "width": 520,
+    "height": 864,
+    "sha256": "0e5357e9b8dd355d4e2c4e46548972be8097787812da944326c2ee9825bfebc9"
+  },
+  "sildenafil": {
+    "id": "sildenafil",
+    "file": "sildenafil.jpg",
+    "page": 11,
+    "width": 520,
+    "height": 864,
+    "sha256": "73f134e9f98fe820094fa0477945df44c3a881119d9f0f8627836489802151e7"
+  },
+  "anxiety": {
+    "id": "anxiety",
+    "file": "anxiety.jpg",
+    "page": 12,
+    "width": 520,
+    "height": 864,
+    "sha256": "6fe9745cedcee4cde6e9a2ee4c78323e22d4d8ba132ffecb6a80b8bdb507427d"
+  },
+  "anorexia": {
+    "id": "anorexia",
+    "file": "anorexia.jpg",
+    "page": 13,
+    "width": 520,
+    "height": 864,
+    "sha256": "6dfb25c51de433a8ad8bd62e39c6941a156aba159909b0aac534f2a2bc941c50"
+  },
+  "depression": {
+    "id": "depression",
+    "file": "depression.jpg",
+    "page": 14,
+    "width": 520,
+    "height": 864,
+    "sha256": "5b9a4b015d33a4e68c83a512d0cd32dedcaa03776b805a167aa875bb699aea49"
+  },
+  "gambling-addiction": {
+    "id": "gambling-addiction",
+    "file": "gambling-addiction.jpg",
+    "page": 15,
+    "width": 520,
+    "height": 864,
+    "sha256": "7bc88f6d90d8e194171edabec87ee4fa8bb672cf891d4af8e9608f4961af62fe"
+  },
+  "madness": {
+    "id": "madness",
+    "file": "madness.jpg",
+    "page": 16,
+    "width": 520,
+    "height": 864,
+    "sha256": "ff383174b7cac7db7df3a2e4b3673b9caeef80f11e5fd086f3c2852e27c38684"
+  },
+  "suicidal-thoughts": {
+    "id": "suicidal-thoughts",
+    "file": "suicidal-thoughts.jpg",
+    "page": 17,
+    "width": 520,
+    "height": 864,
+    "sha256": "b923acffee6a5a9d0ab958b342d3f08ee2b60eafa62a68dbc3e8186a028bd994"
+  },
+  "impotence": {
+    "id": "impotence",
+    "file": "impotence.jpg",
+    "page": 18,
+    "width": 520,
+    "height": 864,
+    "sha256": "c0056877f8411a8f16a4432727c38a44174d5f89fa75c53a7af550167975b8aa"
+  },
+  "tremors": {
+    "id": "tremors",
+    "file": "tremors.jpg",
+    "page": 19,
+    "width": 520,
+    "height": 864,
+    "sha256": "dfa12ef43b4558ae65438767dcb9bca2cce57d0ca5477e29c72c33f5f82eac8d"
+  },
+  "back": {
+    "id": "back",
+    "file": "back.jpg",
+    "page": 20,
+    "width": 496,
+    "height": 822,
+    "sha256": "0e3256a93f80f4238a818d8ca15546a7346600e7b5a06a50ed079284839781b6"
+  }
+}

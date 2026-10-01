@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { RoomState } from '@boardgame/core';
 import {
   canEndTurn,
+  getCardInfoVi,
   getValidTargets,
   mustDiscardCount,
   type SEAction,
@@ -44,17 +45,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [zoomedCardId, setZoomedCardId] = useState<string | null>(null);
 
-  // Nhận diện hướng xoay màn hình (landscape vs portrait)
-  const [isLandscape, setIsLandscape] = useState(() => {
+  // Kích thước cửa sổ trình duyệt
+  const [windowDimensions, setWindowDimensions] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth > window.innerHeight;
+      return { width: window.innerWidth, height: window.innerHeight };
     }
-    return false;
+    return { width: 375, height: 667 };
   });
+
+  const isLandscape = windowDimensions.width > windowDimensions.height;
 
   useEffect(() => {
     const handleResize = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
+      setWindowDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -107,6 +110,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const myHand = me?.hand ?? [];
   const myPsyche = me?.psyche ?? [];
   const opponents = gameView.players.filter((p) => p.id !== myId);
+  const numPlayers = gameView.players.length;
+
+  // Tính kích thước lá hiển thị theo Phần 2 mục E (Bảng mục E)
+  const cardSizes = useMemo(() => {
+    const { width, height } = windowDimensions;
+    if (width >= 1024) {
+      // Máy tính / Tablet lớn (≥ 1024px, vd 1280x800):
+      // Bảng E: Bài tay ≥ 120, Thể Trạng ≥ 110, Đối thủ ≥ 64
+      return { handWidth: 124, psycheWidth: 114, oppWidth: 66 };
+    }
+
+    if (isLandscape) {
+      if (width >= 800) {
+        // 844x390:
+        // Bảng E: Bài tay ≥ 70, Thể Trạng ≥ 66, Đối thủ ≥ 36
+        return { handWidth: 70, psycheWidth: 66, oppWidth: 36 };
+      }
+      // 667x375:
+      // Bảng E: Bài tay ≥ 64, Thể Trạng ≥ 60, Đối thủ ≥ 34 hoặc chỉ chữ
+      return { handWidth: 64, psycheWidth: 60, oppWidth: numPlayers > 3 ? 0 : 34 };
+    }
+
+    // Màn hình dọc:
+    if (height >= 800) {
+      // 390x844:
+      // Bảng E: Bài tay ≥ 96, Thể Trạng ≥ 84, Đối thủ ≥ 44
+      return { handWidth: 96, psycheWidth: 84, oppWidth: 44 };
+    }
+
+    // 375x667:
+    // Bảng E: Bài tay ≥ 76, Thể Trạng ≥ 72, Đối thủ ≥ 34 hoặc chỉ chữ
+    return { handWidth: 76, psycheWidth: 72, oppWidth: numPlayers > 3 ? 0 : 34 };
+  }, [windowDimensions, isLandscape, numPlayers]);
 
   // Xếp ghế đối thủ
   const assignedSeats = useMemo(() => {
@@ -209,6 +245,71 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   const endTurnAllowed = canEndTurn(gameView, myId);
 
+  // Dải thông tin lá đang chọn (Phần 2 mục C):
+  // 1-2 dòng, nằm ngay trên bài tay, thay thế dải TDP đè trên lá
+  const selectedInfo = useMemo(() => {
+    if (!selectedCardId) return null;
+    const card = myHand.find((c) => c.instanceId === selectedCardId);
+    if (!card) return null;
+    return getCardInfoVi(card.cardId);
+  }, [selectedCardId, myHand]);
+
+  const renderSelectedCardInfo = () => {
+    if (!selectedInfo) {
+      return (
+        <span style={{ color: '#64748b', fontStyle: 'italic', fontSize: '12px' }}>
+          Chạm để chọn · giữ để xem to
+        </span>
+      );
+    }
+
+    if (selectedInfo.type === 'drug') {
+      const tdpText = selectedInfo.sideEffectsVi && selectedInfo.sideEffectsVi.length > 0
+        ? selectedInfo.sideEffectsVi.join(', ')
+        : 'Không có';
+      return (
+        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+          <strong style={{ color: '#38bdf8' }}>{selectedInfo.nameVi}</strong>
+          {' — '}trị {selectedInfo.treatsVi || ''}
+          {' · '}Tác dụng phụ: <span style={{ color: '#fda4af', fontWeight: 600 }}>{tdpText}</span>
+        </span>
+      );
+    }
+
+    if (selectedInfo.type === 'disorder') {
+      return (
+        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+          <strong style={{ color: '#ef4444' }}>{selectedInfo.nameVi}</strong>
+          {' — '}đưa cho người đang mở cửa cho bệnh này
+        </span>
+      );
+    }
+
+    if (selectedInfo.type === 'episode') {
+      return (
+        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+          <strong style={{ color: '#f97316' }}>Triệu Chứng</strong>
+          {' — '}kích hoạt Bệnh Lý tương ứng ở đối thủ
+        </span>
+      );
+    }
+
+    if (selectedInfo.type === 'therapy') {
+      return (
+        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+          <strong style={{ color: '#10b981' }}>Liệu Pháp</strong>
+          {' — '}loại bỏ 1 Bệnh Lý bất kỳ khỏi Thể Trạng của bạn
+        </span>
+      );
+    }
+
+    return (
+      <span style={{ fontSize: '12px', color: '#f8fafc' }}>
+        <strong>{selectedInfo.nameVi}</strong>
+      </span>
+    );
+  };
+
   const renderOpponentSeat = (
     opponent: SEPlayerViewPlayer,
     position: (typeof assignedSeats)[number]['position'],
@@ -225,6 +326,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       )
       .map((t) => t.disorderInstanceId!);
 
+    const isAnyTarget = giveTarget || episodeTargetDisorderIds.length > 0;
+    const dimmed = Boolean(selectedCardId && !isAnyTarget);
+
     return (
       <OpponentSeat
         key={opponent.id}
@@ -234,8 +338,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         position={position}
         isDisconnected={roomState.players.find((p) => p.playerId === opponent.id)?.connected === false}
         isBot={botPlayerMap[opponent.id]}
+        cardWidth={cardSizes.oppWidth}
         giveTarget={giveTarget}
         episodeTargetDisorderIds={episodeTargetDisorderIds}
+        dimmed={dimmed}
         onSelectSeatTarget={handleSelectOpponentTarget}
         onSelectDisorderTarget={handleSelectOpponentTarget}
         onOpenDetails={(id) => {
@@ -253,25 +359,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // Format đồng hồ: 0:42
   const formattedTime = `0:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
 
-  // ===================== KHUNG THANH TRÊN 36px =====================
+  // ===================== KHUNG THANH TRÊN 30px =====================
   const renderTopBar = () => (
     <header
       style={{
-        height: '36px',
+        height: '30px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 8px',
-        backgroundColor: '#1e293b',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        backgroundColor: '#122520',
+        borderRadius: '6px',
         flexShrink: 0,
         boxSizing: 'border-box',
         width: '100%',
-        borderRadius: '6px',
       }}
     >
       {/* 1. Lượt đi */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700 }}>
         {isMyTurn ? (
           <span style={{ color: '#4ade80' }}>Lượt của bạn</span>
         ) : (
@@ -288,13 +393,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          backgroundColor: 'rgba(255,255,255,0.06)',
+          backgroundColor: 'rgba(0,0,0,0.3)',
           padding: '2px 8px',
           borderRadius: '999px',
-          fontSize: '11px',
-          fontWeight: 800,
+          fontSize: '12px',
+          fontWeight: 700,
           color: timeLeft <= 15 ? '#f87171' : '#fbbf24',
-          border: `1px solid ${timeLeft <= 15 ? 'rgba(248, 113, 113, 0.4)' : 'rgba(251, 191, 36, 0.3)'}`,
         }}
       >
         <span>⏱ {formattedTime}</span>
@@ -325,15 +429,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               position: 'absolute',
               top: '32px',
               right: 0,
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#122520',
+              border: '1px solid #1e3d34',
               borderRadius: '8px',
               padding: '4px',
               display: 'flex',
               flexDirection: 'column',
               zIndex: 999,
               minWidth: '150px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
             }}
           >
             <button
@@ -347,7 +451,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 background: 'none',
                 border: 'none',
                 color: '#f8fafc',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
@@ -365,7 +469,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 background: 'none',
                 border: 'none',
                 color: '#f8fafc',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
@@ -386,7 +490,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 background: 'none',
                 border: 'none',
                 color: '#f87171',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
               }}
@@ -402,14 +506,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // ===================== DẢI GIỮA BÀN =====================
   const renderCenterTable = () => (
     <div
+      data-testid="center-table-bar"
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '4px 8px',
-        backgroundColor: '#1e293b',
+        padding: isLandscape ? '1px 8px' : '2px 8px',
+        backgroundColor: '#122520',
         borderRadius: '6px',
-        border: '1px solid #334155',
         fontSize: '11px',
         color: '#cbd5e1',
         boxSizing: 'border-box',
@@ -427,22 +531,69 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     </div>
   );
 
+  // ===================== DẢI THÔNG TIN LÁ ĐANG CHỌN + NÚT KẾT THÚC LƯỢT =====================
+  const renderActionInfoRow = () => (
+    <div
+      data-testid="action-info-bar"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '6px',
+        padding: isLandscape ? '1px 8px' : '2px 8px',
+        backgroundColor: '#122520',
+        borderRadius: '6px',
+        boxSizing: 'border-box',
+        width: '100%',
+        minHeight: isLandscape ? '28px' : '32px',
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}>
+        {renderSelectedCardInfo()}
+      </div>
+
+      <button
+        onClick={handleEndTurnClick}
+        disabled={!endTurnAllowed}
+        data-testid="end-turn-button"
+        style={{
+          height: isLandscape ? '26px' : '28px',
+          padding: '0 12px',
+          borderRadius: '5px',
+          backgroundColor: isMyTurn ? '#16a34a' : '#224036',
+          color: isMyTurn ? '#ffffff' : '#94a3b8',
+          fontSize: '12px',
+          fontWeight: 700,
+          border: 'none',
+          cursor: endTurnAllowed ? 'pointer' : 'not-allowed',
+          boxShadow: isMyTurn ? '0 2px 8px rgba(22, 163, 74, 0.4)' : 'none',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+          transition: 'all 0.15s ease',
+        }}
+      >
+        Kết thúc lượt
+      </button>
+    </div>
+  );
+
   return (
     <div
+      data-testid="game-board-container"
       style={{
         display: 'flex',
         flexDirection: isLandscape ? 'row' : 'column',
         width: '100%',
-        maxWidth: isLandscape ? '1100px' : '480px',
+        maxWidth: isLandscape ? '1200px' : '480px',
         height: '100vh',
         maxHeight: '100vh',
         margin: '0 auto',
-        padding: isLandscape ? '4px 8px' : '6px 8px',
-        gap: isLandscape ? '8px' : '6px',
+        padding: isLandscape ? '2px 6px' : '3px 6px',
+        gap: isLandscape ? '4px' : '3px',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        justifyContent: 'space-between',
-        backgroundColor: '#090d16',
+        // Nền nỉ xanh đậm gradient nhẹ (Phần 2 mục F)
+        background: 'linear-gradient(180deg, #0f2a24 0%, #0b1f1a 100%)',
         color: '#f8fafc',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
@@ -454,24 +605,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             flex: '0 0 42%',
             display: 'flex',
             flexDirection: 'column',
-            gap: '6px',
+            gap: '3px',
             height: '100%',
+            maxHeight: '100%',
             overflowY: 'auto',
             boxSizing: 'border-box',
           }}
         >
           {renderTopBar()}
-          {/* Ghế các đối thủ xếp dọc dạng bậc thang mini */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+          {/* Ghế các đối thủ xếp dọc (đảm bảo đủ chỗ không cắt) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
             {seatedOpponents.map(({ opponent, position }) => renderOpponentSeat(opponent, position))}
           </div>
         </aside>
       ) : (
         /* KHI DỌC: KHU TRÊN GỒM THANH TRÊN + ĐỐI THỦ */
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+        <section
+          data-testid="portrait-top-section"
+          style={{ display: 'flex', flexDirection: 'column', gap: '3px', width: '100%' }}
+        >
           {renderTopBar()}
           {/* Danh sách ghế đối thủ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', width: '100%' }}>
             {seatedOpponents.map(({ opponent, position }) => renderOpponentSeat(opponent, position))}
           </div>
         </section>
@@ -483,9 +638,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           flex: isLandscape ? '1 1 0px' : '1 1 auto',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          gap: isLandscape ? '4px' : '6px',
+          gap: isLandscape ? '2px' : '3px',
           height: isLandscape ? '100%' : 'auto',
+          maxHeight: isLandscape ? '100%' : undefined,
+          overflow: isLandscape ? 'hidden' : undefined,
           boxSizing: 'border-box',
           minWidth: 0,
         }}
@@ -493,11 +649,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* Dải giữa bàn: Rút, Bỏ, Đã đánh */}
         {renderCenterTable()}
 
-        {/* Thể Trạng của bạn: xếp bậc thang so le (Góp ý B) */}
-        <section style={{ width: '100%' }}>
+        {/* Thể Trạng của bạn: xếp bậc thang (Mục D) */}
+        <section data-testid="self-psyche-section" style={{ width: '100%' }}>
           <PsycheView
             psyche={myPsyche}
             isSelf={true}
+            cardWidth={cardSizes.psycheWidth}
+            hasSelection={Boolean(selectedCardId)}
             targetSlots={myTargetSlots}
             onSelectSlot={handleSelectSelfSlot}
             onHoldCard={(id) => setZoomedCardId(id)}
@@ -505,56 +663,26 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           />
         </section>
 
-        {/* Khu vực bài trên tay + Nút Kết thúc lượt */}
-        <section
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            gap: '8px',
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {/* Bài tay xếp so le 1 hàng */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <HandView
-              hand={myHand}
-              selectedCardId={selectedCardId}
-              onSelectCard={handleSelectCard}
-              onHoldCard={(id) => setZoomedCardId(id)}
-              isLandscape={isLandscape}
-            />
-          </div>
+        {/* Dải thông tin lá đang chọn + Nút Kết thúc lượt (Mục C & F) */}
+        <section style={{ width: '100%' }}>
+          {renderActionInfoRow()}
+        </section>
 
-          {/* Nút Kết thúc lượt cố định ở góc dưới bên phải */}
-          <div style={{ flexShrink: 0, paddingBottom: '2px' }}>
-            <button
-              onClick={handleEndTurnClick}
-              disabled={!endTurnAllowed}
-              data-testid="end-turn-button"
-              style={{
-                height: '42px',
-                padding: '0 16px',
-                borderRadius: '8px',
-                backgroundColor: isMyTurn ? '#16a34a' : '#334155',
-                color: isMyTurn ? '#ffffff' : '#94a3b8',
-                fontSize: '11px',
-                fontWeight: 800,
-                border: 'none',
-                cursor: endTurnAllowed ? 'pointer' : 'not-allowed',
-                boxShadow: isMyTurn ? '0 4px 12px rgba(22, 163, 74, 0.4)' : 'none',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              Kết thúc lượt
-            </button>
-          </div>
+        {/* Bài trên tay xếp so le 1 hàng (Mục E) */}
+        <section data-testid="self-hand-section" style={{ width: '100%' }}>
+          <HandView
+            hand={myHand}
+            selectedCardId={selectedCardId}
+            cardWidth={cardSizes.handWidth}
+            hasSelection={Boolean(selectedCardId)}
+            onSelectCard={handleSelectCard}
+            onHoldCard={(id) => setZoomedCardId(id)}
+            isLandscape={isLandscape}
+          />
         </section>
       </main>
 
-      {/* ===================== MODAL PHÓNG TO CARD (Góp ý A) ===================== */}
+      {/* ===================== MODAL PHÓNG TO CARD (Mục B5) ===================== */}
       <CardZoomModal
         cardId={zoomedCardId}
         onClose={() => setZoomedCardId(null)}

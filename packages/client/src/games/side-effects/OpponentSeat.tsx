@@ -1,5 +1,10 @@
-import React from 'react';
-import type { SEPlayerViewPlayer } from '@boardgame/game-side-effects';
+import React, { useMemo } from 'react';
+import {
+  getDisorderDef,
+  getDisorderNameVi,
+  getDrugDef,
+  type SEPlayerViewPlayer,
+} from '@boardgame/game-side-effects';
 import { Card } from './Card.js';
 import type { SeatPosition } from './seats.js';
 
@@ -10,8 +15,10 @@ export interface OpponentSeatProps {
   position?: SeatPosition;
   isDisconnected?: boolean;
   isBot?: boolean;
+  cardWidth?: number; // > 0: vẽ ảnh mini, 0: chế độ chỉ chữ
   giveTarget?: boolean;
   episodeTargetDisorderIds?: string[];
+  dimmed?: boolean;
   onSelectSeatTarget?: (playerId: string) => void;
   onSelectDisorderTarget?: (playerId: string, disorderInstanceId: string) => void;
   onOpenDetails: (playerId: string) => void;
@@ -26,13 +33,15 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
   position = 'top',
   isDisconnected = false,
   isBot,
+  cardWidth = 0,
   giveTarget = false,
   episodeTargetDisorderIds = [],
+  dimmed = false,
   onSelectSeatTarget,
   onSelectDisorderTarget,
   onOpenDetails,
   onHoldCard,
-  isLandscape = false,
+  isLandscape: _isLandscape = false,
 }) => {
   const isBotPlayer =
     isBot !== undefined
@@ -41,7 +50,26 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         playerName.includes('(Thường)') ||
         playerName.includes('(Khó)');
 
-  const untreatedCount = opponent.psyche.filter((s) => s.drug === null).length;
+  // Các Bệnh Lý chưa chữa
+  const untreatedSlots = opponent.psyche.filter((s) => s.drug === null);
+  const untreatedCount = untreatedSlots.length;
+
+  // Tính các bệnh lý mở cửa (tác dụng phụ của Thuốc mà đối thủ đã dùng)
+  const possibleSideEffects = useMemo(() => {
+    const set = new Set<string>();
+    for (const slot of opponent.psyche) {
+      if (slot.drug) {
+        const drugDef = getDrugDef(slot.drug.cardId);
+        if (drugDef) {
+          for (const se of drugDef.sideEffects) {
+            const disorderDef = getDisorderDef(se);
+            set.add(disorderDef?.nameVi ?? se);
+          }
+        }
+      }
+    }
+    return Array.from(set);
+  }, [opponent.psyche]);
 
   const handleClickSeat = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -57,25 +85,27 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
     if (episodeTargetDisorderIds.includes(disorderInstanceId) && onSelectDisorderTarget) {
       onSelectDisorderTarget(opponent.id, disorderInstanceId);
     } else {
-      onOpenDetails(opponent.id);
+      const slot = opponent.psyche.find((s) => s.disorder.instanceId === disorderInstanceId);
+      if (slot && onHoldCard) {
+        onHoldCard(slot.disorder.cardId);
+      }
     }
   };
 
-  let borderStyle = '1px solid #334155';
-  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.25)';
+  // Trạng thái theo Phần 2 mục F (Không khung lồng khung, border chỉ dùng cho trạng thái):
+  let outlineStyle = 'none';
+  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.35)';
 
   if (giveTarget) {
-    borderStyle = '2px solid #4ade80';
-    boxShadowStyle = '0 0 12px rgba(74, 222, 128, 0.7)';
+    outlineStyle = '2px solid #22c55e';
+    boxShadowStyle = '0 0 10px rgba(34, 197, 94, 0.6)';
   } else if (isActive) {
-    borderStyle = '2px solid #38bdf8';
-    boxShadowStyle = '0 0 10px rgba(56, 189, 248, 0.6)';
+    outlineStyle = '2px solid #38bdf8';
+    boxShadowStyle = '0 0 10px rgba(56, 189, 248, 0.5)';
   }
 
-  // Kích thước slot mini trong Thể Trạng đối thủ: gọn gàng cho 3 đối thủ
-  const miniWidth = isLandscape ? 32 : 28;
-  const miniHeight = isLandscape ? 48 : 40;
-  const miniStagger = isLandscape ? 12 : 9;
+  const cardHeight = cardWidth > 0 ? Math.round((cardWidth * 864) / 520) : 0;
+  const miniStagger = Math.round(cardHeight * 0.28);
 
   return (
     <div
@@ -84,179 +114,185 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
       data-position={position}
       style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        padding: isLandscape ? '3px 5px' : '2px 4px',
-        backgroundColor: isActive ? 'rgba(30, 58, 138, 0.45)' : '#1e293b',
-        borderRadius: '8px',
-        border: borderStyle,
+        padding: '3px 6px',
+        backgroundColor: isActive ? '#16332a' : '#122520',
+        borderRadius: '6px',
+        outline: outlineStyle,
+        outlineOffset: '1px',
         boxShadow: boxShadowStyle,
+        opacity: dimmed ? 0.4 : 1,
         cursor: 'pointer',
         boxSizing: 'border-box',
         position: 'relative',
         userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
         transition: 'all 0.15s ease',
         minWidth: 0,
         width: '100%',
-        gap: '2px',
+        gap: '4px',
       }}
     >
-      {/* 1. Header ghế: Tên đối thủ + Lượt + Số lá trên tay */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1 }}>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 800,
-              color: '#f8fafc',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {isBotPlayer ? `🤖 ${playerName}` : playerName}
-          </span>
-          {isDisconnected && (
+      {/* KHỐI TRÁI: THÔNG TIN CHỮ VÀ BỆNH LÝ (Mục C) */}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, gap: '2px' }}>
+        {/* 1. Dòng Header: Tên đối thủ + Lượt + Số lá trên tay */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0 }}>
             <span
               style={{
-                fontSize: '11px',
-                padding: '1px 4px',
-                borderRadius: '3px',
-                backgroundColor: 'rgba(239, 68, 68, 0.3)',
-                color: '#fca5a5',
+                fontSize: '12px',
                 fontWeight: 700,
-                flexShrink: 0,
+                color: '#f8fafc',
+                whiteSpace: 'normal',
+                wordBreak: 'normal',
               }}
             >
-              Mất kết nối
+              {isBotPlayer ? `🤖 ${playerName}` : playerName}
             </span>
-          )}
-        </div>
+            {isDisconnected && (
+              <span
+                style={{
+                  fontSize: '11px',
+                  padding: '1px 4px',
+                  borderRadius: '3px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                  color: '#fca5a5',
+                  fontWeight: 600,
+                }}
+              >
+                Mất kết nối
+              </span>
+            )}
+            {isActive && (
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: '#38bdf8',
+                }}
+              >
+                (Đang đi)
+              </span>
+            )}
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-          {isActive && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                color: untreatedCount === 0 ? '#4ade80' : untreatedCount === 1 ? '#facc15' : '#fda4af',
+              }}
+            >
+              {untreatedCount === 0 ? 'Đã chữa hết' : `Còn ${untreatedCount} bệnh`}
+            </span>
             <span
               style={{
                 fontSize: '11px',
-                fontWeight: 800,
-                color: '#38bdf8',
-                backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                fontWeight: 600,
+                color: '#94a3b8',
+                backgroundColor: 'rgba(0,0,0,0.3)',
                 padding: '1px 5px',
                 borderRadius: '3px',
-                border: '1px solid #38bdf8',
               }}
             >
-              Đang đi
+              {opponent.handCount} lá
             </span>
-          )}
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              color: '#cbd5e1',
-              backgroundColor: '#0f172a',
-              padding: '1px 5px',
-              borderRadius: '3px',
-              border: '1px solid #334155',
-            }}
-          >
-            {opponent.handCount} lá
-          </span>
+          </div>
         </div>
-      </div>
 
-      {/* 2. Dòng trạng thái bệnh lý & hình phạt */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '4px' }}>
-        <span
+        {/* 2. Dòng liệt kê ĐỦ TÊN Bệnh Lý chưa chữa (Phần 2 mục C):
+            Chấm màu + tên, giữ chữ đó -> phóng to lá tương ứng. Không cắt chữ, không bẻ đôi từ */}
+        <div
           style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '4px',
             fontSize: '11px',
-            fontWeight: 700,
-            color: untreatedCount === 0 ? '#4ade80' : untreatedCount === 1 ? '#facc15' : '#fda4af',
-            whiteSpace: 'nowrap',
+            color: '#cbd5e1',
+            lineHeight: 1.25,
           }}
         >
-          {untreatedCount === 0 ? 'Đã chữa hết' : `Còn ${untreatedCount} bệnh`}
-        </span>
+          {untreatedSlots.length === 0 ? (
+            <span style={{ color: '#4ade80', fontSize: '11px', fontStyle: 'italic' }}>
+              Không còn bệnh lý chưa chữa
+            </span>
+          ) : (
+            untreatedSlots.map((slot) => {
+              const isEpisodeTarget = episodeTargetDisorderIds.includes(slot.disorder.instanceId);
+              const disorderName = getDisorderNameVi(slot.disorder.cardId);
 
-        {/* Các hình phạt nếu có: không dùng emoji, ghi chữ ngắn gọn */}
-        {(opponent.skipTurns > 0 ||
-          opponent.preventPlayCardsTurns > 0 ||
-          opponent.preventDrawTurns > 0) && (
-          <div style={{ display: 'flex', gap: '3px', flexShrink: 0 }}>
-            {opponent.skipTurns > 0 && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#fbbf24',
-                  backgroundColor: 'rgba(251, 191, 36, 0.2)',
-                  padding: '1px 4px',
-                  borderRadius: '3px',
-                  border: '1px solid rgba(251, 191, 36, 0.4)',
-                }}
-                title="Mất lượt"
-              >
-                Mất lượt ({opponent.skipTurns})
-              </span>
-            )}
-            {opponent.preventPlayCardsTurns > 0 && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#f87171',
-                  backgroundColor: 'rgba(248, 113, 113, 0.2)',
-                  padding: '1px 4px',
-                  borderRadius: '3px',
-                  border: '1px solid rgba(248, 113, 113, 0.4)',
-                }}
-                title="Liệt"
-              >
-                Liệt ({opponent.preventPlayCardsTurns})
-              </span>
-            )}
-            {opponent.preventDrawTurns > 0 && (
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#fb923c',
-                  backgroundColor: 'rgba(251, 146, 60, 0.2)',
-                  padding: '1px 4px',
-                  borderRadius: '3px',
-                  border: '1px solid rgba(251, 146, 60, 0.4)',
-                }}
-                title="Nhịn rút"
-              >
-                Nhịn rút ({opponent.preventDrawTurns})
-              </span>
-            )}
+              return (
+                <span
+                  key={slot.disorder.instanceId}
+                  onClick={(e) => handleDisorderClick(e, slot.disorder.instanceId)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    onHoldCard?.(slot.disorder.cardId);
+                  }}
+                  data-testid={`opponent-disorder-text-${slot.disorder.instanceId}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    backgroundColor: isEpisodeTarget ? 'rgba(34, 197, 94, 0.2)' : 'rgba(0,0,0,0.25)',
+                    outline: isEpisodeTarget ? '1.5px solid #22c55e' : 'none',
+                    padding: '1px 4px',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    color: isEpisodeTarget ? '#4ade80' : '#f8fafc',
+                    fontWeight: 600,
+                    whiteSpace: 'normal',
+                    wordBreak: 'normal',
+                  }}
+                  title="Nhấn giữ để xem to lá bài này"
+                >
+                  <span
+                    style={{
+                      width: '5px',
+                      height: '5px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ef4444',
+                      display: 'inline-block',
+                      flexShrink: 0,
+                    }}
+                  />
+                  {disorderName}
+                </span>
+              );
+            })
+          )}
+        </div>
+
+        {/* 3. Dòng "Có thể bị đưa: ..." nếu có (Phần 2 mục C) */}
+        {possibleSideEffects.length > 0 && (
+          <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.2 }}>
+            Có thể bị đưa:{' '}
+            <strong style={{ color: '#fca5a5', fontWeight: 600 }}>
+              {possibleSideEffects.join(', ')}
+            </strong>
           </div>
         )}
       </div>
 
-      {/* 3. Thể Trạng đối thủ dạng BẬC THANG MINI (Góp ý B & D2) */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '5px',
-          backgroundColor: '#0f172a',
-          padding: '4px',
-          borderRadius: '6px',
-          border: '1px solid #334155',
-          alignItems: 'flex-start',
-        }}
-      >
-        {opponent.psyche.length === 0 ? (
-          <span style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '2px 4px' }}>
-            Chưa có Bệnh Lý
-          </span>
-        ) : (
-          opponent.psyche.map((slot) => {
+      {/* KHỐI PHẢI: HIỂN THỊ ẢNH LÁ MINI (NẾU CARDWIDTH > 0) */}
+      {cardWidth > 0 && opponent.psyche.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'nowrap',
+            gap: '4px',
+            alignItems: 'flex-start',
+            flexShrink: 0,
+          }}
+        >
+          {opponent.psyche.map((slot) => {
             const isTreated = slot.drug !== null;
             const isEpisodeTarget = episodeTargetDisorderIds.includes(slot.disorder.instanceId);
-            const slotHeight = isTreated ? miniHeight + miniStagger : miniHeight;
+            const slotHeight = isTreated ? cardHeight + miniStagger : cardHeight;
 
             return (
               <div
@@ -265,10 +301,9 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                 data-testid={`opponent-disorder-${slot.disorder.instanceId}`}
                 style={{
                   position: 'relative',
-                  width: `${miniWidth}px`,
+                  width: `${cardWidth}px`,
                   height: `${slotHeight}px`,
                   cursor: isEpisodeTarget ? 'pointer' : 'default',
-                  transform: isEpisodeTarget ? 'scale(1.04)' : 'none',
                   flexShrink: 0,
                 }}
               >
@@ -278,8 +313,8 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: `${miniWidth}px`,
-                    height: `${miniHeight}px`,
+                    width: `${cardWidth}px`,
+                    height: `${cardHeight}px`,
                     zIndex: 1,
                   }}
                 >
@@ -291,32 +326,30 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                   />
                 </div>
 
-                {/* LÁ THUỐC ĐÈ TRÊN, LỆCH XUỐNG DƯỚI (z-index 2) - Góp ý B */}
+                {/* LÁ THUỐC ĐÈ TRÊN, LỆCH XUỐNG DƯỚI (z-index 2) */}
                 {slot.drug && (
                   <div
                     style={{
                       position: 'absolute',
                       top: `${miniStagger}px`,
                       left: 0,
-                      width: `${miniWidth}px`,
-                      height: `${miniHeight}px`,
+                      width: `${cardWidth}px`,
+                      height: `${cardHeight}px`,
                       zIndex: 2,
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.7)',
                     }}
                   >
                     <Card
                       cardId={slot.drug.cardId}
                       size="mini"
-                      style={{ border: '1.5px solid #22c55e' }}
                       onHold={() => onHoldCard?.(slot.drug!.cardId)}
                     />
                   </div>
                 )}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 };

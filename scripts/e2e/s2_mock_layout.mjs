@@ -8,11 +8,53 @@ export async function runS2(browser, baseUrl) {
   const screenshotDir = path.join(os.tmpdir(), 'side-effects-mock-screenshots');
   fs.mkdirSync(screenshotDir, { recursive: true });
 
+  // 5 màn hình đo theo Phần 2 mục H1 & Bảng mục E
   const viewports = [
-    { name: '375×667 (dọc)', width: 375, height: 667 },
-    { name: '667×375 (ngang)', width: 667, height: 375 },
-    { name: '390×844 (dọc)', width: 390, height: 844 },
-    { name: '844×390 (ngang)', width: 844, height: 390 },
+    {
+      name: '375×667',
+      width: 375,
+      height: 667,
+      minHand: 76,
+      minPsyche: 72,
+      minOpp: 34,
+      allowOppText: true,
+    },
+    {
+      name: '390×844',
+      width: 390,
+      height: 844,
+      minHand: 96,
+      minPsyche: 84,
+      minOpp: 44,
+      allowOppText: false,
+    },
+    {
+      name: '667×375',
+      width: 667,
+      height: 375,
+      minHand: 64,
+      minPsyche: 60,
+      minOpp: 34,
+      allowOppText: true,
+    },
+    {
+      name: '844×390',
+      width: 844,
+      height: 390,
+      minHand: 70,
+      minPsyche: 66,
+      minOpp: 36,
+      allowOppText: false,
+    },
+    {
+      name: '1280×800',
+      width: 1280,
+      height: 800,
+      minHand: 120,
+      minPsyche: 110,
+      minOpp: 64,
+      allowOppText: false,
+    },
   ];
 
   const configurations = [
@@ -44,7 +86,23 @@ export async function runS2(browser, baseUrl) {
         const noVOverflow = m.noVerticalOverflow;
         const handOk = m.allHandCardsInViewport;
         const handExposureOk = m.minHandExposure >= 24;
-        const disordersOk = m.allOpponentDisordersVisible;
+
+        // Bảng mục E: kiểm tra bề rộng ảnh lá
+        const handWidthOk = m.minHandCardWidth >= vp.minHand;
+        const psycheWidthOk = m.minPsycheCardWidth >= vp.minPsyche;
+        const oppWidthOk =
+          (vp.allowOppText && !m.hasOppImages) ||
+          (m.hasOppImages && m.minOppCardWidth >= vp.minOpp);
+
+        // Mục H1: Tiêu chí kiểm tra ảnh lá
+        const imagesContainOk = m.allImagesContain;
+        const imagesRatioOk = m.allImagesRatioOk;
+        const imagesNaturalWidthOk = m.allImagesNaturalWidthOk;
+        const noOverlayOk = m.allPointsNoOverlay;
+        const gapOk = m.maxVerticalGap <= 40;
+        const noClippedOk = m.noTextOverflowClipped;
+        const noBrokenWordOk = m.noWordBrokenAcrossLines;
+        const oppSeatsOk = m.allOpponentSeatsInViewport;
         const endTurnOk = m.endTurnInside;
         const minFontOk = m.minFontSize >= 11;
         const emojiOk = m.emojiCount <= 3;
@@ -55,7 +113,17 @@ export async function runS2(browser, baseUrl) {
           noVOverflow &&
           handOk &&
           handExposureOk &&
-          disordersOk &&
+          handWidthOk &&
+          psycheWidthOk &&
+          oppWidthOk &&
+          imagesContainOk &&
+          imagesRatioOk &&
+          imagesNaturalWidthOk &&
+          noOverlayOk &&
+          gapOk &&
+          noClippedOk &&
+          noBrokenWordOk &&
+          oppSeatsOk &&
           endTurnOk &&
           minFontOk &&
           emojiOk &&
@@ -66,7 +134,7 @@ export async function runS2(browser, baseUrl) {
         testItems.push({
           name: `${vp.name} | ${cfg.players} người | ${cfg.hand} lá`,
           passed: rowPassed,
-          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, hand=${m.handCardsInViewport}/${m.totalHandCards}, minExposure=${m.minHandExposure}px, disordersOk=${disordersOk}, endTurnBottom=${m.endTurnBottom}, fontMin=${m.minFontSize}px, emoji=${m.emojiCount}, errors=${consoleErrors.length}`,
+          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, handCardW=${m.minHandCardWidth}px(>=${vp.minHand}), psycheW=${m.minPsycheCardWidth}px(>=${vp.minPsyche}), oppW=${m.minOppCardWidth}px, minExposure=${m.minHandExposure}px, contain=${imagesContainOk}, ratio=${imagesRatioOk}, noOverlay=${noOverlayOk}, maxGap=${m.maxVerticalGap}px, noBrokenWord=${noBrokenWordOk}, oppInVp=${oppSeatsOk}, fontMin=${m.minFontSize}px, emoji=${m.emojiCount}`,
         });
 
         tableRows.push({
@@ -75,10 +143,11 @@ export async function runS2(browser, baseUrl) {
           hand: cfg.hand,
           scrollW: `${m.scrollWidth}/${m.innerWidth}`,
           scrollH: `${m.scrollHeight}/${m.innerHeight}`,
-          handStatus: `${m.handCardsInViewport}/${m.totalHandCards} (lộ ≥${m.minHandExposure}px)`,
-          endTurnBottom: `${m.endTurnBottom}px`,
-          minFont: `${m.minFontSize}px`,
-          emoji: `${m.emojiCount}`,
+          handStatus: `${m.handCardsInViewport}/${m.totalHandCards} (w=${m.minHandCardWidth}px, lộ ≥${m.minHandExposure}px)`,
+          psycheStatus: `w=${m.minPsycheCardWidth}px (>=${vp.minPsyche}px)`,
+          oppStatus: m.hasOppImages ? `w=${m.minOppCardWidth}px` : 'chữ',
+          maxGap: `${m.maxVerticalGap}px`,
+          noOverlay: noOverlayOk ? '✓' : '✗',
           passed: rowPassed ? 'ĐẠT' : 'KHÔNG ĐẠT',
         });
       } catch (err) {
@@ -91,6 +160,55 @@ export async function runS2(browser, baseUrl) {
       } finally {
         await context.close();
       }
+    }
+  }
+
+  // Đo thêm trên phòng thật: 1 người + 1 máy và 1 người + 3 máy (Phần 2 mục H1)
+  for (const botCount of [1, 3]) {
+    const { context, page } = await newPlayer(browser, { width: 390, height: 844 });
+    try {
+      await page.goto(cleanBase, { waitUntil: 'networkidle', timeout: 15000 });
+      const nameInput = page.locator('input[placeholder*="tên" i], input[type="text"]').first();
+      await nameInput.fill(`Test S2 Bot${botCount}`);
+      await page.locator('button:has-text("Tạo phòng mới")').click();
+      await page.waitForSelector('[data-testid="invite-url-input"]', { timeout: 8000 });
+
+      // Thêm bot
+      for (let b = 0; b < botCount; b++) {
+        await page.locator('button:has-text("Thêm máy")').click();
+        await page.waitForTimeout(200);
+      }
+
+      await page.locator('button:has-text("Bắt đầu")').click();
+      await page.waitForSelector('[data-testid="game-board-container"]', { timeout: 10000 });
+      await page.waitForTimeout(500);
+
+      const m = await measureLayout(page);
+      const realRoomPassed =
+        m.noHorizontalOverflow &&
+        m.noVerticalOverflow &&
+        m.allHandCardsInViewport &&
+        m.minHandCardWidth >= 96 &&
+        m.allOpponentSeatsInViewport &&
+        m.allImagesContain &&
+        m.allPointsNoOverlay;
+
+      if (!realRoomPassed) allPassed = false;
+
+      testItems.push({
+        name: `Phòng thật: 1 người + ${botCount} máy (390×844)`,
+        passed: realRoomPassed,
+        detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, handCardW=${m.minHandCardWidth}px, oppInVp=${m.allOpponentSeatsInViewport}, noOverlay=${m.allPointsNoOverlay}`,
+      });
+    } catch (err) {
+      allPassed = false;
+      testItems.push({
+        name: `Phòng thật: 1 người + ${botCount} máy`,
+        passed: false,
+        detail: err.message,
+      });
+    } finally {
+      await context.close();
     }
   }
 
@@ -135,7 +253,7 @@ export async function runS2(browser, baseUrl) {
 
   return {
     id: 'S2',
-    name: 'Bố cục bàn chơi /?mock=1 (4 kích thước × cấu hình)',
+    name: 'Bố cục bàn chơi /?mock=1 (5 kích thước × cấu hình & phòng thật)',
     passed: allPassed && interactionPassed,
     items: testItems,
     tableRows,
