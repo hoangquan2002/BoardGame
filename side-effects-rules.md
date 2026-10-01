@@ -194,6 +194,32 @@ Thắng    : chữa hết Psyche trước
 
 ---
 
+## 10. Luật nhà của app (không có trong rulebook — chốt 2026-09-30)
+
+**Số người**: tạm thời 2–4 người (tính cả máy). Luật 6–8 người vẫn giữ trong engine để mở lại sau.
+
+**Đồng hồ lượt — 120 giây** (`turnTimeoutSeconds`, mặc định 120)
+- Đếm từ sau bước rút 2 lá. Mọi người đều thấy đồng hồ.
+- Hết giờ → tự kết thúc lượt, theo thứ tự:
+  1. Người đó đang chọn lá (Lo âu) → chọn ngẫu nhiên 1 lá hợp lệ.
+  2. Huỷ mọi lời mời đổi bài có người đó tham gia.
+  3. Tay > 6 lá → bỏ ngẫu nhiên cho còn 6.
+  4. Kết thúc lượt như `END_TURN`. Lá chưa đánh giữ nguyên trên tay.
+- Tạm dừng trong lúc chờ **người khác** chọn (Chứng run 7 giây), rồi chạy tiếp từ số giây còn lại.
+- Người mất kết nối vẫn bị tính giờ. Máy không chịu đồng hồ.
+- Hết giờ **2 lượt liên tiếp** mà không có hành động nào → máy mức Thường tạm chơi thay. Người đó kết nối lại hoặc bấm
+  "Tôi quay lại" → lấy lại ghế từ lượt kế tiếp của mình.
+- Lời mời đổi bài không được trả lời trong **30 giây** (`tradeTimeoutSeconds`) thì tự huỷ.
+
+**Thoát phòng**
+- Phòng chờ: rời tự do. Chủ phòng rời → quyền chủ phòng chuyển cho người thật vào phòng sớm nhất.
+- Đang chơi: "Thoát ván" (có xác nhận) → máy mức Thường ngồi thay, giữ nguyên bài, Thể Trạng và hình phạt. Người thoát
+  **không** vào lại ván đó.
+- Không còn người thật đang kết nối → xoá phòng sau 5 phút.
+- Hết ván: "Về phòng chờ" giữ người thật và máy gốc, bỏ máy chơi thay.
+
+---
+
 ## Nguồn tham khảo
 
 - Rulebook Việt hoá — Boardrian: bản trong repo `assets/rule/side_effects_viet_hoa_boardrian.pdf` ([Google Drive](https://drive.google.com/file/d/1gHUStaglQVhUxpmB8ZEes_unOsNTOlFf/view))
