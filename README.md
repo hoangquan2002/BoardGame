@@ -20,9 +20,17 @@ pnpm install
 | `pnpm build` | Biên dịch toàn bộ các package trong monorepo |
 | `pnpm lint` | Kiểm tra cú pháp và quy chuẩn code bằng ESLint |
 | `pnpm test` | Chạy bộ kiểm thử tự động với Vitest |
+| `pnpm e2e` | Chạy bộ kiểm thử trình duyệt E2E tự động (`pnpm e2e --url <URL>`) |
 | `pnpm start` | Khởi chạy server phòng online (`@boardgame/server`), phục vụ client build tại `http://localhost:3000` |
 | `pnpm dev` | Khởi chạy dev server của giao diện client (`@boardgame/client`) tại `http://localhost:5173` (Vite proxy `/socket.io` -> `http://localhost:3000`) |
 | `pnpm format` | Tự động định dạng mã nguồn với Prettier |
+
+### Trích xuất ảnh lá bài từ PDF (Chỉ cần chạy khi cập nhật PDF trên máy dev)
+Dự án đã commit sẵn toàn bộ ảnh lá bài dạng WebP trong `packages/client/public/cards/`. Nếu cần trích xuất lại từ PDF gốc:
+```bash
+pip install pymupdf Pillow
+python scripts/extract-cards.py
+```
 
 ### Hướng dẫn chạy khi phát triển (Dev Mode)
 1. Terminal 1: Khởi động server backend:
@@ -43,6 +51,8 @@ pnpm start
 ```
 Mở trình duyệt truy cập `http://localhost:3000`. Server Node.js sẽ phục vụ đồng thời cả ứng dụng SPA PWA và Socket.IO server.
 
+Trang bản phác giao diện theo thiết kế mới: `http://localhost:3000/?mock=1` (hỗ trợ tham số `players=2|3|4`, `hand=4|8|12`, `turn=me|other`).
+
 
 ## Biến môi trường (Server)
 
@@ -55,8 +65,10 @@ Server có thể cấu hình thông qua các biến môi trường sau:
 | `CORS_ORIGIN` | Cùng origin | Origin được phép kết nối Socket.IO (ví dụ: `http://localhost:5173` khi phát triển client) |
 | `CLIENT_DIST_DIR` | `packages/client/dist` | Đường dẫn tới thư mục chứa file tĩnh đã build của client SPA |
 
-Endpoint kiểm tra sức khoẻ:
+Các endpoint hệ thống:
 - `GET /healthz` -> trả về mã `200 OK` (nội dung: `OK`).
+- `GET /version` -> trả về `{ "commit": "<RENDER_GIT_COMMIT>" }`.
+- `GET /robots.txt` -> chặn các bot công khai thu thập dữ liệu web (`Disallow: /`).
 
 ## Deploy lên Render
 

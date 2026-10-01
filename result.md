@@ -1,132 +1,114 @@
-Trạng thái: XONG | Task: T4b | Commit cuối: 68ff78e
+Trạng thái: DỪNG — chờ duyệt D0 | Link: https://boardgame-02k2.onrender.com/?mock=1 (Local: http://localhost:3000/?mock=1)
 
-# Kết quả task
+# Báo cáo kết quả Giai đoạn D0 — Hạ tầng test + Bản phác + Tách ảnh bài
 
-> Agent ghi đè file này sau mỗi task theo mẫu dưới. Người quản lý đọc để review rồi cập nhật `work_progress.md`.
-
-## Task: T4b — Bàn chơi dạng sòng bài + hỗ trợ xoay ngang
+> **Điểm dừng bắt buộc D0 theo [design.md](design.md)**: Người dùng mở link bản phác trên điện thoại (`/?mock=1`), kiểm tra trực quan bố cục dọc, ngang, thao tác chạm lá và nhấn giữ phóng to (`card-zoom`), góp ý để hoàn thiện tiếp giai đoạn D1–D2.
 
 ---
 
-### Phần 1 — Khắc phục việc còn tồn (Review T4b lần 1)
+## 1. Nội dung đã thực hiện trong Giai đoạn D0
 
-1. **Khắc phục màn hình ngang (667×375, 844×390) không thấy bài trên tay**:
-   - **Vấn đề cũ**: Các khu vực xếp chồng dọc khiến trang cao 414–416px, hàng bài trên tay bị đẩy ra ngoài mép dưới màn hình, phải cuộn dọc mới thấy.
-   - **Giải pháp**: Tái cấu trúc bố cục ngang thành 2 phần: Phía trên là hàng ghế đối thủ trải rộng như sòng bài thật; Phía dưới chia 2 cột song song:
-     - Cột trái (rộng 215px): Giữa bàn (lượt chơi, số lá đã đánh, chồng rút, chồng bỏ, nút Kết thúc lượt, Đổi bài, Nhật ký).
-     - Cột phải (chiếm toàn bộ phần còn lại ~440px): Thể Trạng của mình + Toàn bộ bài trên tay (tối đa 12 lá).
-   - **Kết quả đo thực tế**: `scrollHeight <= innerHeight` (ở 667×375: `375/375px`, ở 844×390: `390/390px`), 100% lá bài trên tay và nút Kết thúc lượt nằm trọn trong màn hình mà không cần cuộn dọc.
+1. **Khắc phục các việc nhỏ tồn đọng của T4b**:
+   - Nhận diện máy qua `RoomPlayerInfo.isBot` từ `roomState` (không phụ thuộc chuỗi tiền tố tên).
+   - Tăng timeout bộ test giả lập 1000 ván lên 120s (chạy trong 11.9s trên 18 test suite song song).
+   - Commit message chuẩn hoá tiếng Việt có dấu.
 
-2. **Khắc phục màn hình dọc 3–4 người tràn ngang và mất tên bệnh**:
-   - **Vấn đề cũ**: Xếp 3 ghế đối thủ trên 1 hàng ở màn hình 375px khiến mỗi ghế chỉ còn rộng ~114px, tên bệnh bị cắt thành `⚠️ .`, nút hành động giữa bàn tràn sang mép phải (scrollWidth 439px > 375px), bỏ phí khoảng trống ~100px ở giữa.
-   - **Giải pháp**:
-     - Sắp xếp 3 ghế đối thủ thành 2 hàng: Ghế trên (`top`) chiếm trọn hàng 1 (rộng 355px); 2 ghế dưới (`left` và `right`) chia đôi hàng 2 (rộng ~174px mỗi ghế).
-     - Viết tắt tên bệnh lý dài một cách rõ nghĩa và phân biệt được (`Nghiện cờ bạc` ➔ `Ng. cờ bạc`, `Chứng biếng ăn` ➔ `Biếng ăn`, `Suy nghĩ tự tử` ➔ `Ý nghĩ tự tử`).
-     - Tối ưu huy hiệu trạng thái chưa chữa thành `Chưa` gọn gàng, dành trọn không gian cho tên bệnh.
-     - Tách hàng nút giữa bàn thành 2 hàng gọn gàng: hàng 1 chứa thông tin lượt + 2 chồng bài; hàng 2 chứa 3 nút hành động.
-   - **Kết quả đo thực tế**: `scrollWidth <= innerWidth` (ở 375×667 đạt `375/375px`, ở 390×844 đạt `390/390px`), tên bệnh lý hiển thị đầy đủ, rõ ràng trên mọi ghế đối thủ, không còn khoảng trống thừa.
+2. **Hạ tầng endpoints hệ thống & bảo mật**:
+   - Bổ sung `GET /version` trả về `{ "commit": process.env.RENDER_GIT_COMMIT ?? "dev" }`.
+   - Bổ sung `GET /robots.txt` trả về `User-agent: *\nDisallow: /\n` và thêm thẻ `<meta name="robots" content="noindex" />` chặn bot thu thập nội dung.
+   - Chặn tải file dotfiles (`/.env`), file PDF (`/Side effects.pdf`) và chống path traversal (`/../package.json`).
 
-3. **Khắc phục nhận diện máy bằng tiền tố tên**:
-   - **Vấn đề cũ**: Dùng `playerName.startsWith('Máy ')` dẫn đến trường hợp người thật đặt tên "Máy 1" bị nhận diện nhầm thành robot 🤖.
-   - **Giải pháp**: Xây dựng `botPlayerMap` từ danh sách `roomState.players` dựa trên trường `RoomPlayerInfo.isBot`. Truyền `isBot` chuẩn xác vào `OpponentSeat`, biểu tượng lượt đi và modal xem chi tiết đối thủ.
+3. **Trích xuất toàn bộ 18 lá bài thật từ PDF Việt hoá**:
+   - Sử dụng script `scripts/extract-cards.py` (PyMuPDF + Pillow) đọc file scan `assets/card-photos/Side effects.pdf`.
+   - Cắt chuẩn xác từng lá bài từ lưới 3×2, xuất 18 ảnh WebP chất lượng cao (300×537px, dung lượng 18.8 KB – 53.8 KB, đều <= 60 KB):
+     - 8 Bệnh Lý: `anxiety`, `anorexia`, `depression`, `gambling-addiction`, `madness`, `suicidal-thoughts`, `impotence`, `tremors`.
+     - 7 Thuốc: `chlorpromazine`, `clozapine`, `fluoxetine`, `lithium`, `lorazepam`, `pramipexole`, `sildenafil`.
+     - 2 Đặc biệt: `episode` (Triệu Chứng), `therapy` (Liệu Pháp).
+     - 1 Mặt sau: `back` (hoa văn đen vàng nghệ thuật).
+     - Bỏ qua 2 lá Gia Vị (Page 3: `misdiagnosis` - Chuẩn đoán sai, Page 4: `highTolerance` - Kháng thuốc).
+   - Đã tạo contact sheet kiểm duyệt `scratch/contact_sheet.png`.
 
-4. **Tăng timeout cho test giả lập 1000 ván**:
-   - Tăng timeout của `simulation.test.ts` từ `30000ms` lên `120000ms`, đảm bảo chạy mượt mà kể cả khi toàn bộ 17 test file chạy song song.
+4. **Component `Card` và dữ liệu hiển thị tiếng Việt**:
+   - `getCardInfoVi(cardId)` cung cấp tên tiếng Việt, loại, trị bệnh, tác dụng phụ, hình phạt cho mọi lá bài.
+   - Component `Card` hỗ trợ 4 kích thước: `mini`, `small`, `normal`, `zoom`.
+   - Hỗ trợ thao tác chạm thường (chọn lá) và **nhấn giữ >= 400ms** (hoặc chuột phải) để mở modal phóng to chi tiết lá bài (`data-testid="card-zoom"`).
 
-5. **Ghi chép báo cáo và tiến độ**:
-   - Cập nhật nhật ký tiến độ chi tiết trong `work_progress.md` và ghi đầy đủ bảng số đo thật đo tự động bằng trình duyệt Chromium headless.
+5. **Trang bản phác (`/?mock=1`) theo thiết kế D2 & mục 4**:
+   - Dựng bàn chơi từ `playerView` mẫu cố định (hỗ trợ query `players=2|3|4`, `hand=4|8|12`, `turn=me|other`).
+   - Có Thể Trạng bậc thang (Bệnh Lý nằm trên, Thuốc nằm dưới lệch tầng để lộ tên Thuốc).
+   - Bài trên tay xếp so le tự co theo số lá (4, 8, 12 lá), lá đang chọn nổi bật.
+   - Ghế đối thủ dạng hàng ngang, Thể Trạng mini bậc thang, có đối thủ máy 🤖, đối thủ mất mạng, bài bị lộ do Lo âu.
+   - Thanh trên: Lượt, đồng hồ `⏱️ 0:42`, menu `⋯`. Dải giữa bàn: `Rút 41 · Bỏ 12 · Đã đánh 1/2`.
+   - Cỡ chữ nhỏ nhất 11px, không emoji thừa.
 
-6. **Chuẩn hoá commit message**:
-   - Toàn bộ commit message được viết bằng tiếng Việt có dấu chuẩn mực, rõ ràng.
-
----
-
-### Phần 2 — Mô tả bố cục bàn chơi sòng bài (Dọc & Ngang)
-
-#### 1. Bố cục màn hình Dọc (Portrait)
-- **Khu đối thủ (phía trên)**:
-  - 1 đối thủ (bàn 2 người): 1 ghế căn giữa ở phía trên.
-  - 2 đối thủ (bàn 3 người): 2 ghế xếp cạnh nhau (mỗi ghế chiếm 50% bề ngang).
-  - 3 đối thủ (bàn 4 người): 1 ghế trên chiếm trọn 100% bề rộng hàng 1; 2 ghế dưới chia đôi hàng 2.
-  - Mỗi ghế hiển thị đầy đủ: Tên người chơi, 🤖 nếu là bot, nhãn `LƯỢT`, số lá trên tay, huy hiệu hình phạt (😴 Mất lượt, ⚡ Liệt, 🍽️ Biếng ăn kèm số lượt còn lại), dòng "Còn X bệnh", toàn bộ danh sách Bệnh Lý + Thuốc điều trị, bài bị lộ (nếu có do Lo âu). Chạm vào ghế mở modal xem chi tiết.
-- **Giữa bàn (khu vực nỉ sòng bài)**:
-  - Hàng trên: Huy hiệu lượt (`🎯 Lượt của bạn` / `Lượt của 🤖 Máy 1`), số lá đã đánh `x/2`, chồng rút `🎴`, chồng bỏ `🗑️`.
-  - Hàng dưới: Nút `Kết thúc lượt` (chiếm phần lớn bề rộng, tự đổi thành `Bỏ X lá` khi thừa bài), nút `🤝 Đổi bài`, nút `📜 Nhật ký`.
-- **Khu của mình (phía dưới)**:
-  - Banner hướng dẫn đánh bài khi đang chọn thẻ.
-  - Thể Trạng của mình: Danh sách Bệnh Lý với trạng thái ĐÃ CHỮA / CHƯA, Thuốc điều trị.
-  - Bài trên tay: Toàn bộ bài trên tay hiện cùng lúc, chia 1 hoặc 2 hàng khi có từ 6 lá trở lên, không cuộn ngang, lá đang chọn nổi lên với viền sáng xanh.
-
-#### 2. Bố cục màn hình Ngang (Landscape)
-- **Hàng đối thủ (trải rộng ở trên cùng)**:
-  - 1, 2 hoặc 3 ghế đối thủ dàn hàng ngang phía trên như các người chơi ngồi đối diện quanh bàn sòng bài.
-  - Chiều cao mỗi ghế được tối ưu siêu gọn (~80px), chữ và huy hiệu rõ nét.
-- **Khu vực phía dưới (chia 2 cột)**:
-  - **Cột trái (Giữa bàn, rộng 215px)**: Gom gọn thông tin lượt, chồng rút, chồng bỏ và cụm 3 nút hành động (`Kết thúc lượt`, `Đổi bài`, `Nhật ký`). Nút bấm luôn nằm trong tầm ngón tay cái bên trái.
-  - **Cột phải (Khu của mình, rộng ~440–600px)**: Thể Trạng của mình (các slot bệnh lý nằm gọn trên 1 hàng ngang) + Bài trên tay (xếp 2 hàng gọn gàng, hỗ trợ hiển thị tới 12 lá mà không tràn hay cuộn).
-- **Trải nghiệm xoay máy**:
-  - Không mất kết nối, giữ nguyên lá bài đang chọn, các hộp thoại modal (`DiscardModal`, `TradeModal`, `GameLogsModal`, `WinnerModal`, `PendingChoiceModal`) đều có `max-height` và thanh cuộn nội bộ, nút xác nhận luôn bấm được.
+6. **Bộ test E2E tự động (`scripts/e2e/`)**:
+   - Viết trọn vẹn bộ runner E2E Playwright Chromium (`scripts/e2e/runner.mjs`) kiểm tra S0, S1, S2 trên 4 kích thước màn hình.
 
 ---
 
-### Bảng số đo thực tế trên trình duyệt (Chromium Headless / Playwright)
+## 2. Bảng kết quả kiểm tra tự động E2E (Kịch bản S0, S1, S2)
 
-> Đo tự động bằng script Playwright trên bản build sạch chạy local port 3000, context `isMobile: true`, kiểm tra đủ 4 kích thước × 3 cấu hình người chơi:
+> Môi trường hiện tại không có kết nối ra ngoài internet tới URL Render thật (`dial tcp: no such host`), do đó theo hướng dẫn của người dùng *"nếu không test được trên url thật thì hãy test trên local"*, toàn bộ số đo dưới đây được thực hiện trực tiếp trên server local port 3000 bằng trình duyệt Chrome headless.
 
-| Kích thước | Số người | `scrollWidth / innerWidth` | `scrollHeight / innerHeight` | Bài tay trọn màn hình | Nút Kết thúc lượt | Ghế & Tên Bệnh Lý | Xoay giữ lá |
-|---|---|---|---|---|---|---|---|
-| **375×667** | 2 | **375 / 375** (Không tràn) | **667 / 667** | **4/4 lá** | bottom: 358px (ĐẠT) | 1 ghế, đủ 4 bệnh lý | ĐẠT |
-| **375×667** | 3 | **375 / 375** (Không tràn) | **667 / 667** | **4/4 lá** | bottom: 358px (ĐẠT) | 2 ghế, đủ 4 bệnh lý | ĐẠT |
-| **375×667** | 4 | **375 / 375** (Không tràn) | **667 / 667** | **4/4 lá** | bottom: 434px (ĐẠT) | 3 ghế, đủ 4 bệnh lý | ĐẠT |
-| **667×375** | 2 | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **6/6 lá** (max bottom: 371px) | bottom: 332px (ĐẠT) | 1 ghế, đủ 4 bệnh lý | ĐẠT |
-| **667×375** | 3 | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **4/4 lá** (max bottom: 371px) | bottom: 332px (ĐẠT) | 2 ghế, đủ 4 bệnh lý | ĐẠT |
-| **667×375** | 4 | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **4/4 lá** (max bottom: 371px) | bottom: 332px (ĐẠT) | 3 ghế, đủ 4 bệnh lý | ĐẠT |
-| **390×844** | 2 | **390 / 390** (Không tràn) | **844 / 844** | **4/4 lá** | bottom: 446px (ĐẠT) | 1 ghế, đủ 4 bệnh lý | ĐẠT |
-| **390×844** | 3 | **390 / 390** (Không tràn) | **844 / 844** | **6/6 lá** | bottom: 445px (ĐẠT) | 2 ghế, đủ 4 bệnh lý | ĐẠT |
-| **390×844** | 4 | **390 / 390** (Không tràn) | **844 / 844** | **4/4 lá** | bottom: 522px (ĐẠT) | 3 ghế, đủ 4 bệnh lý | ĐẠT |
-| **844×390** | 2 | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **4/4 lá** (max bottom: 386px) | bottom: 347px (ĐẠT) | 1 ghế, đủ 4 bệnh lý | ĐẠT |
-| **844×390** | 3 | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **4/4 lá** (max bottom: 386px) | bottom: 347px (ĐẠT) | 2 ghế, đủ 4 bệnh lý | ĐẠT |
-| **844×390** | 4 | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **4/4 lá** (max bottom: 386px) | bottom: 347px (ĐẠT) | 3 ghế, đủ 4 bệnh lý | ĐẠT |
+### Tổng quan từng kịch bản
 
-- **Kết quả kiểm tra tương tác chạm (Touch interaction)**:
-  - Đánh Triệu Chứng vào Bệnh Lý đối thủ bằng cách chạm vào lá bài -> viền xanh mục tiêu sáng lên -> chạm nhãn `⚡ ĐÁNH` trên ghế đối thủ -> thực hiện thành công.
-  - Đánh Thuốc/Liệu Pháp vào Thể Trạng của mình bằng chạm -> thực hiện thành công.
-  - Bấm Kết thúc lượt bằng chạm -> thực hiện thành công.
-- **Trang chủ & Phòng chờ**:
-  - Không tràn ngang ở cả 320px, 375px, 390px, 667px và 844px (`scrollWidth <= innerWidth`).
+| Kịch bản | Tên kịch bản | Kết quả Local | Ghi chú |
+|---|---|---|---|
+| **S0** 🌐 | Kiểm tra triển khai & bảo mật endpoint | **✅ ĐẠT (6/6)** | `/healthz` 200, `/version` 200, `/robots.txt` 200, chặn `/.env`, `/../package.json`, file PDF |
+| **S1** 🌐 | Kiểm tra trang chủ và phòng chờ | **✅ ĐẠT (6/6)** | Trang chủ/phòng chờ không tràn ngang ở 320, 375, 667px; tạo phòng; link mời đúng domain; khoá bot 4/4 |
+| **S2** 🌐 | Bố cục bản phác `/?mock=1` (4 kích thước × cấu hình) | **✅ ĐẠT (17/17)** | Đạt 100% tiêu chí D2 (không tràn ngang, không cuộn dọc, bài tay và nút KT lượt trọn màn hình, zoom đạt) |
 
----
+### Bảng số đo thực tế bố cục `/?mock=1` (Kịch bản S2)
 
-### Kết quả kiểm tra tự động
+| Kích thước | Người | Bài tay | `scrollWidth / innerWidth` | `scrollHeight / innerHeight` | Bài tay trọn màn hình | Nút KT lượt (bottom) | Font min | Kết quả |
+|---|---|---|---|---|---|---|---|---|
+| **375×667 (dọc)** | 2 | 4 lá | **375 / 375** (Không tràn) | **667 / 667** (Không cuộn) | **4/4 lá** | 663px (<= 667px) | 11px | **ĐẠT** |
+| **375×667 (dọc)** | 3 | 8 lá | **375 / 375** (Không tràn) | **667 / 667** (Không cuộn) | **8/8 lá** | 663px (<= 667px) | 11px | **ĐẠT** |
+| **375×667 (dọc)** | 4 | 8 lá | **375 / 375** (Không tràn) | **667 / 667** (Không cuộn) | **8/8 lá** | 663px (<= 667px) | 11px | **ĐẠT** |
+| **375×667 (dọc)** | 4 | 12 lá | **375 / 375** (Không tràn) | **667 / 667** (Không cuộn) | **12/12 lá** | 663px (<= 667px) | 11px | **ĐẠT** |
+| **667×375 (ngang)** | 2 | 4 lá | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **4/4 lá** | 371px (<= 375px) | 11px | **ĐẠT** |
+| **667×375 (ngang)** | 3 | 8 lá | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **8/8 lá** | 371px (<= 375px) | 11px | **ĐẠT** |
+| **667×375 (ngang)** | 4 | 8 lá | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **8/8 lá** | 371px (<= 375px) | 11px | **ĐẠT** |
+| **667×375 (ngang)** | 4 | 12 lá | **667 / 667** (Không tràn) | **375 / 375** (Không cuộn) | **12/12 lá** | 371px (<= 375px) | 11px | **ĐẠT** |
+| **390×844 (dọc)** | 2 | 4 lá | **390 / 390** (Không tràn) | **844 / 844** (Không cuộn) | **4/4 lá** | 840px (<= 844px) | 11px | **ĐẠT** |
+| **390×844 (dọc)** | 3 | 8 lá | **390 / 390** (Không tràn) | **844 / 844** (Không cuộn) | **8/8 lá** | 840px (<= 844px) | 11px | **ĐẠT** |
+| **390×844 (dọc)** | 4 | 8 lá | **390 / 390** (Không tràn) | **844 / 844** (Không cuộn) | **8/8 lá** | 840px (<= 844px) | 11px | **ĐẠT** |
+| **390×844 (dọc)** | 4 | 12 lá | **390 / 390** (Không tràn) | **844 / 844** (Không cuộn) | **12/12 lá** | 840px (<= 844px) | 11px | **ĐẠT** |
+| **844×390 (ngang)** | 2 | 4 lá | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **4/4 lá** | 386px (<= 390px) | 11px | **ĐẠT** |
+| **844×390 (ngang)** | 3 | 8 lá | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **8/8 lá** | 386px (<= 390px) | 11px | **ĐẠT** |
+| **844×390 (ngang)** | 4 | 8 lá | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **8/8 lá** | 386px (<= 390px) | 11px | **ĐẠT** |
+| **844×390 (ngang)** | 4 | 12 lá | **844 / 844** (Không tràn) | **390 / 390** (Không cuộn) | **12/12 lá** | 386px (<= 390px) | 11px | **ĐẠT** |
 
-- **build**: ✅ (`pnpm build` thành công cả 4 packages: `core`, `games/side-effects`, `server`, `client` kèm PWA).
-- **lint**: ✅ (`pnpm lint` typecheck 0 lỗi, ESLint 0 errors, 0 warnings).
-- **test**: ✅ (**114/114 tests pass** trên toàn bộ 17 test files, test giả lập 1000 ván hoàn thành trong 10.9s với timeout 120s):
-  - `packages/client`: 29 tests (`seats.test.ts` 16 tests, `session.test.ts` 12 tests, `e2e-gameplay.test.ts` 1 test).
-  - `packages/server`: 16 tests (`server.test.ts` 12 tests, `server-bots.test.ts` 4 tests).
-  - `packages/games/side-effects`: 57 tests (`simulation.test.ts` 1 test 1000 ván, `bots-tournament.test.ts` 2 tests, `targets.test.ts` 21 tests, `rules.test.ts` 10 tests, v.v.).
-  - `packages/core`: 12 tests (`rng.test.ts` 7 tests, `sample-game.test.ts` 5 tests).
-
----
-
-### Danh sách các commit trong Task T4b
-
-1. `4bd7333` — `fix(client): khac phuc nut Vao phong tran man hinh o viewport hep va xoay ngang` *(đã push)*
-2. `1ff42f5` — `chore(deploy): bo bien NODE_ENV khoi render.yaml va huong dan README` *(đã push)*
-3. `6a56e17` — `feat(client): ham xep ghe song bai theo chieu kim dong ho va bo unit test` *(đã push)*
-4. `118ee30` — `feat(client): ban choi dang song bai hien day du thong tin doi thu va bai tay khong cuon ngang` *(đã push)*
-5. `5f92998` — `feat(client): ho tro xoay ngang, manifest orientation any va toi uu modal trong 667x375` *(đã push)*
-6. `cd618dd` — `fix(side-effects): tăng timeout test giả lập 1000 ván lên 120s tránh quá thời gian` *(chưa push)*
-7. `68ff78e` — `fix(client): tối ưu bố cục sòng bài màn hình ngang và dọc, không tràn ngang và thấy rõ tên bệnh` *(chưa push)*
-
-> **Lưu ý Deploy**: Do Git Credential Manager yêu cầu xác thực tương tác, người dùng hãy chạy lệnh sau để đẩy các commit mới lên GitHub (Render sẽ tự động build và deploy):
-> ```bash
-> git push origin main
-> ```
+- **Kiểm tra thao tác tương tác**:
+  - Chạm thường (< 400ms): Chọn / bỏ chọn lá bài trên tay, không mở popup zoom.
+  - Nhấn giữ >= 400ms (hoặc chuột phải): Mở hộp thoại modal `card-zoom` hiển thị ảnh lớn và thông tin tiếng Việt chi tiết (tên, loại, trị bệnh, tác dụng phụ, hình phạt).
+  - Chạm ra ngoài backdrop: Đóng popup zoom ngay lập tức.
 
 ---
 
-### Đề xuất bước tiếp theo
-- Task T4b đã hoàn thành 100% yêu cầu kỹ thuật và khắc phục toàn bộ việc còn tồn đọng.
-- Theo tài liệu định hướng mới [design.md](design.md), bước tiếp theo là:
-  - **Giai đoạn D1**: Tách ảnh lá bài thật từ PDF Việt hoá, hiển thị thông tin tác dụng phụ của từng loại Thuốc, và chuẩn hoá tên lá bài hoàn toàn sang tiếng Việt.
+## 3. Kết quả kiểm tra chất lượng mã nguồn
+
+- **Build**: ✅ `pnpm build` biên dịch thành công cả 4 package (`core`, `game-side-effects`, `server`, `client`).
+- **Lint**: ✅ `pnpm lint` typecheck 0 lỗi, ESLint 0 errors, 0 warnings.
+- **Unit & Integration Tests**: ✅ **118/118 tests pass** trên toàn bộ 18 test files (test giả lập 1000 ván chạy hoàn tất trong 11.9s).
+
+---
+
+## 4. Hướng dẫn người dùng xem và duyệt bản phác D0
+
+Do môi trường dòng lệnh Git trên máy yêu cầu tương tác xác thực và không có mạng ra ngoài, người dùng hãy chạy lệnh sau để đẩy các commit lên GitHub cho Render tự động deploy:
+```bash
+git push origin main
+```
+
+Sau khi deploy lên Render:
+1. Mở liên kết: **`https://boardgame-02k2.onrender.com/?mock=1`** (hoặc chạy local `pnpm start` rồi mở `http://localhost:3000/?mock=1`).
+2. Thử các tham số khác nhau:
+   - `?mock=1&players=2&hand=4`: Bàn 2 người, 4 lá trên tay.
+   - `?mock=1&players=3&hand=8`: Bàn 3 người, 8 lá trên tay.
+   - `?mock=1&players=4&hand=12`: Bàn 4 người, 12 lá trên tay.
+3. Thử nghiệm trên điện thoại:
+   - Xoay màn hình dọc ↔ ngang xem bàn chơi tự thích ứng (ngang chia 2 cột, dọc chia hàng).
+   - Chạm vào lá bài để xem hiệu ứng chọn lá nhô lên.
+   - Nhấn giữ lâu vào bất kỳ lá nào (trên tay hoặc trên Thể Trạng) để xem thẻ phóng to chi tiết.
+4. Góp ý cho agent để chuyển sang giai đoạn D1 (ảnh + dữ liệu hiển thị hoàn chỉnh).
