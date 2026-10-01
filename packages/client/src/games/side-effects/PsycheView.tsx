@@ -220,7 +220,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           <span style={{ fontWeight: 700, color: untreatedCount === 0 ? '#4ade80' : '#fda4af' }}>
             {untreatedCount === 0 ? 'Đã chữa hết bệnh' : `Còn ${untreatedCount} bệnh`}
           </span>
-          {possibleSideEffects.length > 0 && (
+          {!isLandscape && possibleSideEffects.length > 0 && (
             <span style={{ color: '#94a3b8' }}>
               {' · '}Có thể bị đưa: <strong style={{ color: '#fca5a5' }}>{possibleSideEffects.join(', ')}</strong>
             </span>
