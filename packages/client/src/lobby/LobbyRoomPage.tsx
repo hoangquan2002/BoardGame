@@ -170,6 +170,25 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           </button>
         </div>
 
+        {/* Ô hiển thị link mời (readonly) */}
+        <input
+          data-testid="invite-url-input"
+          readOnly
+          value={inviteUrl}
+          onClick={(e) => (e.target as HTMLInputElement).select()}
+          style={{
+            width: '100%',
+            backgroundColor: '#0f172a',
+            color: '#94a3b8',
+            border: '1px solid #334155',
+            borderRadius: '8px',
+            padding: '8px 10px',
+            fontSize: '11px',
+            boxSizing: 'border-box',
+            textAlign: 'center',
+          }}
+        />
+
         {/* Mã QR */}
         <div
           style={{
@@ -212,6 +231,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
         {isHost && (
           <div style={{ display: 'flex', gap: '8px' }}>
             <button
+              data-testid="add-bot-button"
               type="button"
               onClick={() => onAddBot?.('normal')}
               disabled={isLoading || isFull}

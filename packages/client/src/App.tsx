@@ -2,11 +2,15 @@ import React from 'react';
 import { OfflineBanner } from './app/OfflineBanner.js';
 import { Toast } from './app/Toast.js';
 import { GameBoard } from './games/side-effects/GameBoard.js';
+import { MockGameBoard } from './games/side-effects/MockGameBoard.js';
 import { HomePage } from './lobby/HomePage.js';
 import { LobbyRoomPage } from './lobby/LobbyRoomPage.js';
 import { useSession } from './net/useSession.js';
 
 export const App: React.FC = () => {
+  // Kiểm tra chế độ Mock bản phác theo thiết kế D0
+  const isMock = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mock') === '1';
+
   const {
     session,
     pendingRestoreSession,
@@ -27,6 +31,10 @@ export const App: React.FC = () => {
     leaveRoom,
     sendAction,
   } = useSession();
+
+  if (isMock) {
+    return <MockGameBoard />;
+  }
 
   const isPlaying = Boolean(session && roomState && roomState.status !== 'lobby' && gameView);
 
