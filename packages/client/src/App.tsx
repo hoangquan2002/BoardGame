@@ -58,6 +58,35 @@ export const App: React.FC = () => {
       <OfflineBanner show={!isConnected && session !== null} />
       <Toast message={errorToast} onClose={dismissToast} />
 
+      {/* Floating badge chuyển sang bản phác giao diện mới D0 */}
+      <a
+        href="/?mock=1"
+        data-testid="switch-to-mock-link"
+        style={{
+          position: 'fixed',
+          top: '12px',
+          right: '12px',
+          zIndex: 999,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '6px 12px',
+          backgroundColor: '#0284c7',
+          color: '#ffffff',
+          borderRadius: '999px',
+          textDecoration: 'none',
+          fontSize: '11.5px',
+          fontWeight: 700,
+          boxShadow: '0 4px 14px rgba(2, 132, 199, 0.45)',
+          border: '1px solid #38bdf8',
+          opacity: 0.95,
+        }}
+        title="Xem bản phác giao diện mới theo thiết kế D0"
+      >
+        <span>🎨</span>
+        <span>Bản phác D0</span>
+      </a>
+
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Trường hợp chưa vào phòng hoặc phòng chưa được tải */}
         {(!session || !roomState) && (

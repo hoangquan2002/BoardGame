@@ -211,22 +211,44 @@ export const MockGameBoard: React.FC<MockGameBoardProps> = () => {
             <span>⏱️ 0:42</span>
           </div>
 
-          {/* Nút menu ⋯ */}
-          <button
-            data-testid="menu-button"
-            onClick={() => setShowMenu(!showMenu)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#f8fafc',
-              fontSize: '16px',
-              cursor: 'pointer',
-              padding: '2px 8px',
-              borderRadius: '4px',
-            }}
-          >
-            ⋯
-          </button>
+          {/* Nút thoát bản phác & Menu */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <a
+              href="/"
+              data-testid="exit-mock-link"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: '#cbd5e1',
+                fontSize: '11px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+              title="Quay lại sảnh chính hoặc ván chơi thật"
+            >
+              <span>🏠 Thoát</span>
+            </a>
+            <button
+              data-testid="menu-button"
+              onClick={() => setShowMenu(!showMenu)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#f8fafc',
+                fontSize: '16px',
+                cursor: 'pointer',
+                padding: '2px 8px',
+                borderRadius: '4px',
+              }}
+            >
+              ⋯
+            </button>
+          </div>
         </div>
 
         {/* 2. KHU ĐỐI THỦ: Mỗi đối thủ 1 hàng (~68-72px) */}
@@ -593,10 +615,12 @@ export const MockGameBoard: React.FC<MockGameBoardProps> = () => {
               Nhật ký ván chơi
             </button>
             <button
-              onClick={() => alert('Thoát ván')}
+              onClick={() => {
+                window.location.href = '/';
+              }}
               style={{ padding: '8px', textAlign: 'left', background: 'none', border: 'none', color: '#f87171', fontSize: '12px', cursor: 'pointer' }}
             >
-              Thoát ván
+              Thoát về trang chủ
             </button>
           </div>
         </div>
