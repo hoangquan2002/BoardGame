@@ -7,6 +7,7 @@ export * from './apply.js';
 export * from './player-view.js';
 export * from './targets.js';
 export * from './bots/index.js';
+export * from './cardInfo.js';
 export * from './game.js';
 
 export const SIDE_EFFECTS_GAME_ID = 'side-effects';
