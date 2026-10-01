@@ -98,15 +98,15 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          backgroundColor: '#1e293b',
+          backgroundColor: '#122520',
           borderRadius: '16px',
           padding: '20px 16px',
-          border: '1px solid #334155',
-          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.25)',
+          border: '1px solid #224036',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
           gap: '12px',
         }}
       >
-        <span style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#97baad', textTransform: 'uppercase' }}>
           Mã phòng chờ
         </span>
         <div
@@ -114,7 +114,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
             fontSize: '36px',
             fontWeight: 900,
             letterSpacing: '4px',
-            color: '#38bdf8',
+            color: '#38ef7d',
             fontFamily: 'monospace',
           }}
         >
@@ -131,11 +131,11 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               minHeight: '44px',
               padding: '8px 12px',
               borderRadius: '10px',
-              backgroundColor: '#334155',
+              backgroundColor: '#1a382e',
+              border: '1px solid #285446',
               color: '#f8fafc',
               fontSize: '13px',
               fontWeight: 600,
-              border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -154,7 +154,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               minHeight: '44px',
               padding: '8px 12px',
               borderRadius: '10px',
-              backgroundColor: '#0284c7',
+              backgroundColor: '#16a34a',
               color: '#ffffff',
               fontSize: '13px',
               fontWeight: 600,
@@ -164,6 +164,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
+              boxShadow: '0 2px 8px rgba(22, 163, 74, 0.3)',
             }}
           >
             {copiedLink ? '✅ Đã chép link' : '🔗 Chép link mời'}
@@ -178,9 +179,9 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           onClick={(e) => (e.target as HTMLInputElement).select()}
           style={{
             width: '100%',
-            backgroundColor: '#0f172a',
-            color: '#94a3b8',
-            border: '1px solid #334155',
+            backgroundColor: '#0b1915',
+            color: '#97baad',
+            border: '1px solid #224036',
             borderRadius: '8px',
             padding: '8px 10px',
             fontSize: '11px',
@@ -203,7 +204,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
         >
           <canvas ref={canvasRef} style={{ display: 'block', borderRadius: '4px' }} />
         </div>
-        <span style={{ fontSize: '12px', color: '#64748b' }}>Quét mã QR để vào phòng trên điện thoại</span>
+        <span style={{ fontSize: '12px', color: '#5e8275' }}>Quét mã QR để vào phòng trên điện thoại</span>
       </section>
 
       {/* Danh sách người chơi */}
@@ -211,10 +212,10 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
         style={{
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#1e293b',
+          backgroundColor: '#122520',
           borderRadius: '16px',
           padding: '16px',
-          border: '1px solid #334155',
+          border: '1px solid #224036',
           gap: '12px',
         }}
       >
@@ -240,11 +241,11 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                 minHeight: '40px',
                 padding: '8px 12px',
                 borderRadius: '10px',
-                backgroundColor: isFull ? '#475569' : '#3b82f6',
-                color: isFull ? '#94a3b8' : '#ffffff',
+                backgroundColor: isFull ? '#1a362d' : '#1e4d3d',
+                border: '1px solid #2d6b55',
+                color: isFull ? '#5e8275' : '#4ade80',
                 fontSize: '13px',
                 fontWeight: 600,
-                border: 'none',
                 cursor: isLoading || isFull ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -270,8 +271,8 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '10px 14px',
-                  backgroundColor: isMe ? 'rgba(59, 130, 246, 0.15)' : '#0f172a',
-                  border: isMe ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid #1e293b',
+                  backgroundColor: isMe ? 'rgba(34, 197, 94, 0.12)' : '#0b1915',
+                  border: isMe ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid #1a362d',
                   borderRadius: '12px',
                 }}
               >
@@ -281,12 +282,12 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                       width: '10px',
                       height: '10px',
                       borderRadius: '50%',
-                      backgroundColor: p.isBot ? '#38bdf8' : p.connected ? '#10b981' : '#64748b',
+                      backgroundColor: p.isBot ? '#38ef7d' : p.connected ? '#10b981' : '#64748b',
                     }}
                     title={p.isBot ? 'Máy chơi' : p.connected ? 'Trực tuyến' : 'Mất kết nối'}
                   />
                   <span style={{ fontSize: '14px', fontWeight: isMe ? 700 : 500, color: '#f8fafc' }}>
-                    {p.isBot && '🤖 '}{p.name} {isMe && <span style={{ color: '#60a5fa', fontSize: '12px' }}>(Bạn)</span>}
+                    {p.isBot && '🤖 '}{p.name} {isMe && <span style={{ color: '#4ade80', fontSize: '12px' }}>(Bạn)</span>}
                   </span>
                 </div>
 
@@ -326,7 +327,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                     </button>
                   )}
                   {!p.isBot && !p.connected && (
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>Mất kết nối</span>
+                    <span style={{ fontSize: '11px', color: '#97baad' }}>Mất kết nối</span>
                   )}
                 </div>
               </div>
@@ -347,14 +348,14 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               minHeight: '48px',
               padding: '12px',
               borderRadius: '12px',
-              backgroundColor: canStart ? '#059669' : '#334155',
-              color: canStart ? '#ffffff' : '#94a3b8',
+              backgroundColor: canStart ? '#16a34a' : '#1a362d',
+              color: canStart ? '#ffffff' : '#5e8275',
               fontSize: '16px',
               fontWeight: 700,
-              border: 'none',
+              border: canStart ? 'none' : '1px solid #285446',
               cursor: canStart && !isLoading ? 'pointer' : 'not-allowed',
               opacity: canStart ? 1 : 0.7,
-              boxShadow: canStart ? '0 4px 14px rgba(5, 150, 105, 0.4)' : 'none',
+              boxShadow: canStart ? '0 4px 14px rgba(22, 163, 74, 0.4)' : 'none',
             }}
           >
             {canStart ? '🚀 Bắt đầu trò chơi' : 'Chờ thêm người chơi (tối thiểu 2)'}
@@ -364,11 +365,11 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
             style={{
               padding: '12px',
               textAlign: 'center',
-              backgroundColor: 'rgba(15, 23, 42, 0.8)',
+              backgroundColor: '#122520',
               borderRadius: '12px',
-              border: '1px solid #334155',
+              border: '1px solid #224036',
               fontSize: '13px',
-              color: '#94a3b8',
+              color: '#97baad',
             }}
           >
             ⏳ Đang chờ chủ phòng bắt đầu trò chơi…

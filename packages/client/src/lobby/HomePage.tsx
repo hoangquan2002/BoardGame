@@ -85,12 +85,12 @@ export const HomePage: React.FC<HomePageProps> = ({
             width: '68px',
             height: '68px',
             borderRadius: '20px',
-            background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '34px',
-            boxShadow: '0 8px 24px rgba(6, 182, 212, 0.35)',
+            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.35)',
           }}
         >
           💊
@@ -106,7 +106,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         >
           Side Effects
         </h1>
-        <p style={{ fontSize: '14px', color: '#94a3b8' }}>
+        <p style={{ fontSize: '14px', color: '#97baad' }}>
           Trò chơi thẻ bài tâm lý &amp; tác dụng phụ
         </p>
       </header>
@@ -118,14 +118,14 @@ export const HomePage: React.FC<HomePageProps> = ({
           aria-label="Khôi phục phiên chơi"
           style={{
             width: '100%',
-            backgroundColor: '#1e293b',
-            border: '2px solid #38bdf8',
+            backgroundColor: '#122520',
+            border: '2px solid #eab308',
             borderRadius: '16px',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            boxShadow: '0 8px 24px rgba(56, 189, 248, 0.2)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
             boxSizing: 'border-box',
           }}
         >
@@ -137,7 +137,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
           <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.4 }}>
             Bạn đang có phiên phòng{' '}
-            <strong style={{ color: '#38bdf8' }}>{pendingRestoreSession.roomCode}</strong> với tên{' '}
+            <strong style={{ color: '#eab308' }}>{pendingRestoreSession.roomCode}</strong> với tên{' '}
             <strong style={{ color: '#34d399' }}>
               {pendingRestoreSession.playerName || 'Người chơi'}
             </strong>
@@ -152,12 +152,13 @@ export const HomePage: React.FC<HomePageProps> = ({
                 minHeight: '44px',
                 padding: '10px',
                 borderRadius: '10px',
-                backgroundColor: '#0284c7',
+                backgroundColor: '#16a34a',
                 color: '#ffffff',
                 fontSize: '13px',
                 fontWeight: 700,
                 border: 'none',
                 cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.35)',
               }}
             >
               Tiếp tục là {pendingRestoreSession.playerName || 'An'} (phòng {pendingRestoreSession.roomCode})
@@ -170,11 +171,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 minHeight: '44px',
                 padding: '10px',
                 borderRadius: '10px',
-                backgroundColor: '#334155',
+                backgroundColor: '#1a362d',
+                border: '1px solid #285446',
                 color: '#cbd5e1',
                 fontSize: '13px',
                 fontWeight: 600,
-                border: 'none',
                 cursor: 'pointer',
               }}
             >
@@ -209,7 +210,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             display: 'block',
             fontSize: '13px',
             fontWeight: 600,
-            color: '#cbd5e1',
+            color: '#97baad',
             marginBottom: '6px',
           }}
         >
@@ -231,8 +232,8 @@ export const HomePage: React.FC<HomePageProps> = ({
             height: '48px',
             padding: '0 14px',
             borderRadius: '12px',
-            border: '1px solid #334155',
-            backgroundColor: '#1e293b',
+            border: '1px solid #224036',
+            backgroundColor: '#0f211c',
             color: '#f8fafc',
             fontSize: '16px', // Không gây zoom trên iOS
             outline: 'none',
@@ -252,14 +253,14 @@ export const HomePage: React.FC<HomePageProps> = ({
             minHeight: '48px',
             padding: '12px',
             borderRadius: '12px',
-            backgroundColor: '#2563eb',
+            backgroundColor: '#16a34a',
             color: '#ffffff',
             fontSize: '16px',
             fontWeight: 700,
             border: 'none',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.7 : 1,
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.35)',
+            boxShadow: '0 4px 14px rgba(22, 163, 74, 0.4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -274,14 +275,14 @@ export const HomePage: React.FC<HomePageProps> = ({
             display: 'flex',
             alignItems: 'center',
             textAlign: 'center',
-            color: '#64748b',
+            color: '#5e8275',
             fontSize: '13px',
             margin: '4px 0',
           }}
         >
-          <div style={{ flex: 1, borderBottom: '1px solid #334155' }} />
+          <div style={{ flex: 1, borderBottom: '1px solid #1f3d34' }} />
           <span style={{ padding: '0 12px' }}>hoặc tham gia phòng</span>
-          <div style={{ flex: 1, borderBottom: '1px solid #334155' }} />
+          <div style={{ flex: 1, borderBottom: '1px solid #1f3d34' }} />
         </div>
 
         {/* Hành động Vào phòng */}
@@ -302,8 +303,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               height: '48px',
               padding: '0 12px',
               borderRadius: '12px',
-              border: '1px solid #334155',
-              backgroundColor: '#1e293b',
+              border: '1px solid #224036',
+              backgroundColor: '#0f211c',
               color: '#f8fafc',
               fontSize: '16px',
               fontWeight: 700,
@@ -325,14 +326,14 @@ export const HomePage: React.FC<HomePageProps> = ({
               minHeight: '48px',
               padding: '0 14px',
               borderRadius: '12px',
-              backgroundColor: '#059669',
-              color: '#ffffff',
+              backgroundColor: '#1a382e',
+              border: '1px solid #2a5244',
+              color: '#34d399',
               fontSize: '15px',
               fontWeight: 700,
-              border: 'none',
               cursor: isLoading ? 'not-allowed' : 'pointer',
               opacity: isLoading ? 0.7 : 1,
-              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
             }}
           >
             Vào phòng

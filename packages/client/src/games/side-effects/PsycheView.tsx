@@ -124,6 +124,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 }
               }}
               data-testid={`psyche-slot-${slot.disorder.instanceId}`}
+              data-target={isTargetable ? 'true' : undefined}
               style={{
                 position: 'relative',
                 width: `${cardWidth}px`,

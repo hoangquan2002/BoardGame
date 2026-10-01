@@ -111,6 +111,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
     <div
       onClick={handleClickSeat}
       data-testid={`opponent-seat-${opponent.id}`}
+      data-target={giveTarget ? 'true' : undefined}
       data-position={position}
       style={{
         display: 'flex',
@@ -299,6 +300,7 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
                 key={slot.disorder.instanceId}
                 onClick={(e) => handleDisorderClick(e, slot.disorder.instanceId)}
                 data-testid={`opponent-disorder-${slot.disorder.instanceId}`}
+                data-target={isEpisodeTarget ? 'true' : undefined}
                 style={{
                   position: 'relative',
                   width: `${cardWidth}px`,

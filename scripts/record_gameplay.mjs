@@ -4,7 +4,7 @@ import path from 'node:path';
 import { getChromeExecutable } from './e2e/helpers.mjs';
 
 const BASE_URL = process.env.URL || 'https://boardgame-02k2.onrender.com';
-const OUTPUT_DIR = 'C:/Users/ADMIN/.gemini/antigravity-ide/brain/5357304d-1103-43f2-9fbc-00ed6f94c51c/gameplay';
+const OUTPUT_DIR = process.env.OUTPUT_DIR || path.resolve(process.cwd(), 'gameplay_screenshots');
 
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -175,16 +175,18 @@ async function main() {
             });
             await page.waitForTimeout(600);
 
-            const zoomModal = await page.$('[data-testid="card-zoom"]');
+            const zoomModal = await page.$('[data-testid="card-zoom-backdrop"]');
             if (zoomModal) {
-              await capture(page, 'phong_to_la_bai', 'Nhấn giữ ≥400ms phóng to trọn vẹn lá bài thật (tỷ lệ 300x537, to 90% màn hình)');
-              const closeBtn = page.locator('[data-testid="card-zoom"] button:has-text("✕")');
+              await capture(page, 'phong_to_la_bai', 'Nhấn giữ ≥400ms phóng to trọn vẹn lá bài thật từ PDF (520×864), chiếm ~90% màn hình, không chữ đè');
+              const closeBtn = page.locator('button[aria-label="Đóng phóng to"]');
               if (await closeBtn.isVisible()) {
                 await closeBtn.click();
               } else {
-                await page.mouse.click(10, 10);
+                await page.waitForTimeout(650);
+                await page.locator('[data-testid="card-zoom-backdrop"]').click({ position: { x: 10, y: 10 } });
               }
-              await page.waitForTimeout(500);
+              await page.waitForSelector('[data-testid="card-zoom-backdrop"]', { state: 'detached', timeout: 5000 });
+              await page.waitForTimeout(300);
               hasDemonstratedZoom = true;
             }
           }
@@ -192,7 +194,6 @@ async function main() {
       }
 
       // Đánh bài: thử duyệt qua các lá bài trên tay
-      let _playedCard = false;
       const handCards = page.locator('[data-testid^="hand-card-"]');
       const handCount = await handCards.count();
 
@@ -207,36 +208,15 @@ async function main() {
 
         // Tìm mục tiêu hợp lệ trên trang
         const validAction = await page.evaluate(() => {
-          // 1. Kiểm tra ô Thể Trạng của mình
-          const slots = Array.from(document.querySelectorAll('[data-testid^="psyche-slot-"]'));
-          for (const s of slots) {
-            const style = window.getComputedStyle(s);
-            if (s.getAttribute('style')?.includes('scale(1.03)') || style.cursor === 'pointer') {
-              const rect = s.getBoundingClientRect();
-              return { type: 'self-slot', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-            }
+          const targetEl = document.querySelector('[data-target="true"]');
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            return {
+              type: targetEl.getAttribute('data-testid') || 'target',
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2,
+            };
           }
-
-          // 2. Kiểm tra ghế đối thủ (đưa Bệnh Lý)
-          const oppSeats = Array.from(document.querySelectorAll('[data-testid^="opponent-seat-"]'));
-          for (const seat of oppSeats) {
-            const style = window.getComputedStyle(seat);
-            if (style.borderColor.includes('74, 222, 128') || seat.getAttribute('style')?.includes('4ade80')) {
-              const rect = seat.getBoundingClientRect();
-              return { type: 'opp-seat', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-            }
-          }
-
-          // 3. Kiểm tra ô bệnh đối thủ (triệu chứng)
-          const oppDisorders = Array.from(document.querySelectorAll('[data-testid^="opponent-disorder-"]'));
-          for (const d of oppDisorders) {
-            const style = window.getComputedStyle(d);
-            if (style.cursor === 'pointer' || d.getAttribute('style')?.includes('scale(1.03)')) {
-              const rect = d.getBoundingClientRect();
-              return { type: 'opp-disorder', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-            }
-          }
-
           return null;
         });
 
@@ -246,13 +226,25 @@ async function main() {
           await page.mouse.click(validAction.x, validAction.y);
           await page.waitForTimeout(1000);
           await capture(page, `an_danh_thanh_cong_luot_${turnCounter}`, `An thực hiện đánh bài thành công vào mục tiêu`);
-          _playedCard = true;
           break; // Chỉ đánh 1 lá rồi kết thúc hoặc lặp tiếp
         }
 
         // Bỏ chọn nếu không có mục tiêu
         await page.mouse.click(cardBox.x + 12, cardBox.y + 30);
         await page.waitForTimeout(200);
+      }
+
+      // Đóng modal zoom nếu còn sót lại
+      const openZoom = page.locator('[data-testid="card-zoom-backdrop"]');
+      if (await openZoom.isVisible()) {
+        const closeBtn = page.locator('button[aria-label="Đóng phóng to"]');
+        if (await closeBtn.isVisible()) {
+          await closeBtn.click();
+        } else {
+          await page.waitForTimeout(650);
+          await openZoom.click({ position: { x: 10, y: 10 } });
+        }
+        await page.waitForSelector('[data-testid="card-zoom-backdrop"]', { state: 'detached', timeout: 3000 });
       }
 
       // Kết thúc lượt

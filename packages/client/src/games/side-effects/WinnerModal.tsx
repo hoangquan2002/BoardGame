@@ -33,10 +33,10 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#1e293b',
+          backgroundColor: '#122520',
           borderRadius: '24px',
           border: '2px solid #eab308',
-          boxShadow: '0 0 40px rgba(234, 179, 8, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+          boxShadow: '0 0 40px rgba(234, 179, 8, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.6)',
           width: '100%',
           maxWidth: '380px',
           maxHeight: '94vh',
@@ -59,7 +59,7 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
           <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#ffffff', marginTop: '6px' }}>
             {isMe ? 'Bạn đã chiến thắng!' : `${winnerName} đã chiến thắng!`}
           </h2>
-          <p style={{ fontSize: '14px', color: '#94a3b8', marginTop: '8px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '14px', color: '#97baad', marginTop: '8px', lineHeight: 1.4 }}>
             Đã chữa khỏi toàn bộ Bệnh Lý trong Thể Trạng!
           </p>
         </div>
@@ -72,13 +72,13 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
             minHeight: '48px',
             padding: '12px',
             borderRadius: '12px',
-            backgroundColor: '#2563eb',
+            backgroundColor: '#16a34a',
             color: '#ffffff',
             fontSize: '16px',
             fontWeight: 700,
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
+            boxShadow: '0 4px 14px rgba(22, 163, 74, 0.4)',
             marginTop: '8px',
           }}
         >
