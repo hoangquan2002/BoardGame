@@ -111,56 +111,6 @@ export const HomePage: React.FC<HomePageProps> = ({
         </p>
       </header>
 
-      {/* Banner trải nghiệm bản phác giao diện mới D0 */}
-      <div
-        data-testid="mock-preview-banner"
-        style={{
-          width: '100%',
-          backgroundColor: 'rgba(2, 132, 199, 0.15)',
-          border: '1.5px solid #0284c7',
-          borderRadius: '16px',
-          padding: '14px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          boxSizing: 'border-box',
-          boxShadow: '0 4px 16px rgba(2, 132, 199, 0.2)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '16px' }}>🎨</span>
-            <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#38bdf8' }}>
-              Bản phác Giao diện mới (D0)
-            </span>
-          </div>
-          <span style={{ fontSize: '11.5px', color: '#cbd5e1', lineHeight: 1.35 }}>
-            Ảnh bài WebP từ PDF, xếp bậc thang &amp; nhấn giữ phóng to
-          </span>
-        </div>
-        <a
-          href="/?mock=1"
-          style={{
-            flexShrink: 0,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '8px 14px',
-            borderRadius: '10px',
-            backgroundColor: '#0284c7',
-            color: '#ffffff',
-            fontSize: '13px',
-            fontWeight: 700,
-            textDecoration: 'none',
-            whiteSpace: 'nowrap',
-            boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
-          }}
-        >
-          Xem thử →
-        </a>
-      </div>
-
       {/* Lựa chọn khôi phục phiên từ localStorage nếu có */}
       {pendingRestoreSession && (
         <div

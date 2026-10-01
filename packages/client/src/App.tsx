@@ -1,15 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { OfflineBanner } from './app/OfflineBanner.js';
 import { Toast } from './app/Toast.js';
 import { GameBoard } from './games/side-effects/GameBoard.js';
-import { MockGameBoard } from './games/side-effects/MockGameBoard.js';
+import { createMockGameData } from './games/side-effects/mockGameView.js';
 import { HomePage } from './lobby/HomePage.js';
 import { LobbyRoomPage } from './lobby/LobbyRoomPage.js';
 import { useSession } from './net/useSession.js';
 
 export const App: React.FC = () => {
-  // Kiểm tra chế độ Mock bản phác theo thiết kế D0
-  const isMock = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mock') === '1';
+  // Kiểm tra chế độ Mock dữ liệu mẫu (Góp ý C: đưa dữ liệu mẫu vào chính GameBoard thật)
+  const searchParams = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  }, []);
+  const isMock = searchParams.get('mock') === '1';
+
+  const mockGameData = useMemo(() => {
+    if (!isMock) return null;
+    return createMockGameData(searchParams);
+  }, [isMock, searchParams]);
 
   const {
     session,
@@ -32,8 +43,21 @@ export const App: React.FC = () => {
     sendAction,
   } = useSession();
 
-  if (isMock) {
-    return <MockGameBoard />;
+  // Nếu là mock mode, hiển thị chính GameBoard thật với mock data
+  if (isMock && mockGameData) {
+    return (
+      <GameBoard
+        session={mockGameData.session}
+        roomState={mockGameData.roomState}
+        gameView={mockGameData.gameView}
+        deadline={mockGameData.deadline}
+        onSendAction={async () => true}
+        onLeaveRoom={async () => {
+          window.location.href = '/';
+          return true;
+        }}
+      />
+    );
   }
 
   const isPlaying = Boolean(session && roomState && roomState.status !== 'lobby' && gameView);
@@ -45,7 +69,7 @@ export const App: React.FC = () => {
         flexDirection: 'column',
         minHeight: '100vh',
         width: '100%',
-        maxWidth: isPlaying ? '1024px' : '480px',
+        maxWidth: isPlaying ? '1100px' : '480px',
         margin: '0 auto',
         boxSizing: 'border-box',
         paddingTop: 'env(safe-area-inset-top)',
@@ -57,35 +81,6 @@ export const App: React.FC = () => {
     >
       <OfflineBanner show={!isConnected && session !== null} />
       <Toast message={errorToast} onClose={dismissToast} />
-
-      {/* Floating badge chuyển sang bản phác giao diện mới D0 */}
-      <a
-        href="/?mock=1"
-        data-testid="switch-to-mock-link"
-        style={{
-          position: 'fixed',
-          top: '12px',
-          right: '12px',
-          zIndex: 999,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '6px 12px',
-          backgroundColor: '#0284c7',
-          color: '#ffffff',
-          borderRadius: '999px',
-          textDecoration: 'none',
-          fontSize: '11.5px',
-          fontWeight: 700,
-          boxShadow: '0 4px 14px rgba(2, 132, 199, 0.45)',
-          border: '1px solid #38bdf8',
-          opacity: 0.95,
-        }}
-        title="Xem bản phác giao diện mới theo thiết kế D0"
-      >
-        <span>🎨</span>
-        <span>Bản phác D0</span>
-      </a>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Trường hợp chưa vào phòng hoặc phòng chưa được tải */}

@@ -1,6 +1,16 @@
+import { execSync } from 'node:child_process';
+
 export async function runS0(baseUrl) {
   const results = [];
   const cleanBase = baseUrl.replace(/\/+$/, '');
+
+  // Lấy commit HEAD hiện tại qua git (nếu có)
+  let localHead = '';
+  try {
+    localHead = execSync('git rev-parse HEAD', { encoding: 'utf-8' }).trim();
+  } catch {
+    // ignore
+  }
 
   // 1. /healthz
   try {
@@ -12,12 +22,28 @@ export async function runS0(baseUrl) {
     results.push({ name: 'GET /healthz', passed: false, detail: err.message });
   }
 
-  // 2. /version
+  // 2. /version - So sánh với git rev-parse HEAD
   try {
     const res = await fetch(`${cleanBase}/version`);
     const json = await res.json();
-    const ok = res.status === 200 && typeof json.commit === 'string';
-    results.push({ name: 'GET /version', passed: ok, detail: `status=${res.status}, commit="${json.commit}"` });
+    const isLocal = cleanBase.includes('localhost') || cleanBase.includes('127.0.0.1');
+
+    let commitOk = false;
+    let detailMsg = '';
+    if (isLocal) {
+      commitOk = res.status === 200 && (json.commit === 'dev' || (localHead && localHead.startsWith(json.commit)));
+      detailMsg = `local: commit="${json.commit}" (hợp lệ khi dev hoặc match HEAD)`;
+    } else {
+      // Trên URL thật (Render): phải khớp đúng commit git HEAD
+      commitOk = res.status === 200 && typeof json.commit === 'string' && Boolean(localHead) && localHead.startsWith(json.commit);
+      detailMsg = `render: commit="${json.commit}", gitHead="${localHead ? localHead.slice(0, 7) : 'unknown'}"`;
+    }
+
+    results.push({
+      name: 'GET /version khớp git rev-parse HEAD',
+      passed: commitOk,
+      detail: detailMsg,
+    });
   } catch (err) {
     results.push({ name: 'GET /version', passed: false, detail: err.message });
   }

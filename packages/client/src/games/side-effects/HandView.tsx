@@ -1,13 +1,12 @@
-import React from 'react';
-import {
-  getCardDisplayNameVi,
-  type CardInstance,
-} from '@boardgame/game-side-effects';
+import React, { useEffect, useRef, useState } from 'react';
+import type { CardInstance } from '@boardgame/game-side-effects';
+import { Card } from './Card.js';
 
 export interface HandViewProps {
   hand: CardInstance[];
   selectedCardId: string | null;
   onSelectCard: (instanceId: string) => void;
+  onHoldCard?: (cardId: string) => void;
   isLandscape?: boolean;
 }
 
@@ -15,197 +14,118 @@ export const HandView: React.FC<HandViewProps> = ({
   hand,
   selectedCardId,
   onSelectCard,
+  onHoldCard,
   isLandscape = false,
 }) => {
-  // Chia 2 hàng khi có từ 6 lá trở lên để không bị tràn ngang và hiển thị được tới 12 lá
-  const useTwoRows = hand.length > 6;
-  const midpoint = useTwoRows ? Math.ceil(hand.length / 2) : hand.length;
-  const row1 = hand.slice(0, midpoint);
-  const row2 = useTwoRows ? hand.slice(midpoint) : [];
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(360);
 
-  const renderCardItem = (card: CardInstance) => {
-    const isSelected = card.instanceId === selectedCardId;
-    const name = getCardDisplayNameVi(card);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-    let badgeText = 'THẺ';
-    let headerColor = '#38bdf8';
-    let bgGradient = 'linear-gradient(145deg, #1e293b, #0f172a)';
-    let borderColor = '#334155';
+    const updateWidth = () => {
+      if (el.clientWidth > 0) {
+        setContainerWidth(el.clientWidth);
+      }
+    };
 
-    if (card.type === 'drug') {
-      badgeText = 'THUỐC';
-      headerColor = '#38bdf8';
-      bgGradient = 'linear-gradient(145deg, #083344 0%, #0f172a 100%)';
-      borderColor = '#0284c7';
-    } else if (card.type === 'disorder') {
-      badgeText = 'BỆNH LÝ';
-      headerColor = '#f43f5e';
-      bgGradient = 'linear-gradient(145deg, #4c0519 0%, #0f172a 100%)';
-      borderColor = '#be123c';
-    } else if (card.type === 'episode') {
-      badgeText = 'T/CHỨNG';
-      headerColor = '#fb923c';
-      bgGradient = 'linear-gradient(145deg, #431407 0%, #0f172a 100%)';
-      borderColor = '#ea580c';
-    } else if (card.type === 'therapy') {
-      badgeText = 'L/PHÁP';
-      headerColor = '#4ade80';
-      bgGradient = 'linear-gradient(145deg, #052e16 0%, #0f172a 100%)';
-      borderColor = '#16a34a';
-    }
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
-    // Chiều cao và độ rộng tối đa mỗi lá để đảm bảo 12 lá không tràn ngang
-    const cardHeight = isLandscape ? (useTwoRows ? '44px' : '52px') : (useTwoRows ? '66px' : '76px');
+  const numCards = hand.length;
+  // Chiều rộng lá trên tay: 58px khi ngang, 50px khi dọc để vừa vặn không tràn
+  const cardWidth = isLandscape ? 58 : 50;
+  const cardHeight = isLandscape ? 90 : 76;
 
-    return (
-      <div
-        key={card.instanceId}
-        onClick={() => onSelectCard(card.instanceId)}
-        data-testid={`hand-card-${card.instanceId}`}
-        data-selected={isSelected ? 'true' : 'false'}
-        style={{
-          flex: '1 1 0px',
-          maxWidth: isLandscape ? (useTwoRows ? '76px' : '88px') : (useTwoRows ? '58px' : '72px'),
-          minWidth: '38px',
-          height: cardHeight,
-          boxSizing: 'border-box',
-          borderRadius: '6px',
-          background: bgGradient,
-          border: isSelected ? '2px solid #38bdf8' : `1.5px solid ${borderColor}`,
-          boxShadow: isSelected
-            ? '0 0 12px rgba(56, 189, 248, 0.8), 0 3px 8px rgba(0,0,0,0.5)'
-            : '0 2px 4px rgba(0,0,0,0.3)',
-          transform: isSelected
-            ? isLandscape
-              ? 'translateY(-4px) scale(1.05)'
-              : 'translateY(-8px) scale(1.08)'
-            : 'none',
-          transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
-          cursor: 'pointer',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: isLandscape ? '2px 2px' : '4px 3px',
-          userSelect: 'none',
-          position: 'relative',
-          zIndex: isSelected ? 30 : 1,
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header loại thẻ */}
-        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <span
-            style={{
-              fontSize: isLandscape ? '7px' : '8px',
-              fontWeight: 900,
-              color: headerColor,
-              textTransform: 'uppercase',
-              letterSpacing: '0.2px',
-              lineHeight: 1,
-            }}
-          >
-            {badgeText}
-          </span>
-        </div>
-
-        {/* Tên lá bài - đảm bảo luôn đọc được */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            padding: '1px',
-          }}
-        >
-          <span
-            style={{
-              fontSize: isLandscape ? '8.5px' : '10px',
-              fontWeight: 700,
-              color: '#f8fafc',
-              lineHeight: 1.15,
-              wordBreak: 'break-word',
-              display: '-webkit-box',
-              WebkitLineClamp: isLandscape ? 2 : 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {name}
-          </span>
-        </div>
-      </div>
-    );
-  };
+  // Tính khoảng cách lộ giữa các lá so le:
+  // Đảm bảo tối thiểu 24px (theo tiêu chí S2) và tối đa 65% cardWidth
+  const overlapStep =
+    numCards > 1
+      ? Math.max(24, Math.min(cardWidth * 0.65, (containerWidth - cardWidth - 8) / (numCards - 1)))
+      : 0;
 
   return (
     <div
+      ref={containerRef}
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px',
         width: '100%',
         boxSizing: 'border-box',
+        gap: '4px',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px' }}>
         <span
           style={{
-            fontSize: isLandscape ? '11px' : '12px',
-            fontWeight: 700,
+            fontSize: '11px',
+            fontWeight: 800,
             color: '#94a3b8',
             textTransform: 'uppercase',
+            letterSpacing: '0.5px',
           }}
         >
-          Bài trên tay ({hand.length} lá)
+          Bài trên tay ({numCards} lá)
         </span>
-        {hand.length > 6 && (
-          <span style={{ fontSize: '10px', color: '#f87171', fontWeight: 700 }}>
-            ⚠️ Cần bỏ {hand.length - 6} lá cuối lượt
-          </span>
-        )}
+        <span style={{ fontSize: '11px', color: '#64748b' }}>
+          Chạm để chọn · Nhấn giữ để xem to
+        </span>
       </div>
 
-      {/* Vùng hiển thị toàn bộ lá bài: 1 hoặc 2 hàng, tuyệt đối không cuộn ngang */}
+      {/* Vùng bài tay xếp so le 1 hàng (Staggered Overlap) */}
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '4px',
+          position: 'relative',
           width: '100%',
+          height: `${cardHeight + 14}px`,
           boxSizing: 'border-box',
           overflow: 'visible',
-          paddingTop: '6px', // chừa khoảng trống khi thẻ phóng to
         }}
       >
-        {/* Hàng 1 */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '4px',
-            width: '100%',
-            boxSizing: 'border-box',
-          }}
-        >
-          {row1.map(renderCardItem)}
-        </div>
+        {hand.map((card, idx) => {
+          const isSelected = card.instanceId === selectedCardId;
+          const leftPos = idx * overlapStep;
 
-        {/* Hàng 2 nếu có */}
-        {useTwoRows && (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '4px',
-              width: '100%',
-              boxSizing: 'border-box',
-            }}
-          >
-            {row2.map(renderCardItem)}
-          </div>
-        )}
+          return (
+            <div
+              key={card.instanceId}
+              data-testid={`hand-card-${card.instanceId}`}
+              data-card-index={idx}
+              data-selected={isSelected ? 'true' : 'false'}
+              style={{
+                position: 'absolute',
+                left: `${leftPos}px`,
+                bottom: 0,
+                width: `${cardWidth}px`,
+                height: `${cardHeight}px`,
+                zIndex: isSelected ? 50 : idx + 1,
+                transform: isSelected ? 'translateY(-12px) scale(1.05)' : 'none',
+                transition: 'transform 0.15s ease, z-index 0.15s ease',
+                cursor: 'pointer',
+              }}
+            >
+              <Card
+                cardId={card.cardId}
+                size="normal"
+                isSelected={isSelected}
+                showSideEffects={card.type === 'drug'}
+                style={{
+                  width: `${cardWidth}px`,
+                  height: `${cardHeight}px`,
+                  boxShadow: isSelected
+                    ? '0 10px 20px rgba(56, 189, 248, 0.5)'
+                    : '0 4px 8px rgba(0,0,0,0.4)',
+                }}
+                onClick={() => onSelectCard(card.instanceId)}
+                onHold={() => onHoldCard?.(card.cardId)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

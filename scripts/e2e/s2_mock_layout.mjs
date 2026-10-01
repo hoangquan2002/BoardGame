@@ -43,17 +43,30 @@ export async function runS2(browser, baseUrl) {
         const noHOverflow = m.noHorizontalOverflow;
         const noVOverflow = m.noVerticalOverflow;
         const handOk = m.allHandCardsInViewport;
+        const handExposureOk = m.minHandExposure >= 24;
+        const disordersOk = m.allOpponentDisordersVisible;
         const endTurnOk = m.endTurnInside;
         const minFontOk = m.minFontSize >= 11;
+        const emojiOk = m.emojiCount <= 3;
         const consoleOk = consoleErrors.length === 0;
 
-        const rowPassed = noHOverflow && noVOverflow && handOk && endTurnOk && minFontOk && consoleOk;
+        const rowPassed =
+          noHOverflow &&
+          noVOverflow &&
+          handOk &&
+          handExposureOk &&
+          disordersOk &&
+          endTurnOk &&
+          minFontOk &&
+          emojiOk &&
+          consoleOk;
+
         if (!rowPassed) allPassed = false;
 
         testItems.push({
           name: `${vp.name} | ${cfg.players} người | ${cfg.hand} lá`,
           passed: rowPassed,
-          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, hand=${m.handCardsInViewport}/${m.totalHandCards}, endTurnBottom=${m.endTurnBottom}, fontMin=${m.minFontSize}px, errors=${consoleErrors.length}`,
+          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, hand=${m.handCardsInViewport}/${m.totalHandCards}, minExposure=${m.minHandExposure}px, disordersOk=${disordersOk}, endTurnBottom=${m.endTurnBottom}, fontMin=${m.minFontSize}px, emoji=${m.emojiCount}, errors=${consoleErrors.length}`,
         });
 
         tableRows.push({
@@ -62,9 +75,10 @@ export async function runS2(browser, baseUrl) {
           hand: cfg.hand,
           scrollW: `${m.scrollWidth}/${m.innerWidth}`,
           scrollH: `${m.scrollHeight}/${m.innerHeight}`,
-          handStatus: `${m.handCardsInViewport}/${m.totalHandCards}`,
+          handStatus: `${m.handCardsInViewport}/${m.totalHandCards} (lộ ≥${m.minHandExposure}px)`,
           endTurnBottom: `${m.endTurnBottom}px`,
           minFont: `${m.minFontSize}px`,
+          emoji: `${m.emojiCount}`,
           passed: rowPassed ? 'ĐẠT' : 'KHÔNG ĐẠT',
         });
       } catch (err) {
@@ -86,20 +100,21 @@ export async function runS2(browser, baseUrl) {
   try {
     await intPage.goto(`${cleanBase}/?mock=1&players=4&hand=8`, { waitUntil: 'networkidle' });
 
-    // 1. Chạm thường (100ms): chọn lá bài, không mở zoom
-    const firstCard = intPage.locator('[data-testid="hand-card-0"]');
-    await firstCard.click();
+    // 1. Chạm thường (100ms): chọn lá bài, không mở zoom (chạm vào phần lộ ra x=12)
+    const firstCard = intPage.locator('[data-testid^="hand-card-"]').first();
+    await firstCard.click({ position: { x: 12, y: 30 } });
     await intPage.waitForTimeout(200);
     const zoomVisibleAfterClick = await intPage.locator('[data-testid="card-zoom"]').isVisible();
     const clickOk = !zoomVisibleAfterClick;
 
-    // 2. Nhấn chuột phải hoặc chuột giữ 600ms: mở zoom
-    await firstCard.dispatchEvent('contextmenu');
+    // 2. Nhấn chuột phải: mở zoom
+    await firstCard.click({ button: 'right', position: { x: 12, y: 30 } });
     await intPage.waitForTimeout(300);
     const zoomVisibleAfterHold = await intPage.locator('[data-testid="card-zoom"]').isVisible();
 
-    // 3. Chạm ra ngoài để đóng zoom
+    // 3. Chạm ra ngoài để đóng zoom (chờ qua 600ms guard time của backdrop)
     if (zoomVisibleAfterHold) {
+      await intPage.waitForTimeout(650);
       await intPage.locator('[data-testid="card-zoom-backdrop"]').click({ position: { x: 10, y: 10 } });
       await intPage.waitForTimeout(300);
     }
@@ -120,7 +135,7 @@ export async function runS2(browser, baseUrl) {
 
   return {
     id: 'S2',
-    name: 'Bố cục bản phác /?mock=1 (4 kích thước × cấu hình)',
+    name: 'Bố cục bàn chơi /?mock=1 (4 kích thước × cấu hình)',
     passed: allPassed && interactionPassed,
     items: testItems,
     tableRows,

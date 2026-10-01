@@ -1,11 +1,10 @@
 import React from 'react';
 import {
-  getCardDisplayNameVi,
-  getDisorderDef,
   getDisorderNameVi,
+  getDrugDef,
   type PsycheSlot,
 } from '@boardgame/game-side-effects';
-import { getShortDisorderNameVi } from './OpponentSeat.js';
+import { Card } from './Card.js';
 
 export interface TargetSlotInfo {
   disorderInstanceId: string;
@@ -17,6 +16,7 @@ export interface PsycheViewProps {
   isSelf?: boolean;
   targetSlots?: TargetSlotInfo[];
   onSelectSlot?: (disorderInstanceId: string) => void;
+  onHoldCard?: (cardId: string) => void;
   isLandscape?: boolean;
 }
 
@@ -25,16 +25,22 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
   isSelf = true,
   targetSlots = [],
   onSelectSlot,
+  onHoldCard,
   isLandscape = false,
 }) => {
   const allTreated = psyche.length > 0 && psyche.every((s) => s.drug !== null);
+
+  // Kích thước lá trong Thể Trạng: tối ưu vừa vặn trong màn hình dọc 375x667 cho cả 4 người
+  const cardWidth = isLandscape ? 58 : 48;
+  const cardHeight = isLandscape ? 90 : 72;
+  const staggerOffset = isLandscape ? 24 : 18;
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: isLandscape ? '2px' : '4px',
+        gap: isLandscape ? '3px' : '6px',
         width: '100%',
         boxSizing: 'border-box',
       }}
@@ -42,29 +48,41 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span
           style={{
-            fontSize: isLandscape ? '10px' : '11.5px',
-            fontWeight: 700,
+            fontSize: '11px',
+            fontWeight: 800,
             color: '#94a3b8',
             textTransform: 'uppercase',
+            letterSpacing: '0.5px',
           }}
         >
           {isSelf ? 'Thể Trạng của bạn' : 'Thể Trạng'} ({psyche.length} Bệnh Lý)
         </span>
         {allTreated && (
-          <span style={{ fontSize: isLandscape ? '9.5px' : '10.5px', color: '#4ade80', fontWeight: 800 }}>
-            🎉 ĐÃ ĐIỀU TRỊ TOÀN BỘ (SẮP THẮNG!)
+          <span
+            style={{
+              fontSize: '11px',
+              color: '#4ade80',
+              fontWeight: 800,
+              backgroundColor: 'rgba(34, 197, 94, 0.15)',
+              padding: '2px 8px',
+              borderRadius: '999px',
+              border: '1px solid #22c55e',
+            }}
+          >
+            ĐÃ CHỮA TẤT CẢ (SẮP THẮNG)
           </span>
         )}
       </div>
 
-      {/* Danh sách Thể Trạng: chia đều/bọc dòng, không cuộn ngang */}
+      {/* Danh sách các ô Thể Trạng: xếp bậc thang so le (Góp ý B) */}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
-          gap: isLandscape ? '4px' : '6px',
+          gap: isLandscape ? '6px' : '8px',
           width: '100%',
           boxSizing: 'border-box',
+          alignItems: 'flex-start',
         }}
       >
         {psyche.map((slot) => {
@@ -73,9 +91,10 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
             (t) => t.disorderInstanceId === slot.disorder.instanceId,
           );
           const isTargetable = Boolean(target);
-          const disorderDef = getDisorderDef(slot.disorder.cardId);
-          const rawDisorderName = disorderDef?.nameVi || getDisorderNameVi(slot.disorder.cardId);
-          const disorderName = isLandscape ? getShortDisorderNameVi(rawDisorderName) : rawDisorderName;
+          const drugDef = slot.drug ? getDrugDef(slot.drug.cardId) : undefined;
+          const openedSideEffects = drugDef?.sideEffects?.map((s) => getDisorderNameVi(s)).join(', ');
+
+          const slotHeight = isTreated ? cardHeight + staggerOffset : cardHeight;
 
           return (
             <div
@@ -87,99 +106,119 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
               }}
               data-testid={`psyche-slot-${slot.disorder.instanceId}`}
               style={{
-                flex: isLandscape ? '1 1 55px' : '1 1 70px',
-                minWidth: isLandscape ? '55px' : '65px',
-                maxWidth: isLandscape ? '120px' : '110px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                backgroundColor: isTargetable
-                  ? 'rgba(74, 222, 128, 0.2)'
-                  : isTreated
-                    ? 'rgba(6, 78, 59, 0.4)'
-                    : 'rgba(76, 5, 25, 0.45)',
-                borderRadius: '6px',
-                padding: isLandscape ? '2px 4px' : '4px 6px',
-                border: isTargetable
-                  ? '2px solid #4ade80'
-                  : isTreated
-                    ? '1.5px solid #059669'
-                    : '1.5px solid #be123c',
-                boxShadow: isTargetable
-                  ? '0 0 10px rgba(74, 222, 128, 0.7)'
-                  : '0 2px 4px rgba(0,0,0,0.2)',
-                cursor: isTargetable ? 'pointer' : 'default',
-                transform: isTargetable ? 'scale(1.02)' : 'none',
-                transition: 'all 0.15s ease',
-                boxSizing: 'border-box',
                 position: 'relative',
+                width: `${cardWidth}px`,
+                height: `${slotHeight}px`,
+                cursor: isTargetable ? 'pointer' : 'default',
+                transform: isTargetable ? 'scale(1.03)' : 'none',
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                flexShrink: 0,
               }}
             >
-              {/* Badge trạng thái */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span
-                  style={{
-                    fontSize: isLandscape ? '7.5px' : '8px',
-                    fontWeight: 800,
-                    padding: '1px 3px',
-                    borderRadius: '2px',
-                    backgroundColor: isTreated ? '#10b981' : '#ef4444',
-                    color: '#ffffff',
-                  }}
-                >
-                  {isTreated ? 'ĐÃ CHỮA' : 'CHƯA'}
-                </span>
+              {/* LÁ BỆNH LÝ Ở DƯỚI (z-index 1) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: `${cardWidth}px`,
+                  height: `${cardHeight}px`,
+                  zIndex: 1,
+                }}
+              >
+                <Card
+                  cardId={slot.disorder.cardId}
+                  size="normal"
+                  style={{ width: `${cardWidth}px`, height: `${cardHeight}px` }}
+                  isTarget={isTargetable}
+                  onHold={() => onHoldCard?.(slot.disorder.cardId)}
+                />
               </div>
 
-              {/* Tên Bệnh Lý */}
-              <div style={{ marginTop: '1px', marginBottom: '1px' }}>
-                <span
-                  style={{
-                    fontSize: isLandscape ? '8.5px' : '10px',
-                    fontWeight: 700,
-                    color: '#f8fafc',
-                    lineHeight: 1.15,
-                    display: 'block',
-                    wordBreak: 'break-word',
-                  }}
-                  title={rawDisorderName}
-                >
-                  ⚠️ {disorderName}
-                </span>
-              </div>
-
-              {/* Thuốc điều trị nếu có */}
+              {/* LÁ THUỐC Ở TRÊN, LỆCH XUỐNG DƯỚI (z-index 2) - Góp ý B */}
               {slot.drug && (
                 <div
                   style={{
-                    fontSize: '8.5px',
-                    color: '#86efac',
-                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                    padding: '2px 4px',
-                    borderRadius: '4px',
-                    border: '1px solid #059669',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    position: 'absolute',
+                    top: `${staggerOffset}px`,
+                    left: 0,
+                    width: `${cardWidth}px`,
+                    height: `${cardHeight}px`,
+                    zIndex: 2,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
                   }}
                 >
-                  💊 {getCardDisplayNameVi(slot.drug)}
+                  <Card
+                    cardId={slot.drug.cardId}
+                    size="normal"
+                    style={{
+                      width: `${cardWidth}px`,
+                      height: `${cardHeight}px`,
+                      border: '2px solid #22c55e',
+                    }}
+                    onHold={() => onHoldCard?.(slot.drug!.cardId)}
+                  />
+                  {/* Huy hiệu ĐÃ CHỮA */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '2px',
+                      left: '2px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.95)',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    Đã chữa
+                  </div>
+
+                  {/* Dòng Mở cửa cho: tác dụng phụ (Phần 1 mục 2) */}
+                  {openedSideEffects && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '25px',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: 'rgba(76, 5, 25, 0.95)',
+                        color: '#fca5a5',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '1px 3px',
+                        textAlign: 'center',
+                        lineHeight: 1.15,
+                        pointerEvents: 'none',
+                        borderTop: '1px solid #f43f5e',
+                      }}
+                    >
+                      Mở cửa: {openedSideEffects}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Nút hành động mục tiêu nếu có */}
+              {/* Nhãn nút hành động mục tiêu nếu có (TREAT / THERAPY) */}
               {isTargetable && target && (
                 <div
                   style={{
+                    position: 'absolute',
+                    bottom: '-22px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
                     backgroundColor: '#16a34a',
                     color: '#ffffff',
-                    fontSize: '8.5px',
+                    fontSize: '11px',
                     fontWeight: 800,
                     textAlign: 'center',
-                    padding: '2px 4px',
-                    borderRadius: '3px',
-                    marginTop: '2px',
-                    textTransform: 'uppercase',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    whiteSpace: 'nowrap',
+                    zIndex: 10,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
                   }}
                 >
                   {target.label}

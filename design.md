@@ -144,6 +144,10 @@ là chuẩn.
 6. Push → chờ deploy → chạy S0, S1, S2 trên URL thật. Chụp bản phác ở 4 kích thước để người quản lý xem (không
    commit ảnh). **DỪNG** chờ duyệt.
 
+> **Cập nhật 2026-10-01 (người dùng chốt):** từ D1 làm thẳng trên bàn chơi thật, **không** phát triển bản phác riêng nữa.
+> Xoá `MockGameBoard` và banner/nút dẫn tới bản phác. `/?mock=1` chỉ còn là **dữ liệu mẫu** đưa vào chính component bàn chơi
+> thật (`GameBoard`, action gửi đi bị bỏ qua) để S2 đo được trường hợp 8–12 lá; không có giao diện riêng.
+
 ### D1 — Ảnh bài + dữ liệu hiển thị
 1. **Tách ảnh** (đã làm ở D0; D1 chỉ sửa nếu bản phác lộ ra ảnh sai). Script chạy một lần, app không phụ thuộc vào nó lúc chạy:
    - Nguồn: `assets/card-photos/Side effects.pdf` (bản Việt hoá, 24 trang). Mỗi trang là 1 ảnh scan gồm **6 bản giống nhau
@@ -158,7 +162,8 @@ là chuẩn.
 2. **Service worker**: ảnh bài cache kiểu CacheFirst lúc chạy, không đưa vào precache nếu tổng > 1MB.
 3. **Component `Card`** dùng chung: `size = mini | small | normal | zoom`.
    - `mini` / `small`: ảnh + tên tiếng Việt 1 dòng (ảnh nhỏ không đọc được chữ in).
-   - `zoom`: ảnh to + khối chữ tiếng Việt: tên, loại, "Trị …", "Tác dụng phụ …", hình phạt đầy đủ (`punishment.textVi`).
+   - `zoom`: **chỉ ảnh lá, hiện trọn cả lá**, không có khối chữ chú thích (người dùng chốt 2026-10-01: chữ che mất lá, mà lá
+     Việt hoá đã in đủ thông tin). Ảnh lỗi → khung màu + tên tiếng Việt.
    - Ảnh lỗi/chưa tải → khung màu theo loại + tên, không vỡ bố cục.
 4. **Dữ liệu hiển thị**:
    - Hàm `getCardInfoVi(cardId)` trong `games/side-effects` trả về tên, loại, trị bệnh, tác dụng phụ, hình phạt (tiếng Việt).
@@ -169,8 +174,8 @@ là chuẩn.
 **Xếp bài:**
 - **Bài tay — xếp so le**: các lá chồng lên nhau theo chiều ngang, chỉ lộ phần trái của lá (khoảng 40% chiều rộng). Khoảng
   lộ tự co theo số lá để **8–12 lá luôn vừa 1 hàng**, không cuộn. Lá đang chọn nhô lên và lộ hết.
-- **Thể Trạng — xếp bậc thang**: mỗi ô là lá Bệnh Lý. Đã có Thuốc → lá Thuốc nằm **dưới**, lệch xuống ~22% để lộ dải tên
-  Thuốc. Lá bị Liệu Pháp loại bỏ thì không còn trong Thể Trạng.
+- **Thể Trạng — xếp bậc thang**: mỗi ô là lá Bệnh Lý. Đã có Thuốc → lá Thuốc nằm **trên** lá Bệnh Lý (người dùng chốt
+  2026-10-01), lệch xuống để lộ phần đầu lá Bệnh Lý có tên bệnh; lá Thuốc thấy rõ tên thuốc. Lá bị Liệu Pháp loại bỏ thì không còn trong Thể Trạng.
 - **Ghế đối thủ**: Thể Trạng dạng bậc thang cỡ `mini`. Bài trên tay là chồng mặt sau kèm số lá.
 
 **Thao tác:**
