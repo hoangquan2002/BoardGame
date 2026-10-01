@@ -78,7 +78,7 @@ export const HandView: React.FC<HandViewProps> = ({
       }}
     >
       {/* Nhãn nhỏ mờ - có khoảng cách dưới đảm bảo lá nhô lên không che chữ */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: isLandscape ? '11px' : '14px' }}>
         <span
           style={{
             fontSize: '11px',
@@ -92,12 +92,12 @@ export const HandView: React.FC<HandViewProps> = ({
         </span>
       </div>
 
-      {/* Vùng bài tay: đệm trên 16px để khi nhô lên 12px không che chữ Bài trên tay */}
+      {/* Vùng bài tay */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: `${cardHeight + 16}px`,
+          height: `${cardHeight}px`,
           boxSizing: 'border-box',
           overflow: 'visible',
         }}
@@ -115,12 +115,12 @@ export const HandView: React.FC<HandViewProps> = ({
               style={{
                 position: 'absolute',
                 left: `${leftPos}px`,
-                bottom: 0,
+                top: 0,
                 width: `${cardWidth}px`,
                 height: `${cardHeight}px`,
                 // Lá đang chọn có zIndex cao nhất để lộ hết trọn vẹn (Mục E)
                 zIndex: isSelected ? 50 : idx + 1,
-                transform: isSelected ? 'translateY(-12px)' : 'none',
+                transform: isSelected ? 'translateY(-10px)' : 'none',
                 transition: 'transform 0.15s ease, z-index 0.15s ease',
                 cursor: 'pointer',
               }}

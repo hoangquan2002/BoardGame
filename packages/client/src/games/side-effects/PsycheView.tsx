@@ -114,7 +114,9 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           const dimmed = hasSelection && !isTargetable;
 
           // Chiều cao ô: có thuốc thì thêm độ lệch staggerOffset + khoảng cho vạch "Đã chữa"
-          const slotHeight = isTreated ? cardHeight + staggerOffset + 12 : cardHeight;
+          const slotHeight = isTreated
+            ? cardHeight + staggerOffset + (isLandscape ? 0 : 12)
+            : cardHeight;
 
           return (
             <div
@@ -186,17 +188,21 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: 0,
+                    bottom: isLandscape ? '2px' : 0,
                     left: 0,
                     right: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '2px',
-                    fontSize: '11px',
+                    fontSize: isLandscape ? '10px' : '11px',
                     fontWeight: 700,
                     color: '#4ade80',
                     lineHeight: 1,
+                    zIndex: 3,
+                    backgroundColor: isLandscape ? 'rgba(15, 42, 36, 0.9)' : undefined,
+                    borderRadius: '2px',
+                    padding: isLandscape ? '1px 2px' : undefined,
                   }}
                 >
                   <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4ade80' }} />

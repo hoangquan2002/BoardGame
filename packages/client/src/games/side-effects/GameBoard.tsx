@@ -120,57 +120,59 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (width >= 1024) {
       // Máy tính / Tablet lớn (≥ 1024px, vd 1280x800):
       // Bảng E: Bài tay ≥ 120, Thể Trạng ≥ 110, Đối thủ ≥ 64
-      // Khi ít người, lá lớn thêm để không bị trống
       if (numPlayers <= 2) {
-        return { handWidth: 155, psycheWidth: 135, oppWidth: 80 };
+        return { handWidth: 180, psycheWidth: 150, oppWidth: 80 };
       }
       if (numPlayers === 3) {
-        return { handWidth: 145, psycheWidth: 125, oppWidth: 72 };
+        return { handWidth: 170, psycheWidth: 145, oppWidth: 72 };
       }
-      return { handWidth: 135, psycheWidth: 118, oppWidth: 66 };
+      return { handWidth: 165, psycheWidth: 140, oppWidth: 66 };
     }
 
     if (isLandscape) {
       if (width >= 800) {
-        // 844x390:
-        // Bảng E: Bài tay ≥ 70, Thể Trạng ≥ 66, Đối thủ ≥ 36
-        if (numPlayers <= 2) {
-          return { handWidth: 86, psycheWidth: 74, oppWidth: 44 };
-        }
-        return { handWidth: 76, psycheWidth: 68, oppWidth: 38 };
+        // 844x390 (Bảng E: Bài tay ≥ 70, Thể Trạng ≥ 66, Đối thủ ≥ 36)
+        return { handWidth: 70, psycheWidth: 66, oppWidth: 36 };
       }
-      // 667x375:
-      // Bảng E: Bài tay ≥ 64, Thể Trạng ≥ 60, Đối thủ ≥ 34
-      // Còn chỗ thì phải hiện ảnh Thể Trạng đối thủ (Phần 1 mục 4)
-      if (numPlayers <= 2) {
-        return { handWidth: 78, psycheWidth: 66, oppWidth: 38 };
-      }
-      return { handWidth: 68, psycheWidth: 62, oppWidth: 34 };
+      // 667x375 (Bảng E: Bài tay ≥ 64, Thể Trạng ≥ 60, Đối thủ ≥ 34)
+      return { handWidth: 64, psycheWidth: 60, oppWidth: 34 };
     }
 
     // Màn hình dọc:
     if (height >= 800) {
-      // 390x844:
-      // Bảng E: Bài tay ≥ 96, Thể Trạng ≥ 84, Đối thủ ≥ 44
-      // Khi 2 người (1 đối thủ): lá lớn lên để lấp khoảng trống ~220px dưới đáy
+      // 390x844 (Bảng E: Bài tay ≥ 96, Thể Trạng ≥ 84, Đối thủ ≥ 44)
       if (numPlayers <= 2) {
-        return { handWidth: 135, psycheWidth: 88, oppWidth: 52 };
+        return { handWidth: 135, psycheWidth: 88, oppWidth: 50 };
       }
       if (numPlayers === 3) {
-        return { handWidth: 115, psycheWidth: 86, oppWidth: 46 };
+        return { handWidth: 110, psycheWidth: 86, oppWidth: 46 };
       }
-      return { handWidth: 98, psycheWidth: 84, oppWidth: 44 };
+      return { handWidth: 96, psycheWidth: 84, oppWidth: 44 };
     }
 
-    // 375x667:
-    // Bảng E: Bài tay ≥ 76, Thể Trạng ≥ 72, Đối thủ ≥ 34 hoặc chỉ chữ
+    // 375x667 (Bảng E: Bài tay ≥ 76, Thể Trạng ≥ 72, Đối thủ ≥ 34 hoặc chỉ chữ)
     if (numPlayers <= 2) {
-      return { handWidth: 86, psycheWidth: 76, oppWidth: 36 };
+      return { handWidth: 84, psycheWidth: 74, oppWidth: 36 };
     }
     if (numPlayers === 3) {
-      return { handWidth: 80, psycheWidth: 74, oppWidth: 34 };
+      return { handWidth: 78, psycheWidth: 72, oppWidth: 34 };
     }
     return { handWidth: 76, psycheWidth: 72, oppWidth: 0 };
+  }, [windowDimensions, isLandscape, numPlayers]);
+
+  // Khoảng cách giữa các khối luôn <= 40px và lấp đầy chiều cao
+  const sectionGap = useMemo(() => {
+    const { width, height } = windowDimensions;
+    if (width >= 1024) {
+      return isLandscape ? (numPlayers <= 2 ? '20px' : '12px') : '14px';
+    }
+    if (isLandscape) {
+      return '2px';
+    }
+    if (height >= 800) {
+      return numPlayers <= 2 ? '18px' : numPlayers === 3 ? '10px' : '4px';
+    }
+    return numPlayers <= 2 ? '10px' : '3px';
   }, [windowDimensions, isLandscape, numPlayers]);
 
   // Xếp ghế đối thủ
@@ -721,7 +723,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          gap: isLandscape ? '2px' : '4px',
+          gap: sectionGap,
           height: isLandscape ? '100%' : 'auto',
           maxHeight: isLandscape ? '100%' : undefined,
           overflow: isLandscape ? 'hidden' : undefined,
