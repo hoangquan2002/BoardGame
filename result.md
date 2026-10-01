@@ -1,8 +1,15 @@
-Trạng thái: DỪNG — chờ thử 2 điện thoại sau D2 | Local: http://localhost:3000/ (Mock: http://localhost:3000/?mock=1) | Render: https://boardgame-02k2.onrender.com/
+Trạng thái: DỪNG — chờ thử 2 điện thoại sau D2 | Commit: 0c2f6aa | Local: http://localhost:3000/ (Mock: http://localhost:3000/?mock=1) | Render: https://boardgame-02k2.onrender.com/
 
 # Báo cáo kết quả Giai đoạn D1 & D2 — Thiết kế lại giao diện & Bố cục sòng bài
 
-> **Điểm dừng sau D2**: Đã hoàn thành 100% các yêu cầu của Giai đoạn D1 & D2 và xử lý dứt điểm 5 việc còn tồn từ D0. Bàn chơi thật và bộ test E2E tự động đều đạt 100% tiêu chí. Dừng lại để người dùng thử nghiệm trực tiếp trên 2 điện thoại thật theo checklist mục 4.
+> **Trạng thái Git**: Đã commit mã nguồn hoàn chỉnh Giai đoạn D1 & D2: **`0c2f6aab0d1df91270eaf05af46dee40aebd309b`**.
+> **Lệnh đồng bộ lên Render**: Do môi trường terminal tự động không hỗ trợ nhập thông tin xác thực GitHub interactive, bạn vui lòng chạy lệnh sau trên terminal của bạn:
+> ```bash
+> git push origin main
+> ```
+> Sau khi bạn push, Render sẽ tự động kích hoạt build & deploy trong khoảng 2–3 phút. Bạn có thể mở `https://boardgame-02k2.onrender.com/version` để thấy commit `0c2f6aa`, lúc đó URL thật sẽ cập nhật 100% giao diện mới sòng bài.
+>
+> **Thử nghiệm ngay trên Local**: Server local hiện đã chạy phiên bản mới nhất tại **`http://localhost:3000/`** (hoặc `http://localhost:3000/?mock=1`). Toàn bộ 5 bộ test E2E (S0, S1, S2, S4, S13) đều đã ĐẠT 100% (36/36 tiêu chí).
 
 ---
 
