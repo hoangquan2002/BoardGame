@@ -47,11 +47,13 @@ export function createDeck(cards: CardsData = cardsData): CardInstance[] {
 }
 
 export function getDisorderDef(cardId: string): DisorderCard | undefined {
-  return cardsData.disorders.find((d) => d.id === cardId);
+  const baseId = cardId ? cardId.split('#')[0] : '';
+  return cardsData.disorders.find((d) => d.id === baseId);
 }
 
 export function getDrugDef(cardId: string): DrugCard | undefined {
-  return cardsData.drugs.find((dr) => dr.id === cardId);
+  const baseId = cardId ? cardId.split('#')[0] : '';
+  return cardsData.drugs.find((dr) => dr.id === baseId);
 }
 
 export function getDisorderNameVi(cardId: string): string {

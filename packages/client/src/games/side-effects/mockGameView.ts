@@ -68,11 +68,11 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 5,
       psyche: [
         {
-          disorder: { instanceId: 'b1-d-1', cardId: 'madness#1', type: 'disorder' },
-          drug: { instanceId: 'b1-dr-1', cardId: 'chlorpromazine#2', type: 'drug' },
+          disorder: { instanceId: 'b1-d-1', cardId: 'madness', type: 'disorder' },
+          drug: { instanceId: 'b1-dr-1', cardId: 'chlorpromazine', type: 'drug' },
         },
         {
-          disorder: { instanceId: 'b1-d-2', cardId: 'suicidal-thoughts#3', type: 'disorder' },
+          disorder: { instanceId: 'b1-d-2', cardId: 'suicidal-thoughts', type: 'disorder' },
           drug: null,
         },
       ],
@@ -86,11 +86,11 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 6,
       psyche: [
         {
-          disorder: { instanceId: 'ub-d-1', cardId: 'depression#3', type: 'disorder' },
-          drug: { instanceId: 'ub-dr-1', cardId: 'lithium#1', type: 'drug' },
+          disorder: { instanceId: 'ub-d-1', cardId: 'depression', type: 'disorder' },
+          drug: { instanceId: 'ub-dr-1', cardId: 'lithium', type: 'drug' },
         },
         {
-          disorder: { instanceId: 'ub-d-2', cardId: 'gambling-addiction#2', type: 'disorder' },
+          disorder: { instanceId: 'ub-d-2', cardId: 'gambling-addiction', type: 'disorder' },
           drug: null,
         },
       ],
@@ -104,7 +104,7 @@ export function createMockGameData(searchParams: URLSearchParams): {
       handCount: 4,
       psyche: [
         {
-          disorder: { instanceId: 'b2-d-1', cardId: 'anorexia#1', type: 'disorder' },
+          disorder: { instanceId: 'b2-d-1', cardId: 'anorexia', type: 'disorder' },
           drug: null,
         },
       ],
