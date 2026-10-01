@@ -68,7 +68,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       }}
     >
       {/* Tiêu đề nhỏ màu mờ (Phần 2 mục F) - có khoảng cách dưới tránh viền mục tiêu chạm chữ */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isLandscape ? '1px' : '3px' }}>
         <span
           style={{
             fontSize: '11px',
@@ -102,7 +102,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           width: '100%',
           boxSizing: 'border-box',
           alignItems: 'flex-start',
-          paddingTop: '2px',
+          paddingTop: isLandscape ? '0px' : '2px',
         }}
       >
         {psyche.map((slot) => {
@@ -114,9 +114,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           const dimmed = hasSelection && !isTargetable;
 
           // Chiều cao ô: có thuốc thì thêm độ lệch staggerOffset + khoảng cho vạch "Đã chữa"
-          const slotHeight = isTreated
-            ? cardHeight + staggerOffset + (isLandscape ? 0 : 12)
-            : cardHeight;
+          const slotHeight = isTreated ? cardHeight + staggerOffset + 12 : cardHeight;
 
           return (
             <div
@@ -188,21 +186,17 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: isLandscape ? '2px' : 0,
+                    bottom: 0,
                     left: 0,
                     right: 0,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '2px',
-                    fontSize: isLandscape ? '10px' : '11px',
+                    fontSize: '11px',
                     fontWeight: 700,
                     color: '#4ade80',
                     lineHeight: 1,
-                    zIndex: 3,
-                    backgroundColor: isLandscape ? 'rgba(15, 42, 36, 0.9)' : undefined,
-                    borderRadius: '2px',
-                    padding: isLandscape ? '1px 2px' : undefined,
                   }}
                 >
                   <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4ade80' }} />
@@ -220,7 +214,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           style={{
             fontSize: '12px',
             color: '#cbd5e1',
-            lineHeight: isLandscape ? 1.15 : 1.25,
+            lineHeight: isLandscape ? 1.05 : 1.25,
             padding: 0,
           }}
         >

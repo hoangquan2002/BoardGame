@@ -78,7 +78,7 @@ export const HandView: React.FC<HandViewProps> = ({
       }}
     >
       {/* Nhãn nhỏ mờ - có khoảng cách dưới đảm bảo lá nhô lên không che chữ */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: isLandscape ? '11px' : '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: isLandscape ? '1px' : '14px' }}>
         <span
           style={{
             fontSize: '11px',
@@ -98,6 +98,7 @@ export const HandView: React.FC<HandViewProps> = ({
           position: 'relative',
           width: '100%',
           height: `${cardHeight}px`,
+          marginTop: isLandscape ? '-3px' : '0px',
           boxSizing: 'border-box',
           overflow: 'visible',
         }}
@@ -120,7 +121,7 @@ export const HandView: React.FC<HandViewProps> = ({
                 height: `${cardHeight}px`,
                 // Lá đang chọn có zIndex cao nhất để lộ hết trọn vẹn (Mục E)
                 zIndex: isSelected ? 50 : idx + 1,
-                transform: isSelected ? 'translateY(-10px)' : 'none',
+                transform: isSelected ? (isLandscape ? 'translateY(-2px)' : 'translateY(-10px)') : 'none',
                 transition: 'transform 0.15s ease, z-index 0.15s ease',
                 cursor: 'pointer',
               }}

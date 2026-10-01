@@ -121,7 +121,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       // Máy tính / Tablet lớn (≥ 1024px, vd 1280x800):
       // Bảng E: Bài tay ≥ 120, Thể Trạng ≥ 110, Đối thủ ≥ 64
       if (numPlayers <= 2) {
-        return { handWidth: 180, psycheWidth: 150, oppWidth: 80 };
+        return { handWidth: 172, psycheWidth: 142, oppWidth: 80 };
       }
       if (numPlayers === 3) {
         return { handWidth: 170, psycheWidth: 145, oppWidth: 72 };
@@ -142,10 +142,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (height >= 800) {
       // 390x844 (Bảng E: Bài tay ≥ 96, Thể Trạng ≥ 84, Đối thủ ≥ 44)
       if (numPlayers <= 2) {
-        return { handWidth: 135, psycheWidth: 88, oppWidth: 50 };
+        return { handWidth: 142, psycheWidth: 92, oppWidth: 54 };
       }
       if (numPlayers === 3) {
-        return { handWidth: 110, psycheWidth: 86, oppWidth: 46 };
+        return { handWidth: 112, psycheWidth: 86, oppWidth: 46 };
       }
       return { handWidth: 96, psycheWidth: 84, oppWidth: 44 };
     }
@@ -299,7 +299,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         ? selectedInfo.sideEffectsVi.join(', ')
         : 'Không có';
       return (
-        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+        <span style={{ fontSize: isLandscape ? '11px' : '12px', color: '#f8fafc', lineHeight: isLandscape ? 1.15 : 1.35 }}>
           <strong style={{ color: '#38bdf8' }}>{selectedInfo.nameVi}</strong>
           {' — '}trị {selectedInfo.treatsVi || ''}
           {' · '}Tác dụng phụ: <span style={{ color: '#fda4af', fontWeight: 600 }}>{tdpText}</span>
@@ -309,7 +309,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     if (selectedInfo.type === 'disorder') {
       return (
-        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+        <span style={{ fontSize: isLandscape ? '11px' : '12px', color: '#f8fafc', lineHeight: isLandscape ? 1.15 : 1.35 }}>
           <strong style={{ color: '#ef4444' }}>{selectedInfo.nameVi}</strong>
           {' — '}đưa cho người đang mở cửa cho bệnh này
         </span>
@@ -318,7 +318,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     if (selectedInfo.type === 'episode') {
       return (
-        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+        <span style={{ fontSize: isLandscape ? '11px' : '12px', color: '#f8fafc', lineHeight: isLandscape ? 1.15 : 1.35 }}>
           <strong style={{ color: '#f97316' }}>Triệu Chứng</strong>
           {' — '}kích hoạt Bệnh Lý tương ứng ở đối thủ
         </span>
@@ -327,7 +327,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     if (selectedInfo.type === 'therapy') {
       return (
-        <span style={{ fontSize: '12px', color: '#f8fafc', lineHeight: 1.35 }}>
+        <span style={{ fontSize: isLandscape ? '11px' : '12px', color: '#f8fafc', lineHeight: isLandscape ? 1.15 : 1.35 }}>
           <strong style={{ color: '#10b981' }}>Liệu Pháp</strong>
           {' — '}loại bỏ 1 Bệnh Lý bất kỳ khỏi Thể Trạng của bạn
         </span>
@@ -593,7 +593,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: isLandscape ? '1px 8px' : '2px 8px',
+        padding: isLandscape ? '0px 8px' : '2px 8px',
         backgroundColor: '#122520',
         borderRadius: '6px',
         fontSize: '11px',
@@ -622,12 +622,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '6px',
-        padding: isLandscape ? '1px 8px' : '2px 8px',
+        padding: isLandscape ? '0px 8px' : '2px 8px',
         backgroundColor: '#122520',
         borderRadius: '6px',
         boxSizing: 'border-box',
         width: '100%',
-        minHeight: isLandscape ? '28px' : '32px',
+        minHeight: isLandscape ? '20px' : '32px',
       }}
     >
       <div style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}>
@@ -639,7 +639,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         disabled={!endTurnAllowed}
         data-testid="end-turn-button"
         style={{
-          height: isLandscape ? '26px' : '28px',
+          height: isLandscape ? '20px' : '28px',
           padding: '0 12px',
           borderRadius: '5px',
           backgroundColor: isMyTurn ? '#16a34a' : '#224036',
@@ -671,7 +671,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         height: '100vh',
         maxHeight: '100vh',
         margin: '0 auto',
-        padding: isLandscape ? '2px 6px' : '4px 6px',
+        padding: isLandscape ? '1px 6px' : '4px 6px',
         gap: isLandscape ? '4px' : '4px',
         boxSizing: 'border-box',
         overflow: 'hidden',
@@ -723,7 +723,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          gap: sectionGap,
+          gap: isLandscape ? '1px' : sectionGap,
           height: isLandscape ? '100%' : 'auto',
           maxHeight: isLandscape ? '100%' : undefined,
           overflow: isLandscape ? 'hidden' : undefined,
