@@ -223,14 +223,14 @@ export async function runS15(browser, baseUrl) {
       // Thêm 1 bot và bắt đầu
       await page.locator('button:has-text("Thêm máy")').click();
       await page.waitForTimeout(300);
-      await page.locator('button:has-text("Bắt đầu ván bài")').click();
+      await page.locator('button:has-text("Bắt đầu")').click();
       await page.waitForSelector('[data-testid="game-board-container"]', { timeout: 10000 });
 
-      // Đợi đến khi có lá bài trên tay
-      const handCard = page.locator('[data-testid^="hand-card-"]').first();
+      // Đợi đến khi có lá bài trên tay và chọn lá trên cùng
+      const handCard = page.locator('[data-testid^="hand-card-"]').last();
       await handCard.waitFor({ state: 'visible', timeout: 8000 });
       await handCard.click();
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(300);
 
       // Xác nhận lá đã được chọn
       const selectedInitially = await page.evaluate(() => {
