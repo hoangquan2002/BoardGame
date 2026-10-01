@@ -20,6 +20,7 @@ import { PsycheView, type TargetSlotInfo } from './PsycheView.js';
 import { computeOpponentSeats } from './seats.js';
 import { TradeModal } from './TradeModal.js';
 import { WinnerModal } from './WinnerModal.js';
+import { RulesModal } from './RulesModal.js';
 
 export interface GameBoardProps {
   session: UserSession;
@@ -44,6 +45,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [zoomedCardId, setZoomedCardId] = useState<string | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   // Kích thước cửa sổ trình duyệt
   const [windowDimensions, setWindowDimensions] = useState(() => {
@@ -112,36 +114,63 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const opponents = gameView.players.filter((p) => p.id !== myId);
   const numPlayers = gameView.players.length;
 
-  // Tính kích thước lá hiển thị theo Phần 2 mục E (Bảng mục E)
+  // Tính kích thước lá hiển thị thích ứng theo không gian còn trống (Phần 1 mục 1 & Bảng mục E)
   const cardSizes = useMemo(() => {
     const { width, height } = windowDimensions;
     if (width >= 1024) {
       // Máy tính / Tablet lớn (≥ 1024px, vd 1280x800):
       // Bảng E: Bài tay ≥ 120, Thể Trạng ≥ 110, Đối thủ ≥ 64
-      return { handWidth: 124, psycheWidth: 114, oppWidth: 66 };
+      // Khi ít người, lá lớn thêm để không bị trống
+      if (numPlayers <= 2) {
+        return { handWidth: 155, psycheWidth: 135, oppWidth: 80 };
+      }
+      if (numPlayers === 3) {
+        return { handWidth: 145, psycheWidth: 125, oppWidth: 72 };
+      }
+      return { handWidth: 135, psycheWidth: 118, oppWidth: 66 };
     }
 
     if (isLandscape) {
       if (width >= 800) {
         // 844x390:
         // Bảng E: Bài tay ≥ 70, Thể Trạng ≥ 66, Đối thủ ≥ 36
-        return { handWidth: 70, psycheWidth: 66, oppWidth: 36 };
+        if (numPlayers <= 2) {
+          return { handWidth: 86, psycheWidth: 74, oppWidth: 44 };
+        }
+        return { handWidth: 76, psycheWidth: 68, oppWidth: 38 };
       }
       // 667x375:
-      // Bảng E: Bài tay ≥ 64, Thể Trạng ≥ 60, Đối thủ ≥ 34 hoặc chỉ chữ
-      return { handWidth: 64, psycheWidth: 60, oppWidth: numPlayers > 3 ? 0 : 34 };
+      // Bảng E: Bài tay ≥ 64, Thể Trạng ≥ 60, Đối thủ ≥ 34
+      // Còn chỗ thì phải hiện ảnh Thể Trạng đối thủ (Phần 1 mục 4)
+      if (numPlayers <= 2) {
+        return { handWidth: 78, psycheWidth: 66, oppWidth: 38 };
+      }
+      return { handWidth: 68, psycheWidth: 62, oppWidth: 34 };
     }
 
     // Màn hình dọc:
     if (height >= 800) {
       // 390x844:
       // Bảng E: Bài tay ≥ 96, Thể Trạng ≥ 84, Đối thủ ≥ 44
-      return { handWidth: 96, psycheWidth: 84, oppWidth: 44 };
+      // Khi 2 người (1 đối thủ): lá lớn lên để lấp khoảng trống ~220px dưới đáy
+      if (numPlayers <= 2) {
+        return { handWidth: 135, psycheWidth: 88, oppWidth: 52 };
+      }
+      if (numPlayers === 3) {
+        return { handWidth: 115, psycheWidth: 86, oppWidth: 46 };
+      }
+      return { handWidth: 98, psycheWidth: 84, oppWidth: 44 };
     }
 
     // 375x667:
     // Bảng E: Bài tay ≥ 76, Thể Trạng ≥ 72, Đối thủ ≥ 34 hoặc chỉ chữ
-    return { handWidth: 76, psycheWidth: 72, oppWidth: numPlayers > 3 ? 0 : 34 };
+    if (numPlayers <= 2) {
+      return { handWidth: 86, psycheWidth: 76, oppWidth: 36 };
+    }
+    if (numPlayers === 3) {
+      return { handWidth: 80, psycheWidth: 74, oppWidth: 34 };
+    }
+    return { handWidth: 76, psycheWidth: 72, oppWidth: 0 };
   }, [windowDimensions, isLandscape, numPlayers]);
 
   // Xếp ghế đối thủ
@@ -357,7 +386,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   // Format đồng hồ: 0:42
+  // Format đồng hồ: 0:42
   const formattedTime = `0:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
+  // Ván thật ẩn turn-timer cho tới D4; chỉ /?mock=1 được hiện số mẫu (Phần 1 mục 5)
+  const isMock = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mock') === '1';
 
   // ===================== KHUNG THANH TRÊN 30px =====================
   const renderTopBar = () => (
@@ -386,60 +418,107 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         )}
       </div>
 
-      {/* 2. Đồng hồ lượt (Emoji ⏱) */}
-      <div
-        data-testid="turn-timer"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          padding: '2px 8px',
-          borderRadius: '999px',
-          fontSize: '12px',
-          fontWeight: 700,
-          color: timeLeft <= 15 ? '#f87171' : '#fbbf24',
-        }}
-      >
-        <span>⏱ {formattedTime}</span>
-      </div>
-
-      {/* 3. Nút Menu "⋯" (Chỉ Thoát trong menu, không có nút thoát ngoài) */}
-      <div style={{ position: 'relative' }}>
-        <button
-          data-testid="menu-button"
-          onClick={() => setShowMenu(!showMenu)}
+      {/* 2. Đồng hồ lượt: chỉ hiện ở /?mock=1 */}
+      {isMock && (
+        <div
+          data-testid="turn-timer"
           style={{
-            background: 'none',
-            border: 'none',
-            color: '#f8fafc',
-            fontSize: '18px',
-            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            backgroundColor: 'rgba(0,0,0,0.3)',
             padding: '2px 8px',
-            borderRadius: '4px',
-            lineHeight: 1,
+            borderRadius: '999px',
+            fontSize: '12px',
+            fontWeight: 700,
+            color: timeLeft <= 15 ? '#f87171' : '#fbbf24',
           }}
         >
-          ⋯
+          <span>⏱ {formattedTime}</span>
+        </div>
+      )}
+
+      {/* 3. Nút "?" Luật chơi & Menu "⋯" */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <button
+          type="button"
+          data-testid="rules-button"
+          aria-label="Luật chơi"
+          onClick={() => setShowRules(true)}
+          style={{
+            width: '22px',
+            height: '22px',
+            borderRadius: '50%',
+            backgroundColor: '#1a382e',
+            border: '1px solid #285446',
+            color: '#cbd5e1',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+            padding: 0,
+          }}
+        >
+          ?
         </button>
 
-        {showMenu && (
-          <div
+        <div style={{ position: 'relative' }}>
+          <button
+            data-testid="menu-button"
+            onClick={() => setShowMenu(!showMenu)}
             style={{
-              position: 'absolute',
-              top: '32px',
-              right: 0,
-              backgroundColor: '#122520',
-              border: '1px solid #1e3d34',
-              borderRadius: '8px',
-              padding: '4px',
-              display: 'flex',
-              flexDirection: 'column',
-              zIndex: 999,
-              minWidth: '150px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              background: 'none',
+              border: 'none',
+              color: '#f8fafc',
+              fontSize: '18px',
+              cursor: 'pointer',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              lineHeight: 1,
             }}
           >
+            ⋯
+          </button>
+
+          {showMenu && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '32px',
+                right: 0,
+                backgroundColor: '#122520',
+                border: '1px solid #1e3d34',
+                borderRadius: '8px',
+                padding: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: 999,
+                minWidth: '150px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              }}
+            >
+              <button
+                data-testid="rules-menu-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowRules(true);
+                }}
+                style={{
+                  padding: '8px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: '#f8fafc',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Luật chơi
+              </button>
             <button
               onClick={() => {
                 setShowMenu(false);
@@ -499,6 +578,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             </button>
           </div>
         )}
+        </div>
       </div>
     </header>
   );
@@ -583,13 +663,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       style={{
         display: 'flex',
         flexDirection: isLandscape ? 'row' : 'column',
+        justifyContent: 'space-between',
         width: '100%',
         maxWidth: isLandscape ? '1200px' : '480px',
         height: '100vh',
         maxHeight: '100vh',
         margin: '0 auto',
-        padding: isLandscape ? '2px 6px' : '3px 6px',
-        gap: isLandscape ? '4px' : '3px',
+        padding: isLandscape ? '2px 6px' : '4px 6px',
+        gap: isLandscape ? '4px' : '4px',
         boxSizing: 'border-box',
         overflow: 'hidden',
         // Nền nỉ xanh đậm gradient nhẹ (Phần 2 mục F)
@@ -605,6 +686,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             flex: '0 0 42%',
             display: 'flex',
             flexDirection: 'column',
+            justifyContent: 'space-between',
             gap: '3px',
             height: '100%',
             maxHeight: '100%',
@@ -614,7 +696,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         >
           {renderTopBar()}
           {/* Ghế các đối thủ xếp dọc (đảm bảo đủ chỗ không cắt) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, justifyContent: 'space-around' }}>
             {seatedOpponents.map(({ opponent, position }) => renderOpponentSeat(opponent, position))}
           </div>
         </aside>
@@ -638,7 +720,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           flex: isLandscape ? '1 1 0px' : '1 1 auto',
           display: 'flex',
           flexDirection: 'column',
-          gap: isLandscape ? '2px' : '3px',
+          justifyContent: 'space-between',
+          gap: isLandscape ? '2px' : '4px',
           height: isLandscape ? '100%' : 'auto',
           maxHeight: isLandscape ? '100%' : undefined,
           overflow: isLandscape ? 'hidden' : undefined,
@@ -746,6 +829,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           }}
         />
       )}
+
+      {/* Modal Luật chơi (Task R2) */}
+      <RulesModal
+        isOpen={showRules}
+        onClose={() => setShowRules(false)}
+        isMyTurn={isMyTurn}
+      />
     </div>
   );
 };

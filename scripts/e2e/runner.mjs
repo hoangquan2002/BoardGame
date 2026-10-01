@@ -7,6 +7,7 @@ import { runS3 } from './s3_card_content.mjs';
 import { runS4 } from './s4_touch_zoom.mjs';
 import { runS8 } from './s8_rotate.mjs';
 import { runS13 } from './s13_socket_resilience.mjs';
+import { runS15 } from './s15_rules.mjs';
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -33,7 +34,7 @@ async function main() {
   const { url, only, headed } = parseArgs();
   console.log(`\n========================================`);
   console.log(`BẮT ĐẦU CHẠY E2E TESTS TRÊN: ${url}`);
-  console.log(`Kịch bản: ${only ? only.join(', ') : 'TẤT CẢ (S0, S1, S2, S3, S4, S8, S13)'}`);
+  console.log(`Kịch bản: ${only ? only.join(', ') : 'TẤT CẢ (S0, S1, S2, S3, S4, S8, S13, S15)'}`);
   console.log(`Chế độ: ${headed ? 'Headed' : 'Headless'}`);
   console.log(`========================================\n`);
 
@@ -53,7 +54,7 @@ async function main() {
 
   let browser = null;
   try {
-    const needsBrowser = !only || only.some((k) => ['S1', 'S2', 'S3', 'S4', 'S8', 'S13'].includes(k));
+    const needsBrowser = !only || only.some((k) => ['S1', 'S2', 'S3', 'S4', 'S8', 'S13', 'S15'].includes(k));
     if (needsBrowser) {
       browser = await launchBrowser({ headed });
     }
@@ -121,6 +122,18 @@ async function main() {
       results.push(s13Res);
       console.log(`  S13: ${s13Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
       for (const it of s13Res.items) {
+        console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
+      }
+    }
+
+    // S15: Rules Sheet (Task R2)
+    if (!only || only.includes('S15')) {
+      console.log(`\n▶ Đang chạy kịch bản S15: Kiểm tra nút và tấm phủ Luật chơi (Task R2)...`);
+      const s15Res = await runS15(browser, url);
+      s15Res.id = 'S15';
+      results.push(s15Res);
+      console.log(`  S15: ${s15Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
+      for (const it of s15Res.items) {
         console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
       }
     }

@@ -64,7 +64,7 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 9998,
+            zIndex: 10005,
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
             display: 'flex',
             alignItems: 'center',
@@ -190,7 +190,7 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9998,
+          zIndex: 10005,
           backgroundColor: 'rgba(0, 0, 0, 0.75)',
           display: 'flex',
           alignItems: 'center',
@@ -245,7 +245,7 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 9998,
+            zIndex: 10005,
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
             display: 'flex',
             alignItems: 'center',
@@ -407,7 +407,7 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9998,
+          zIndex: 10005,
           backgroundColor: 'rgba(0, 0, 0, 0.75)',
           display: 'flex',
           alignItems: 'center',

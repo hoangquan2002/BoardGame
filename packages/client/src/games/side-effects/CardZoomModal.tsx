@@ -81,9 +81,6 @@ export const CardZoomModal: React.FC<CardZoomModalProps> = ({ cardId, onClose })
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          aspectRatio: '520 / 864',
           position: 'relative',
         }}
       >

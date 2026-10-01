@@ -16,7 +16,7 @@ export const HandView: React.FC<HandViewProps> = ({
   hand,
   selectedCardId,
   cardWidth = 78,
-  hasSelection = false,
+  hasSelection: _hasSelection = false,
   onSelectCard,
   onHoldCard,
   isLandscape = false,
@@ -44,12 +44,27 @@ export const HandView: React.FC<HandViewProps> = ({
   // Chiều cao theo tỷ lệ gốc 520x864
   const cardHeight = Math.round((cardWidth * 864) / 520);
 
-  // Tính khoảng cách lộ giữa các lá so le (Phần 2 mục E):
-  // Đảm bảo tối thiểu 24px để chạm được, và lá đang chọn có zIndex cao nhất để lộ hết
-  const availableSpan = Math.max(0, containerWidth - cardWidth);
-  const rawStep = numCards > 1 ? availableSpan / (numCards - 1) : 0;
-  // Giới hạn khoảng lộ tối đa khoảng 60% cardWidth để tạo cảm giác bài xếp quạt/chồng so le
-  const overlapStep = numCards > 1 ? Math.max(24, Math.min(cardWidth * 0.6, rawStep)) : 0;
+  // Tính khoảng cách giữa các lá bài (Phần 1 mục 1 & mục 7):
+  // 1. Nếu xếp vừa hàng ngang thì KHÔNG chồng lên nhau (khoảng cách = cardWidth + 8px)
+  // 2. Nếu không vừa thì xếp chồng so le với khoảng lộ tối thiểu 24px
+  const gap = 8;
+  const neededWidthNoOverlap = numCards > 0 ? numCards * cardWidth + (numCards - 1) * gap : 0;
+  const fitsWithoutOverlap = containerWidth >= neededWidthNoOverlap;
+
+  let overlapStep = 0;
+  if (numCards > 1) {
+    if (fitsWithoutOverlap) {
+      overlapStep = cardWidth + gap;
+    } else {
+      const availableSpan = Math.max(0, containerWidth - cardWidth);
+      overlapStep = Math.max(24, availableSpan / (numCards - 1));
+    }
+  }
+
+  // Tổng bề rộng thực tế của dãy bài
+  const totalOccupiedWidth = numCards > 0 ? (numCards - 1) * overlapStep + cardWidth : 0;
+  // Căn giữa nếu bài tay vừa khít hoặc thừa chỗ
+  const startOffset = Math.max(0, Math.floor((containerWidth - totalOccupiedWidth) / 2));
 
   return (
     <div
@@ -59,11 +74,11 @@ export const HandView: React.FC<HandViewProps> = ({
         flexDirection: 'column',
         width: '100%',
         boxSizing: 'border-box',
-        gap: isLandscape ? '1px' : '2px',
+        gap: isLandscape ? '2px' : '4px',
       }}
     >
-      {/* Nhãn nhỏ mờ (Phần 2 mục F: bỏ dòng hướng dẫn lộn xộn cạnh Bài trên tay) */}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Nhãn nhỏ mờ - có khoảng cách dưới đảm bảo lá nhô lên không che chữ */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2px' }}>
         <span
           style={{
             fontSize: '11px',
@@ -77,19 +92,19 @@ export const HandView: React.FC<HandViewProps> = ({
         </span>
       </div>
 
-      {/* Vùng bài tay xếp so le 1 hàng (Staggered Overlap) */}
+      {/* Vùng bài tay: đệm trên 16px để khi nhô lên 12px không che chữ Bài trên tay */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: `${cardHeight + 12}px`,
+          height: `${cardHeight + 16}px`,
           boxSizing: 'border-box',
           overflow: 'visible',
         }}
       >
         {hand.map((card, idx) => {
           const isSelected = card.instanceId === selectedCardId;
-          const leftPos = Math.round(idx * overlapStep);
+          const leftPos = startOffset + Math.round(idx * overlapStep);
 
           return (
             <div
@@ -114,10 +129,10 @@ export const HandView: React.FC<HandViewProps> = ({
                 cardId={card.cardId}
                 size="normal"
                 isSelected={isSelected}
-                dimmed={hasSelection && !isSelected}
                 style={{
                   width: `${cardWidth}px`,
                   height: `${cardHeight}px`,
+                  transform: 'none',
                 }}
                 onClick={() => onSelectCard(card.instanceId)}
                 onHold={() => onHoldCard?.(card.cardId)}

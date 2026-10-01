@@ -3,6 +3,7 @@ import type { RoomState } from '@boardgame/core';
 import { sideEffectsGame } from '@boardgame/game-side-effects';
 import QRCode from 'qrcode';
 import type { UserSession } from '../net/session.js';
+import { RulesModal } from '../games/side-effects/RulesModal.js';
 
 interface LobbyRoomPageProps {
   roomState: RoomState;
@@ -26,6 +27,21 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [hasReadRules, setHasReadRules] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('side_effects_rules_read') === 'true';
+    }
+    return true;
+  });
+
+  const handleOpenRules = () => {
+    setShowRules(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('side_effects_rules_read', 'true');
+      setHasReadRules(true);
+    }
+  };
 
   const inviteUrl = `${window.location.origin}/?room=${roomState.roomCode}`;
   const isHost = roomState.hostId === session.playerId;
@@ -106,9 +122,43 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           gap: '12px',
         }}
       >
-        <span style={{ fontSize: '13px', fontWeight: 600, color: '#97baad', textTransform: 'uppercase' }}>
-          Mã phòng chờ
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: '#97baad', textTransform: 'uppercase' }}>
+            Mã phòng chờ
+          </span>
+          <button
+            type="button"
+            data-testid="rules-button"
+            onClick={handleOpenRules}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '999px',
+              backgroundColor: '#1a382e',
+              border: '1px solid #285446',
+              color: '#cbd5e1',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {!hasReadRules && (
+              <span
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: '#eab308',
+                  boxShadow: '0 0 6px #eab308',
+                }}
+              />
+            )}
+            Luật chơi
+          </button>
+        </div>
         <div
           style={{
             fontSize: '36px',
@@ -396,6 +446,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           🚪 Rời phòng
         </button>
       </footer>
+      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 };

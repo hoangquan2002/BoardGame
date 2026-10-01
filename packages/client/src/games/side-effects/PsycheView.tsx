@@ -34,8 +34,8 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
 }) => {
   // Tính tỷ lệ chuẩn 520x864
   const cardHeight = Math.round((cardWidth * 864) / 520);
-  // Thuốc lệch xuống 25% chiều cao lá để lộ tên bệnh (Phần 2 mục D)
-  const staggerOffset = Math.round(cardHeight * 0.25);
+  // Thuốc lệch xuống 34% chiều cao lá để lộ trọn tiêu đề Bệnh Lý (33-35%)
+  const staggerOffset = Math.round(cardHeight * 0.34);
 
   // Số bệnh chưa chữa
   const untreatedCount = psyche.filter((s) => s.drug === null).length;
@@ -62,13 +62,13 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '2px',
+        gap: '3px',
         width: '100%',
         boxSizing: 'border-box',
       }}
     >
-      {/* Tiêu đề nhỏ màu mờ (Phần 2 mục F) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Tiêu đề nhỏ màu mờ (Phần 2 mục F) - có khoảng cách dưới tránh viền mục tiêu chạm chữ */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
         <span
           style={{
             fontSize: '11px',
@@ -93,7 +93,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
         )}
       </div>
 
-      {/* Danh sách các ô Thể Trạng bậc thang: Thuốc nằm TRÊN Bệnh Lý, lệch xuống 25% (Mục D) */}
+      {/* Danh sách các ô Thể Trạng bậc thang: Thuốc nằm TRÊN Bệnh Lý, lệch xuống 34% (Mục D) */}
       <div
         style={{
           display: 'flex',
@@ -102,6 +102,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           width: '100%',
           boxSizing: 'border-box',
           alignItems: 'flex-start',
+          paddingTop: '2px',
         }}
       >
         {psyche.map((slot) => {
@@ -132,6 +133,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 cursor: isTargetable ? 'pointer' : 'default',
                 flexShrink: 0,
                 boxSizing: 'border-box',
+                opacity: dimmed ? 0.4 : 1,
                 transition: 'opacity 0.15s ease',
               }}
             >
@@ -150,13 +152,12 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                   cardId={slot.disorder.cardId}
                   size="normal"
                   isTarget={isTargetable}
-                  dimmed={dimmed}
                   style={{ width: `${cardWidth}px`, height: `${cardHeight}px` }}
                   onHold={() => onHoldCard?.(slot.disorder.cardId)}
                 />
               </div>
 
-              {/* LÁ THUỐC Ở TRÊN, LỆCH XUỐNG DƯỚI 25% (z-index 2) - Mục D */}
+              {/* LÁ THUỐC Ở TRÊN, LỆCH XUỐNG DƯỚI 34% (z-index 2) - Mục D */}
               {slot.drug && (
                 <div
                   style={{
@@ -171,7 +172,6 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                   <Card
                     cardId={slot.drug.cardId}
                     size="normal"
-                    dimmed={dimmed}
                     style={{
                       width: `${cardWidth}px`,
                       height: `${cardHeight}px`,
@@ -221,7 +221,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           <span style={{ fontWeight: 700, color: untreatedCount === 0 ? '#4ade80' : '#fda4af' }}>
             {untreatedCount === 0 ? 'Đã chữa hết bệnh' : `Còn ${untreatedCount} bệnh`}
           </span>
-          {!isLandscape && possibleSideEffects.length > 0 && (
+          {possibleSideEffects.length > 0 && (
             <span style={{ color: '#94a3b8' }}>
               {' · '}Có thể bị đưa: <strong style={{ color: '#fca5a5' }}>{possibleSideEffects.join(', ')}</strong>
             </span>

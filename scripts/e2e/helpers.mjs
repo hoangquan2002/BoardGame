@@ -290,6 +290,100 @@ export async function measureLayout(page) {
     const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
     const emojis = bodyText.match(emojiRegex) || [];
 
+    // 13. Khoảng trống dưới khối cuối cùng (Phần 1 mục 1: <= 40px)
+    let bottomGap = 0;
+    const asideEl = document.querySelector('aside');
+    const mainEl = document.querySelector('main');
+    if (asideEl && mainEl) {
+      // Màn ngang: đo trong mỗi cột
+      const lastAsideChild = asideEl.lastElementChild;
+      const lastMainChild = mainEl.lastElementChild;
+      const asideBottom = lastAsideChild ? lastAsideChild.getBoundingClientRect().bottom : innerHeight;
+      const mainBottom = lastMainChild ? lastMainChild.getBoundingClientRect().bottom : innerHeight;
+      const leftGap = Math.max(0, Math.round(innerHeight - asideBottom));
+      const rightGap = Math.max(0, Math.round(innerHeight - mainBottom));
+      bottomGap = Math.max(leftGap, rightGap);
+    } else {
+      // Màn dọc: đo từ khối cuối cùng (bài tay) tới đáy màn hình
+      const lastSection = document.querySelector('[data-testid="self-hand-section"]');
+      if (lastSection) {
+        bottomGap = Math.max(0, Math.round(innerHeight - lastSection.getBoundingClientRect().bottom));
+      }
+    }
+
+    // 14. Không có lá mờ nào nằm chồng lên lá khác (Phần 1 mục 6)
+    let noOverlappingSemiTransparentCards = true;
+    for (let i = 0; i < allCardImages.length; i++) {
+      const imgA = allCardImages[i];
+      const rA = imgA.getBoundingClientRect();
+      if (rA.width <= 0 || rA.height <= 0) continue;
+
+      let opA = 1;
+      let curr = imgA;
+      while (curr && curr !== document.body) {
+        const cs = window.getComputedStyle(curr);
+        const val = parseFloat(cs.opacity);
+        if (!isNaN(val)) opA *= val;
+        curr = curr.parentElement;
+      }
+
+      if (opA < 0.95) {
+        for (let j = 0; j < allCardImages.length; j++) {
+          if (i === j) continue;
+          const imgB = allCardImages[j];
+          const rB = imgB.getBoundingClientRect();
+          if (rB.width <= 0 || rB.height <= 0) continue;
+          const overlap = !(
+            rA.right <= rB.left ||
+            rA.left >= rB.right ||
+            rA.bottom <= rB.top ||
+            rA.top >= rB.bottom
+          );
+          if (overlap) {
+            noOverlappingSemiTransparentCards = false;
+            break;
+          }
+        }
+      }
+      if (!noOverlappingSemiTransparentCards) break;
+    }
+
+    // 15. Tại tâm mỗi phần tử chữ, elementFromPoint không bị che bởi lá bài (Phần 1 mục 7)
+    let noTextElementsCovered = true;
+    const textCheckSelectors = ['span', 'strong', 'h1', 'h2', 'h3', 'header span'];
+    const textNodes = Array.from(document.querySelectorAll(textCheckSelectors.join(',')))
+      .filter((el) => el.children.length === 0 && el.textContent && el.textContent.trim().length > 0);
+    for (const el of textNodes) {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth) {
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const topEl = document.elementFromPoint(cx, cy);
+        if (topEl && topEl !== el && !el.contains(topEl) && !topEl.contains(el)) {
+          if (topEl.tagName === 'IMG' || topEl.getAttribute('data-testid')?.includes('card')) {
+            noTextElementsCovered = false;
+            break;
+          }
+        }
+      }
+    }
+
+    // 16. Nếu xếp hàng ngang mà vừa thì bài tay không chồng lên nhau (Phần 1 mục 1)
+    let handNotOverlappingWhenFitting = true;
+    const handContainer = document.querySelector('[data-testid="self-hand-section"]');
+    if (handContainer && sortedHandEls.length > 1) {
+      const totalNoOverlapW = sortedHandEls.length * minHandCardWidth + (sortedHandEls.length - 1) * 8;
+      const containerW = handContainer.clientWidth;
+      if (containerW >= totalNoOverlapW) {
+        for (let i = 0; i < sortedHandEls.length - 1; i++) {
+          if (sortedHandEls[i + 1].rect.left < sortedHandEls[i].rect.right - 1) {
+            handNotOverlappingWhenFitting = false;
+            break;
+          }
+        }
+      }
+    }
+
     return {
       scrollWidth,
       scrollHeight,
@@ -313,6 +407,11 @@ export async function measureLayout(page) {
       allImagesNaturalWidthOk,
       allPointsNoOverlay,
       maxVerticalGap,
+      bottomGap,
+      bottomGapOk: bottomGap <= 40,
+      noOverlappingSemiTransparentCards,
+      noTextElementsCovered,
+      handNotOverlappingWhenFitting,
       noTextOverflowClipped,
       noWordBrokenAcrossLines,
       minFontSize: minFontSize === 999 ? 11 : Math.round(minFontSize),

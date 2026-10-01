@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadSavedPlayerName } from '../net/session.js';
+import { RulesModal } from '../games/side-effects/RulesModal.js';
 
 import type { UserSession } from '../net/session.js';
 
@@ -23,6 +24,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [name, setName] = useState<string>(() => loadSavedPlayerName());
   const [roomCode, setRoomCode] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [showRules, setShowRules] = useState(false);
 
   // Điền trước mã phòng nếu có trong URL query (?room=ABCDE)
   useEffect(() => {
@@ -95,18 +97,39 @@ export const HomePage: React.FC<HomePageProps> = ({
         >
           💊
         </div>
-        <h1
-          style={{
-            fontSize: '26px',
-            fontWeight: 800,
-            letterSpacing: '-0.5px',
-            color: '#f8fafc',
-            marginTop: '8px',
-          }}
-        >
-          Side Effects
-        </h1>
-        <p style={{ fontSize: '14px', color: '#97baad' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+          <h1
+            style={{
+              fontSize: '26px',
+              fontWeight: 800,
+              letterSpacing: '-0.5px',
+              color: '#f8fafc',
+              margin: 0,
+            }}
+          >
+            Side Effects
+          </h1>
+          <button
+            type="button"
+            data-testid="rules-button"
+            onClick={() => setShowRules(true)}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '999px',
+              backgroundColor: '#122520',
+              border: '1px solid #224036',
+              color: '#cbd5e1',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            Luật chơi
+          </button>
+        </div>
+        <p style={{ fontSize: '14px', color: '#97baad', margin: 0 }}>
           Trò chơi thẻ bài tâm lý &amp; tác dụng phụ
         </p>
       </header>
@@ -340,6 +363,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </button>
         </div>
       </div>
+      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 };

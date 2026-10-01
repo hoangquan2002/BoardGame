@@ -94,12 +94,16 @@ export async function runS2(browser, baseUrl) {
           (vp.allowOppText && !m.hasOppImages) ||
           (m.hasOppImages && m.minOppCardWidth >= vp.minOpp);
 
-        // Mục H1: Tiêu chí kiểm tra ảnh lá
+        // Mục H1 & Phần 1: Tiêu chí kiểm tra ảnh lá và bố cục
         const imagesContainOk = m.allImagesContain;
         const imagesRatioOk = m.allImagesRatioOk;
         const imagesNaturalWidthOk = m.allImagesNaturalWidthOk;
         const noOverlayOk = m.allPointsNoOverlay;
         const gapOk = m.maxVerticalGap <= 40;
+        const bottomGapOk = m.bottomGapOk;
+        const noSemiTransCardsOk = m.noOverlappingSemiTransparentCards;
+        const noTextCoveredOk = m.noTextElementsCovered;
+        const handOverlapProperOk = m.handNotOverlappingWhenFitting;
         const noClippedOk = m.noTextOverflowClipped;
         const noBrokenWordOk = m.noWordBrokenAcrossLines;
         const oppSeatsOk = m.allOpponentSeatsInViewport;
@@ -121,6 +125,10 @@ export async function runS2(browser, baseUrl) {
           imagesNaturalWidthOk &&
           noOverlayOk &&
           gapOk &&
+          bottomGapOk &&
+          noSemiTransCardsOk &&
+          noTextCoveredOk &&
+          handOverlapProperOk &&
           noClippedOk &&
           noBrokenWordOk &&
           oppSeatsOk &&
@@ -134,7 +142,7 @@ export async function runS2(browser, baseUrl) {
         testItems.push({
           name: `${vp.name} | ${cfg.players} người | ${cfg.hand} lá`,
           passed: rowPassed,
-          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, handCardW=${m.minHandCardWidth}px(>=${vp.minHand}), psycheW=${m.minPsycheCardWidth}px(>=${vp.minPsyche}), oppW=${m.minOppCardWidth}px, minExposure=${m.minHandExposure}px, contain=${imagesContainOk}, ratio=${imagesRatioOk}, noOverlay=${noOverlayOk}, maxGap=${m.maxVerticalGap}px, noBrokenWord=${noBrokenWordOk}, oppInVp=${oppSeatsOk}, fontMin=${m.minFontSize}px, emoji=${m.emojiCount}`,
+          detail: `sw/iw=${m.scrollWidth}/${m.innerWidth}, sh/ih=${m.scrollHeight}/${m.innerHeight}, handCardW=${m.minHandCardWidth}px(>=${vp.minHand}), psycheW=${m.minPsycheCardWidth}px(>=${vp.minPsyche}), oppW=${m.minOppCardWidth}px, minExposure=${m.minHandExposure}px, bottomGap=${m.bottomGap}px(<=40), maxGap=${m.maxVerticalGap}px, contain=${imagesContainOk}, ratio=${imagesRatioOk}, noOverlay=${noOverlayOk}, noSemiTransCards=${noSemiTransCardsOk}, noTextCovered=${noTextCoveredOk}, handOverlapProper=${handOverlapProperOk}, noBrokenWord=${noBrokenWordOk}, oppInVp=${oppSeatsOk}, fontMin=${m.minFontSize}px, emoji=${m.emojiCount}`,
         });
 
         tableRows.push({
@@ -147,6 +155,7 @@ export async function runS2(browser, baseUrl) {
           psycheStatus: `w=${m.minPsycheCardWidth}px (>=${vp.minPsyche}px)`,
           oppStatus: m.hasOppImages ? `w=${m.minOppCardWidth}px` : 'chữ',
           maxGap: `${m.maxVerticalGap}px`,
+          bottomGap: `${m.bottomGap}px`,
           noOverlay: noOverlayOk ? '✓' : '✗',
           passed: rowPassed ? 'ĐẠT' : 'KHÔNG ĐẠT',
         });
