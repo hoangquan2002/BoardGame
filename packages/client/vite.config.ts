@@ -45,8 +45,24 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/socket\.io/, /^\/healthz/],
+        navigateFallbackDenylist: [/^\/socket\.io/, /^\/healthz/, /^\/version/, /^\/robots\.txt/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/cards\/.*\.webp$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'card-images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
       },
     }),
   ],

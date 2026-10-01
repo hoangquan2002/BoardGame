@@ -82,6 +82,20 @@ export function createAppServer(options: ServerOptions = {}) {
       return;
     }
 
+    // Version endpoint (trả về git commit SHA của deploy)
+    if (url === '/version' || url.startsWith('/version?')) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ commit: process.env.RENDER_GIT_COMMIT ?? 'dev' }));
+      return;
+    }
+
+    // Robots.txt
+    if (url === '/robots.txt' || url.startsWith('/robots.txt?')) {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('User-agent: *\nDisallow: /\n');
+      return;
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Method Not Allowed');
@@ -96,10 +110,10 @@ export function createAppServer(options: ServerOptions = {}) {
       return;
     }
 
-    // Chặn truy cập dotfiles (ví dụ /.env, /.git)
+    // Chặn truy cập file PDF và dotfiles (ví dụ /.env, /.git)
     const cleanUrl = (url.split('?')[0] || '').toLowerCase();
     const segments = cleanUrl.split('/').filter(Boolean);
-    if (segments.some((s) => s.startsWith('.'))) {
+    if (cleanUrl.endsWith('.pdf') || segments.some((s) => s.startsWith('.'))) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Not Found');
       return;
