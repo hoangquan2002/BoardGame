@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { RoomState } from '@boardgame/core';
 import {
-  canEndTurn,
   getCardInfoVi,
+  getEndTurnState,
   getValidTargets,
-  mustDiscardCount,
   type SEAction,
   type SEPlayerView,
   type SEPlayerViewPlayer,
+  type SETradeView,
 } from '@boardgame/game-side-effects';
 import type { UserSession } from '../../net/session.js';
 import { CardZoomModal } from './CardZoomModal.js';
@@ -225,6 +225,71 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     (t) => t.proposerId === myId || t.targetPlayerId === myId,
   );
 
+  // Xác định xem có lời mời nào gửi tới mình đang chờ mình xử lý hay không (Phần 2.B)
+  const hasIncomingTrade = Boolean(
+    myActiveTrade &&
+      ((myActiveTrade.status === 'PROPOSED' && myActiveTrade.targetPlayerId === myId) ||
+        (myActiveTrade.status === 'RESPONDED' && myActiveTrade.proposerId === myId)),
+  );
+  const incomingTrade = hasIncomingTrade ? myActiveTrade : null;
+
+  // Thông báo kết thúc đổi bài (Phần 2.B mục 4)
+  const [tradeResultMessage, setTradeResultMessage] = useState<string | null>(null);
+  const prevTradesRef = useRef<SETradeView[]>(gameView.trades);
+  const prevLogsLengthRef = useRef<number>(gameView.logs.length);
+
+  useEffect(() => {
+    const prevTrades = prevTradesRef.current;
+    const currentTrades = gameView.trades;
+
+    // Tìm trade liên quan đến myId vừa biến mất (bị từ chối, huỷ, hoặc hoàn tất)
+    const disappearedTrade = prevTrades.find(
+      (pt) =>
+        (pt.proposerId === myId || pt.targetPlayerId === myId) &&
+        !currentTrades.some((ct) => ct.tradeId === pt.tradeId),
+    );
+
+    if (disappearedTrade) {
+      const otherId =
+        disappearedTrade.proposerId === myId
+          ? disappearedTrade.targetPlayerId
+          : disappearedTrade.proposerId;
+      const otherName = playerNames[otherId] || otherId;
+
+      const newLogs = gameView.logs.slice(prevLogsLengthRef.current);
+      const relevantLog = [...newLogs].reverse().find(
+        (log) => log.includes('giao dịch') || log.includes('đổi bài'),
+      );
+
+      let msg = '';
+      if (relevantLog) {
+        if (relevantLog.includes('từ chối')) {
+          msg =
+            disappearedTrade.proposerId === myId
+              ? `${otherName} từ chối đổi bài`
+              : `Đã từ chối đổi bài với ${otherName}`;
+        } else if (relevantLog.includes('hoàn tất')) {
+          msg = `Đã đổi bài với ${otherName}`;
+        } else if (relevantLog.includes('huỷ')) {
+          msg = `${otherName} đã huỷ đề nghị đổi bài`;
+        }
+      }
+      if (!msg) {
+        msg = `Giao dịch với ${otherName} đã kết thúc`;
+      }
+
+      setTradeResultMessage(msg);
+      setShowTradeModal(false);
+      const timer = setTimeout(() => {
+        setTradeResultMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    prevTradesRef.current = currentTrades;
+    prevLogsLengthRef.current = gameView.logs.length;
+  }, [gameView.trades, gameView.logs, myId, playerNames]);
+
   const handleSelectCard = (instanceId: string) => {
     if (selectedCardId === instanceId) {
       setSelectedCardId(null);
@@ -255,26 +320,43 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
+  // Logic trạng thái nút Kết thúc lượt (Phần 2.A)
+  const endTurnState = getEndTurnState(gameView, myId);
+  const endTurnAllowed = endTurnState.enabled;
+  const discardCount = endTurnState.discardCount;
+
   const handleEndTurnClick = async () => {
-    const discardCount = mustDiscardCount(gameView, myId);
+    if (!endTurnAllowed) return;
     if (discardCount > 0) {
       setShowDiscardModal(true);
       return;
     }
-    await onSendAction({ type: 'END_TURN' });
+    const ok = await onSendAction({ type: 'END_TURN' });
+    if (!ok) {
+      alert('Không thể kết thúc lượt. Vui lòng thử lại!');
+      return;
+    }
     setSelectedCardId(null);
   };
 
   const handleConfirmDiscard = async (cardIds: string[]) => {
     setShowDiscardModal(false);
-    const ok = await onSendAction({ type: 'DISCARD', cardIds });
-    if (ok) {
-      await onSendAction({ type: 'END_TURN' });
+    try {
+      const ok = await onSendAction({ type: 'DISCARD', cardIds });
+      if (!ok) {
+        alert('Lỗi khi bỏ bài thừa. Vui lòng thử lại!');
+        return;
+      }
+      const endOk = await onSendAction({ type: 'END_TURN' });
+      if (!endOk) {
+        alert('Lỗi khi kết thúc lượt sau khi bỏ bài. Vui lòng thử lại!');
+        return;
+      }
       setSelectedCardId(null);
+    } catch (err) {
+      alert(`Đã xảy ra lỗi: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
-
-  const endTurnAllowed = canEndTurn(gameView, myId);
 
   // Dải thông tin lá đang chọn (Phần 2 mục C):
   // 1-2 dòng, nằm ngay trên bài tay, thay thế dải TDP đè trên lá
@@ -472,6 +554,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             data-testid="menu-button"
             onClick={() => setShowMenu(!showMenu)}
             style={{
+              position: 'relative',
               background: 'none',
               border: 'none',
               color: '#f8fafc',
@@ -483,6 +566,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             }}
           >
             ⋯
+            {hasIncomingTrade && (
+              <span
+                data-testid="menu-badge"
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  right: '2px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ef4444',
+                  boxShadow: '0 0 6px rgba(239, 68, 68, 0.9)',
+                }}
+              />
+            )}
           </button>
 
           {showMenu && (
@@ -522,6 +620,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 Luật chơi
               </button>
             <button
+              data-testid="trade-menu-item"
               onClick={() => {
                 setShowMenu(false);
                 setShowTradeModal(true);
@@ -531,13 +630,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 textAlign: 'left',
                 background: 'none',
                 border: 'none',
-                color: '#f8fafc',
+                color: hasIncomingTrade ? '#38bdf8' : '#f8fafc',
                 fontSize: '12px',
-                fontWeight: 600,
+                fontWeight: hasIncomingTrade ? 700 : 600,
                 cursor: 'pointer',
               }}
             >
-              Đổi bài
+              {hasIncomingTrade ? 'Đổi bài (1 lời mời)' : 'Đổi bài'}
             </button>
             <button
               onClick={() => {
@@ -654,7 +753,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           transition: 'all 0.15s ease',
         }}
       >
-        Kết thúc lượt
+        {discardCount > 0 ? `Kết thúc lượt (bỏ ${discardCount} lá)` : 'Kết thúc lượt'}
       </button>
     </div>
   );
@@ -688,8 +787,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             flex: '0 0 42%',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
-            gap: '3px',
+            justifyContent: 'flex-start',
+            gap: '6px',
             height: '100%',
             maxHeight: '100%',
             overflowY: 'auto',
@@ -697,8 +796,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           }}
         >
           {renderTopBar()}
-          {/* Ghế các đối thủ xếp dọc (đảm bảo đủ chỗ không cắt) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, justifyContent: 'space-around' }}>
+          {/* Ghế các đối thủ xếp dọc (dồn lên đầu cột ngay dưới thanh trên - Phần 1 mục 2) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, justifyContent: 'flex-start' }}>
             {seatedOpponents.map(({ opponent, position }) => renderOpponentSeat(opponent, position))}
           </div>
         </aside>
@@ -777,10 +876,127 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {showDiscardModal && (
         <DiscardModal
           hand={myHand}
-          neededCount={mustDiscardCount(gameView, myId)}
+          neededCount={discardCount}
           onConfirmDiscard={handleConfirmDiscard}
           onCancel={() => setShowDiscardModal(false)}
         />
+      )}
+
+      {/* ===================== HỘP THÔNG BÁO LỜI MỜI ĐỔI BÀI (Phần 2.B) ===================== */}
+      {hasIncomingTrade && incomingTrade && !showTradeModal && (
+        <div
+          data-testid="trade-notice"
+          style={{
+            position: 'fixed',
+            top: isLandscape ? '44px' : '48px',
+            left: isLandscape ? '44%' : '12px',
+            right: isLandscape ? '16px' : '12px',
+            maxWidth: isLandscape ? '420px' : '456px',
+            margin: '0 auto',
+            zIndex: 1200,
+            backgroundColor: '#1e293b',
+            border: '1px solid #38bdf8',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
+            boxSizing: 'border-box',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0, fontSize: '13px', color: '#f8fafc', lineHeight: 1.3 }}>
+            {incomingTrade.status === 'PROPOSED' ? (
+              <span>
+                <strong style={{ color: '#38bdf8' }}>
+                  {playerNames[incomingTrade.proposerId] || incomingTrade.proposerId}
+                </strong>{' '}
+                mời bạn đổi bài: đưa bạn{' '}
+                <strong style={{ color: '#4ade80' }}>
+                  {incomingTrade.offerCardCount ?? incomingTrade.offerCardIds?.length ?? 1} lá
+                </strong>
+              </span>
+            ) : (
+              <span>
+                <strong style={{ color: '#38bdf8' }}>
+                  {playerNames[incomingTrade.targetPlayerId] || incomingTrade.targetPlayerId}
+                </strong>{' '}
+                đã trả lời, xác nhận đổi bài
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+            <button
+              type="button"
+              data-testid="trade-notice-view"
+              onClick={() => setShowTradeModal(true)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                backgroundColor: '#16a34a',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Xem
+            </button>
+            {incomingTrade.status === 'PROPOSED' && (
+              <button
+                type="button"
+                data-testid="trade-notice-reject"
+                onClick={async () => {
+                  await onSendAction({
+                    type: 'RESPOND_TRADE',
+                    tradeId: incomingTrade.tradeId,
+                    accept: false,
+                  });
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Từ chối
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Thông báo kết quả đổi bài (3 giây) */}
+      {tradeResultMessage && (
+        <div
+          data-testid="trade-result-banner"
+          style={{
+            position: 'fixed',
+            top: '48px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#1e293b',
+            border: '1px solid #10b981',
+            color: '#f8fafc',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            fontSize: '13px',
+            fontWeight: 600,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+            zIndex: 1250,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {tradeResultMessage}
+        </div>
       )}
 
       {/* Modal Đổi bài */}

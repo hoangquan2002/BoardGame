@@ -112,6 +112,17 @@ export async function runS2(browser, baseUrl) {
         const emojiOk = m.emojiCount <= 3;
         const consoleOk = consoleErrors.length === 0;
 
+        let oppSeatTopOk = true;
+        if (vp.name === '1280×800' && cfg.players === 2) {
+          const oppTop = await page.evaluate(() => {
+            const seat = document.querySelector('[data-testid^="opponent-seat-"]');
+            return seat ? seat.getBoundingClientRect().top : 999;
+          });
+          if (oppTop >= 120) {
+            oppSeatTopOk = false;
+          }
+        }
+
         const rowPassed =
           noHOverflow &&
           noVOverflow &&
@@ -132,6 +143,7 @@ export async function runS2(browser, baseUrl) {
           noClippedOk &&
           noBrokenWordOk &&
           oppSeatsOk &&
+          oppSeatTopOk &&
           endTurnOk &&
           minFontOk &&
           emojiOk &&

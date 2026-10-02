@@ -50,5 +50,9 @@ describe('Rules Content Validation (Task R2)', () => {
     expect(renderedHtml).toContain('7 giây');
     expect(renderedHtml).toContain('quá giờ mất hết bài tay');
     expect(renderedHtml).toContain('Cộng dồn số vòng phạt');
+    expect(renderedHtml).toContain('tối đa 3 lá');
+    expect(renderedHtml).not.toContain('Loại bỏ vĩnh viễn');
+    expect(renderedHtml).toContain('Tay quá 6 lá: bấm Kết thúc lượt rồi chọn lá để bỏ');
+    expect(renderedHtml).toContain('thông báo sẽ hiện ngay trên màn hình');
   });
 });

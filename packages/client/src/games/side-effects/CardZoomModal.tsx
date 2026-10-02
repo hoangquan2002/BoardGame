@@ -11,7 +11,14 @@ export const CardZoomModal: React.FC<CardZoomModalProps> = ({ cardId, onClose })
 
   useEffect(() => {
     mountTimeRef.current = Date.now();
-  }, [cardId]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cardId, onClose]);
 
   if (!cardId) return null;
 

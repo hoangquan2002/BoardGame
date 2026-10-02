@@ -5,9 +5,12 @@ import { runS1 } from './s1_lobby.mjs';
 import { runS2 } from './s2_mock_layout.mjs';
 import { runS3 } from './s3_card_content.mjs';
 import { runS4 } from './s4_touch_zoom.mjs';
+import { runS5 } from './s5_real_gameplay.mjs';
 import { runS8 } from './s8_rotate.mjs';
 import { runS13 } from './s13_socket_resilience.mjs';
 import { runS15 } from './s15_rules.mjs';
+import { runS16 } from './s16_discard_turn.mjs';
+import { runS17 } from './s17_trade.mjs';
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -34,7 +37,7 @@ async function main() {
   const { url, only, headed } = parseArgs();
   console.log(`\n========================================`);
   console.log(`BẮT ĐẦU CHẠY E2E TESTS TRÊN: ${url}`);
-  console.log(`Kịch bản: ${only ? only.join(', ') : 'TẤT CẢ (S0, S1, S2, S3, S4, S8, S13, S15)'}`);
+  console.log(`Kịch bản: ${only ? only.join(', ') : 'TẤT CẢ (S0, S1, S2, S3, S4, S5, S8, S13, S15, S16, S17)'}`);
   console.log(`Chế độ: ${headed ? 'Headed' : 'Headless'}`);
   console.log(`========================================\n`);
 
@@ -54,7 +57,7 @@ async function main() {
 
   let browser = null;
   try {
-    const needsBrowser = !only || only.some((k) => ['S1', 'S2', 'S3', 'S4', 'S8', 'S13', 'S15'].includes(k));
+    const needsBrowser = !only || only.some((k) => ['S1', 'S2', 'S3', 'S4', 'S5', 'S8', 'S13', 'S15', 'S16', 'S17'].includes(k));
     if (needsBrowser) {
       browser = await launchBrowser({ headed });
     }
@@ -104,6 +107,17 @@ async function main() {
       }
     }
 
+    // S5: Real Gameplay (2 players + 2 bots)
+    if (!only || only.includes('S5')) {
+      console.log(`\n▶ Đang chạy kịch bản S5: Kiểm tra ván thật 2 người thật + 2 máy...`);
+      const s5Res = await runS5(browser, url);
+      results.push(s5Res);
+      console.log(`  S5: ${s5Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
+      for (const it of s5Res.items) {
+        console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
+      }
+    }
+
     // S8: Screen Rotation
     if (!only || only.includes('S8')) {
       console.log(`\n▶ Đang chạy kịch bản S8: Kiểm tra xoay ngang/dọc giữa ván...`);
@@ -134,6 +148,28 @@ async function main() {
       results.push(s15Res);
       console.log(`  S15: ${s15Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
       for (const it of s15Res.items) {
+        console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
+      }
+    }
+
+    // S16: Discard Turn (> 6 cards)
+    if (!only || only.includes('S16')) {
+      console.log(`\n▶ Đang chạy kịch bản S16: Kiểm tra Kết thúc lượt khi bài tay > 6 lá & DiscardModal...`);
+      const s16Res = await runS16(browser, url);
+      results.push(s16Res);
+      console.log(`  S16: ${s16Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
+      for (const it of s16Res.items) {
+        console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
+      }
+    }
+
+    // S17: Trade Between 2 Real Players
+    if (!only || only.includes('S17')) {
+      console.log(`\n▶ Đang chạy kịch bản S17: Kiểm tra đổi bài giữa 2 người thật & trade-notice...`);
+      const s17Res = await runS17(browser, url);
+      results.push(s17Res);
+      console.log(`  S17: ${s17Res.passed ? '✅ ĐẠT' : '❌ THẤT BẠI'}`);
+      for (const it of s17Res.items) {
         console.log(`    - ${it.passed ? '✓' : '✗'} ${it.name}: ${it.detail}`);
       }
     }

@@ -226,3 +226,28 @@ export function canEndTurn(view: SEPlayerView, playerId: string): boolean {
   }
   return mustDiscardCount(view, playerId) === 0;
 }
+
+export interface EndTurnState {
+  enabled: boolean;
+  discardCount: number;
+}
+
+/**
+ * Trạng thái nút Kết thúc lượt trên giao diện:
+ * - enabled = true khi: đúng lượt mình, không có pendingChoice, ván chưa kết thúc.
+ *   (Số lá trên tay KHÔNG làm khoá nút, nếu > 6 lá thì bấm nút sẽ mở hộp DiscardModal).
+ * - discardCount: số lá bài bắt buộc phải bỏ (bài trên tay - 6).
+ */
+export function getEndTurnState(view: SEPlayerView, playerId: string): EndTurnState {
+  const discardCount = mustDiscardCount(view, playerId);
+  const enabled =
+    view.winner === null &&
+    view.pendingChoice === null &&
+    view.activePlayerId === playerId;
+
+  return {
+    enabled,
+    discardCount,
+  };
+}
+

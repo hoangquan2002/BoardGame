@@ -1,170 +1,129 @@
 # Prompt cho agent
 
-> File này gồm 2 phần: (1) việc còn tồn từ giai đoạn trước, (2) yêu cầu giai đoạn hiện tại. Làm **cả hai**, Phần 1 trước.
+> File này chỉ chứa: (1) việc còn tồn từ giai đoạn trước, (2) yêu cầu giai đoạn hiện tại. Làm **cả hai**.
 > Kế hoạch chung: [design.md](design.md) (agent chỉ đọc, không sửa). Quy trình mỗi giai đoạn: `design.md` mục 7.
-> Prompt này **ưu tiên hơn** `design.md` nếu hai bên lệch nhau.
-> **Báo cáo trung thực**: bước nào không thực sự chạy được thì ghi "không kiểm tra được" kèm lý do, **không** ghi ✅.
+> Prompt này **ưu tiên hơn** `design.md` nếu lệch nhau.
+> **Trung thực trong báo cáo**: bước nào không thực sự chạy được thì ghi "không kiểm tra được" + lý do, **không** ghi ✅.
 
-## Phần 1 — Việc còn tồn (review R1)
+## Phần 1 — Việc còn tồn (review R2)
 
-Người quản lý đã review commit `4a56b8d` (Render đã deploy đúng commit này).
+Người quản lý đã review commit `94acd09`; Render đã deploy đúng commit này.
 
-**Đạt:**
-- build/lint/test qua (121/121, lint 0 cảnh báo).
-- 18 ảnh lá trùng **từng byte** với ảnh nhúng trong PDF. Người quản lý đã tự băm lại từ PDF, không dùng `--check` của agent.
-- Không còn chữ đè lên ảnh, không còn "…", không bẻ đôi từ.
-- Ghế đối thủ ở màn ngang hiện đủ. Mock chỉ dùng lá có thật.
-
-**Chưa đạt.** Người quản lý tự đo trên `https://boardgame-02k2.onrender.com/?mock=1` và xem ảnh ván thật của agent
-(`gameplay_screenshots/step_15_*.png`, `r1_zoom_390x844.png`):
-
-1. **Lá không lớn thêm khi còn chỗ.**
-   - Ở mọi cấu hình, cỡ lá đúng bằng **mức tối thiểu** của bảng R1 (76/72, 96/84, 64/60, 70/66, 124/114), không bao giờ lớn hơn.
-   - 390×844, 2 người, 4 lá: dưới bài tay còn trống **~220px** (ván thật `step_15` cũng trống ~210px).
-   - 1280×800, 2 người, 4 lá:
-     - dưới bài tay trống ~240px;
-     - cột trái trống ~600px dưới ghế đối thủ;
-     - 4 lá trên tay vẫn xếp chồng dù còn thừa ~650px chiều ngang.
-   - S2 ghi "maxGap ≤ 3px" vì chỉ đo khoảng hở **giữa** các khối, không đo khoảng trống **dưới khối cuối**. Sửa:
-     - lá lớn dần tới khi hết chỗ;
-     - trong S2, khoảng trống dưới khối cuối ≤ 40px và khoảng trống trong mỗi cột (khi màn ngang) ≤ 40px;
-     - nếu xếp hàng ngang mà vẫn vừa thì bài tay **không chồng** lên nhau.
-2. **Thuốc che nửa dưới tên Bệnh Lý.**
-   - Lá Thuốc chỉ lệch xuống 25% chiều cao lá, nên chữ tiêu đề in trên lá Bệnh Lý ("TRẦM CẢM", "CHỨNG RUN") bị cắt ngang thân chữ.
-   - Phải lộ **trọn** dòng tiêu đề, khoảng 33–35% chiều cao lá. Tự xem ảnh chụp để xác nhận cho cả 8 Bệnh Lý.
-3. **Dòng "Có thể bị đưa: …" của mình biến mất ở màn ngang và máy tính.** Ở 667×375 và 1280×800 chỉ còn chữ "Còn 2 bệnh".
-4. **Màn ngang 667×375**: ghế đối thủ chỉ hiện chữ, nhưng cột trái còn trống ~130px. Còn chỗ thì phải hiện ảnh Thể Trạng
-   đối thủ.
-5. **Đồng hồ lượt là số giả.**
-   - Khi không có `deadline`, `GameBoard` hiện cố định "0:42".
-   - Khi có, nó lấy `deadline` của Chứng run (7 giây) làm đồng hồ lượt.
-   - Server **chưa** có đồng hồ lượt (D4 chưa làm), nên người chơi thật thấy số sai.
-   - Sửa: ván thật **ẩn** `turn-timer` cho tới D4; chỉ `/?mock=1` được hiện số mẫu. Đếm ngược Chứng run vẫn ở hộp chọn lá như cũ.
-6. **Lá chồng nhau bị trong suốt, nhìn xuyên qua nhau** (`step_15`).
-   - `opacity: 0.4` đang đặt cho **từng lá**. Ở bài tay và ở cột Thể Trạng có Thuốc, lá bên dưới lộ xuyên qua lá bên trên:
-     "ĐIÊN LOẠN" hiện xuyên qua lá Triệu Chứng, Bệnh Lý hiện xuyên qua lá Thuốc. Hình lá bị biến dạng so với nguồn.
-   - Sửa:
-     - làm mờ theo **nhóm**: đặt `opacity` lên khung chứa cả nhóm (cả ghế đối thủ, cả cột Bệnh Lý + Thuốc), không đặt lên
-       từng lá đang chồng nhau;
-     - **không** làm mờ bài tay khi đang chọn lá, vì bài tay không phải mục tiêu.
-   - S2 thêm phép đo: không có `<img>` lá nào có `opacity` < 1 nằm chồng lên một lá khác.
-7. **Lá che mất nhãn chữ** (`step_15`).
-   - Lá đang chọn nhô lên che chữ "Bài trên tay" (chỉ còn "Bài trên").
-   - Viền của ô mục tiêu đè lên chữ "Thể Trạng (4 ô)".
-   - Sửa: lá nhô lên hay viền trạng thái đều không được che chữ nào. S2 thêm phép đo: tại tâm mỗi phần tử chữ,
-     `elementFromPoint` phải trả về chính phần tử chữ đó.
-8. **Phóng to còn khung nền thừa** (`r1_zoom_390x844.png`).
-   - Lá nằm trong một khung nền xanh đậm cao hơn lá ~90px ở cả trên và dưới.
-   - Sửa: khung ôm khít đúng lá, chỉ còn nền tối mờ phủ toàn màn hình.
-9. **Báo cáo và git:**
-   - `result.md` ghi commit `140eda5`, nhưng commit này **không có** trong lịch sử.
-   - Cột URL thật toàn ghi "Chờ push", nghĩa là chưa test trên URL thật. Lần này phải chạy đủ cả hai cột.
-   - Bộ ảnh `step_*` chụp ở **localhost** (ảnh phòng chờ hiện link `http://localhost:3000/?room=…`), trong khi prompt R1
-     yêu cầu chụp từ URL thật. Lần này chụp từ URL thật, ghi URL đã chụp vào `gameplay_screenshots/README.md`.
-   - Còn thay đổi chưa commit trong `mockGameView.ts` (tham số `winner`) và `scripts/record_gameplay.mjs`: commit hoặc bỏ.
-     Không để dở.
+- **Đạt**:
+  - `pnpm build`, `pnpm lint`, `pnpm test` đều qua (125/125).
+  - Có nút "Luật chơi" ở trang chủ, phòng chờ và bàn chơi (nút "?" và mục trong menu ⋯).
+  - Lá to dần theo chỗ trống:
+    - 390×844: bài tay 142px, Thể Trạng 92px;
+    - 1280×800: bài tay 172px, Thể Trạng 142px.
+  - Thuốc lệch 34%, lộ trọn tên Bệnh Lý.
+  - Dòng "Có thể bị đưa" hiện ở mọi kích thước.
+- **Chưa đạt**:
+  1. **Luật chơi ghi sai 2 chỗ** (`RulesModal.tsx`):
+     - Dòng 268: "Liệu Pháp: Loại bỏ **vĩnh viễn**". Sai: bệnh đã bị loại bỏ vẫn có thể mắc lại (`side-effects-rules.md` mục 5.4).
+     - Nghiện cờ bạc: "luôn rút được ngẫu nhiên **3** lá". Đúng là **tối đa** 3 lá; tay ít hơn thì lấy hết.
+  2. **1280×800**: ghế đối thủ duy nhất nằm giữa cột trái, phía trên và dưới đều trống ~300px. Dồn các ghế lên đầu cột,
+     ngay dưới thanh trên.
+  3. **Commit message không dấu**: "toi uu s15_rules…", "cap nhat bao cao…". Theo quy định, dùng tiếng Việt **có dấu**
+     hoặc tiếng Anh.
+  4. **Bộ e2e không có ván thật nhiều người** nên bỏ lọt 2 lỗi chặn ván ở Phần 2. Kịch bản S5 (`design.md` mục 8) chưa
+     từng được làm. Làm trong Phần 2.
 
 ---
 
-## Phần 2 — Task R2: nút "Luật chơi" cho người mới
+## Phần 2 — Task R3: sửa 2 lỗi người dùng gặp khi chơi thật
 
-Người dùng cần **một nút ở phòng chờ và ở bàn chơi**. Bấm vào thì mở phần giới thiệu luật cho người mới chơi.
-Trang chủ cũng thêm nút này, vì người mới vào trang chủ trước.
+Người dùng chơi thật và báo 2 lỗi, ưu tiên cao nhất vì làm hỏng ván:
+- "Khi đề nghị đổi bài, người được đề nghị không thấy thông báo."
+- "Có lúc kích bệnh Nghiện cờ bạc 2 lần rồi thì không kết thúc lượt được, có thể do quá nhiều lá trên tay."
 
-### A. Nội dung
-- **Nguồn duy nhất**: `side-effects-rules.md`, đã đối chiếu rulebook Việt hoá.
-  - **Không tự đặt luật.** Chỗ nào không rõ → ghi `DỪNG — cần hỏi`.
-  - Không đưa vào: lá Gia Vị (Kháng Thuốc, Chẩn Đoán Sai), luật 6–8 người, mục "Thông tin còn thiếu", bản quyền.
-- **Chỉ mô tả những gì app đang làm thật.** Đồng hồ lượt 120 giây, vắng mặt, máy chơi thay, thoát ván… thuộc D4, chưa có
-  trên server → **chưa** ghi. Tới D4 thì bổ sung.
-- Dùng thuật ngữ in trên lá: Thể Trạng, Bệnh Lý, Thuốc, Triệu Chứng, Liệu Pháp, "Có thể gây ra", kẻ gây hại.
-  Không dùng chữ tiếng Anh (Psyche, Disorder…).
-- Viết ngắn, câu đơn, dễ hiểu với người chưa chơi bao giờ. Thứ tự các mục:
-  1. **Tóm tắt 30 giây** (≤ 6 dòng): mục tiêu, mỗi lượt làm gì, 4 loại lá dùng để làm gì.
-  2. **Mục tiêu**: chữa hết Bệnh Lý trong Thể Trạng của mình trước người khác thì thắng ngay.
-     Chữa = đặt Thuốc lên, hoặc dùng Liệu Pháp loại bỏ.
-  3. **Chuẩn bị**: mỗi người 4 Bệnh Lý khác loại, ngửa trước mặt; 4 lá trên tay; người đi đầu chọn ngẫu nhiên.
-  4. **Một lượt**: rút 2 lá → đánh tối đa 2 lá (có thể không đánh) → tay quá 6 lá thì bỏ cho còn 6.
-     - Lá đánh ra có tác dụng ngay, không ai chặn được.
-     - Chồng rút hết thì xáo chồng bỏ thành chồng rút mới.
-  5. **4 loại lá**: mỗi loại có **ảnh lá thật** (dùng component `Card`, nhấn giữ để phóng to như trên bàn) và 2–3 câu giải thích.
-     - **Bệnh Lý**: nằm trong Thể Trạng thì là bệnh phải chữa. Trên tay thì dùng để đưa cho người đang "mở cửa" cho bệnh đó.
-       Mỗi Thể Trạng chỉ có tối đa 1 lá mỗi loại.
-     - **Thuốc**:
-       - đặt lên đúng Bệnh Lý nó trị → bệnh đó đã chữa và không bị Triệu Chứng đánh vào nữa;
-       - đổi lại, người khác được đưa cho bạn những Bệnh Lý ghi ở dòng "Có thể gây ra" (nếu bạn chưa có bệnh đó, kể cả
-         bệnh đã chữa cũng tính là đã có).
-     - **Triệu Chứng**: đánh vào 1 Bệnh Lý **chưa chữa** của người khác. Người đó phải chịu hình phạt ghi trên lá Bệnh Lý.
-     - **Liệu Pháp**: loại bỏ hẳn 1 Bệnh Lý bất kỳ của mình, kể cả bệnh đã có Thuốc.
-       - Ngoại lệ: **Chứng run** không dùng Liệu Pháp được;
-       - **Chứng biếng ăn** không có Thuốc, chỉ chữa được bằng Liệu Pháp;
-       - bệnh bị loại bỏ có thể bị mắc lại sau này.
-  6. **Bảng Thuốc**: tên thuốc → trị bệnh gì → có thể gây ra. Đủ 7 Thuốc.
-  7. **Bảng hình phạt**: 8 Bệnh Lý → hình phạt khi bị Triệu Chứng, đúng cách app áp dụng (`side-effects-rules.md` mục 5.3).
-     - Ghi rõ: Chứng run có 7 giây để chọn 3 lá bỏ;
-     - Lo âu / Nghiện cờ bạc thì kẻ gây hại luôn lấy bài;
-     - Trầm cảm / Liệt dương / Chứng biếng ăn cộng dồn theo từng lượt bị đánh.
-  8. **Đổi bài**: đổi được với người khác kể cả ngoài lượt mình. Thoả thuận không bắt buộc phải giữ.
-  9. **Thao tác trên app**:
-     - chạm lá để chọn, rồi chạm mục tiêu đang sáng;
-     - nhấn giữ lá để xem to;
-     - nút **Kết thúc lượt**;
-     - menu ⋯ có Đổi bài, Nhật ký, Thoát.
-- **Bảng 6 và 7 lấy từ dữ liệu** (`cards.json` / `getCardInfoVi`), không gõ tay, để không lệch với engine. Mỗi dòng có ảnh nhỏ
-  của lá tương ứng.
-- Thêm unit test:
-  - nội dung luật có đủ 8 Bệnh Lý, 7 Thuốc, đúng tác dụng phụ theo `cards.json`;
-  - không có chữ "Kháng Thuốc", "Chẩn Đoán Sai", "Psyche", "Disorder".
+Người quản lý đã tìm ra nguyên nhân, ghi bên dưới. Agent tự kiểm chứng lại trước khi sửa.
 
-### B. Nút và cách mở
-- **Trang chủ** và **phòng chờ**:
-  - nút chữ "Luật chơi", thấy được ngay, không cần cuộn, ở cả 320×568 và 667×375;
-  - không thêm emoji mới.
-- **Bàn chơi**:
-  - thanh trên có nút tròn nhỏ chữ "?" (là ký tự thường, không phải emoji), `aria-label="Luật chơi"`;
-  - menu ⋯ cũng có mục "Luật chơi";
-  - không làm lệch nút Kết thúc lượt; số loại emoji trong bàn chơi vẫn ≤ 3.
-- **Người mới**: nút ở phòng chờ có dấu nhấn nhẹ (chấm màu) cho tới khi người dùng mở luật lần đầu (lưu `localStorage`).
-  **Không** tự bật hộp luật.
-- **Cách hiển thị**: một tấm phủ gần toàn màn hình (trên điện thoại là toàn màn hình), dùng chung một component cho cả 3 chỗ.
-  - Có mục lục ở đầu (các nút nhảy tới từng mục) và nút đóng luôn nhìn thấy. Đóng được bằng nút đóng, phím Esc và nút
-    Back của điện thoại (dùng `history`, không rời trang).
-  - **Chỉ cuộn bên trong** tấm phủ; trang phía sau không cuộn, không tràn ngang.
-  - Bảng không được tràn ngang ở 320px. Màn hẹp thì đổi bảng thành danh sách thẻ.
-  - Chữ thân ≥ 14px, nhỏ nhất 12px. Cùng màu và font với giao diện R1.
-- **Mở luật giữa ván không được ảnh hưởng ván chơi**: vẫn kết nối socket; lá đang chọn vẫn được chọn sau khi đóng.
-  - Nếu tới lượt mình trong lúc đang mở, đầu tấm phủ hiện dòng "Đến lượt bạn" (không tự đóng).
-  - Hộp chọn lá bắt buộc (Lo âu, Chứng run) phải hiện **trên** tấm luật, để không lỡ 7 giây của Chứng run.
-- `data-testid`: `rules-button` (trang chủ, phòng chờ, thanh trên bàn chơi), `rules-menu-item`, `rules-sheet`, `rules-close`.
+### A. Không kết thúc lượt được khi trên tay có hơn 6 lá (lỗi chặn ván)
+- **Nguyên nhân** (lỗi phát sinh khi làm lại giao diện):
+  - `GameBoard.tsx` đặt `endTurnAllowed = canEndTurn(gameView, myId)`, rồi dùng `disabled={!endTurnAllowed}` cho nút
+    Kết thúc lượt.
+  - `canEndTurn` trả `false` khi tay > 6 lá, nên nút bị khoá. Vì vậy `handleEndTurnClick` (chỗ mở `DiscardModal` để bỏ bài)
+    **không bao giờ chạy được**.
+  - Trước đợt làm lại (`7a1f658`), nút chỉ bị khoá khi `!isMyTurn || pendingChoice`.
+- **Không riêng Nghiện cờ bạc**: lượt nào kết thúc với 7 lá trở lên đều bị kẹt. Ví dụ: có 6 lá, rút 2 lên 8, rồi đánh ít hơn
+  2 lá. Người quản lý đo trên URL thật `/?mock=1&players=2&turn=me`: `hand=4` → nút bật; `hand=8` và `hand=12` → nút **bị khoá**.
+- **Sửa**:
+  1. Nút Kết thúc lượt bật khi: đúng lượt mình, không có `pendingChoice`, ván chưa kết thúc. Số lá trên tay **không** được
+     làm khoá nút.
+  2. Tay > 6 lá → bấm nút sẽ mở `DiscardModal`. Bỏ đủ lá → gửi `DISCARD` rồi `END_TURN`. Bước nào lỗi thì hiện thông báo
+     lỗi, không im lặng.
+  3. Khi tay > 6 lá, nút ghi rõ việc phải làm, vd. "Kết thúc lượt (bỏ 2 lá)".
+  4. `DiscardModal`:
+     - dùng component `Card` (ảnh trọn lá, đúng nguồn, không chữ đè lên ảnh) thay cho `CardView` cũ;
+     - chọn được mọi lá kể cả khi tay có 15 lá, ở 375×667 và 667×375. Được cuộn bên trong hộp, trang không cuộn;
+     - nhấn giữ lá thì phóng to như trên bàn.
+  5. Tách logic trạng thái nút ra hàm thuần, vd. `getEndTurnState(view, me)` trả `{ enabled, discardCount }`, kèm unit test
+     cho các ca: tay 6, 7, 8, 12; có `pendingChoice`; không phải lượt mình; ván đã kết thúc.
+- **Luật chơi**: mục "Một lượt" thêm câu "Tay quá 6 lá: bấm Kết thúc lượt rồi chọn lá để bỏ".
 
-### C. Test
-- **S15 🌐 (mới, thêm vào runner)** ở 320×568, 375×667, 667×375, 1280×800:
-  - mở luật từ trang chủ, phòng chờ, và bàn chơi (cả nút "?" lẫn mục trong menu ⋯; bàn chơi đo trên `/?mock=1` và phòng thật
-    1 người + 1 máy);
-  - `rules-sheet` hiện; trang không tràn: `scrollWidth ≤ innerWidth`;
-  - tấm luật cuộn được bên trong; có đủ tên 8 Bệnh Lý và 7 Thuốc; mọi `<img>` có `naturalWidth > 0`;
-  - cỡ chữ nhỏ nhất ≥ 12px;
-  - đóng bằng nút đóng, bằng Esc, bằng `page.goBack()` → về đúng màn trước, không rời phòng;
-  - ở phòng thật: chọn 1 lá → mở luật → đóng → lá vẫn được chọn, không hiện "mất kết nối";
-  - chấm "người mới" có ở lần đầu, mất sau khi mở luật, F5 vẫn mất.
-- **Chạy lại** S0, S1, S2, S3, S4, S8, S13 trên local và URL thật.
-  - S2 đo thêm khoảng trống dưới cùng (Phần 1 mục 1).
-  - Ván thật không còn `turn-timer` (Phần 1 mục 5).
-- **Ảnh chụp** vào `gameplay_screenshots/`, chụp từ URL thật, `deviceScaleFactor: 2`:
-  - `r2_rules_<chỗ mở>_<w>x<h>.png` cho trang chủ, phòng chờ, bàn chơi, ở 375×667 và 667×375;
-  - chụp lại bộ `r1_*` sau khi sửa Phần 1;
-  - tự xem lại từng ảnh trước khi báo.
+### B. Người được mời đổi bài không thấy thông báo
+- **Nguyên nhân** (cũng là lỗi phát sinh khi làm lại giao diện):
+  - Hiện `TradeModal` chỉ hiện khi tự mở menu ⋯ → Đổi bài.
+  - Bản cũ (`7a1f658`) có `(showTradeModal || myActiveTrade) && <TradeModal …>`: có lời mời là tự hiện. Nút Đổi bài cũng
+    được tô sáng. Bản mới làm mất cả hai.
+- Luồng đổi bài trong engine:
+  1. `PROPOSE_TRADE`: người mời gửi lời mời.
+  2. Người được mời trả lời (`RESPOND_TRADE`): đồng ý (kèm lá đưa lại) hoặc từ chối.
+  3. Người mời chốt (`CONFIRM_TRADE`) hoặc huỷ (`CANCEL_TRADE`).
+
+  Như vậy **cả 2 người** đều có lúc phải chờ người kia, nên cả 2 đều cần được báo.
+- **Sửa**:
+  1. **Có lời mời gửi tới mình** (`status = PROPOSED`, `targetPlayerId = mình`):
+     - hiện ngay một hộp nổi `data-testid="trade-notice"` ghi "**Bình** mời bạn đổi bài: đưa bạn 1 lá";
+     - hộp có nút "Xem" (mở `TradeModal` ở bước trả lời) và nút "Từ chối";
+     - hộp không che bài tay và không che nút Kết thúc lượt;
+     - hộp hiện cả khi **không phải lượt mình**, và còn hiện cho tới khi lời mời được trả lời hoặc bị huỷ.
+  2. **Người kia đã trả lời** (`status = RESPONDED`, `proposerId = mình`): hiện `trade-notice` tương tự, "Bình đã trả lời,
+     xác nhận đổi bài", có nút "Xem".
+  3. **Dấu nhắc trên menu**: khi có lời mời đang chờ mình xử lý, nút ⋯ có chấm nhắc (`data-testid="menu-badge"`); mục
+     "Đổi bài" trong menu ghi rõ "Đổi bài (1 lời mời)".
+  4. **Kết thúc đổi bài**: lời mời bị từ chối, bị huỷ hay đổi xong → cả 2 người thấy 1 dòng thông báo ~3 giây, vd.
+     "Bình từ chối đổi bài" / "Đã đổi bài với Bình". Lấy kết quả từ `logs` hoặc từ thay đổi của `trades`. **Không** sửa engine
+     chỉ để phục vụ việc này; sự kiện có cấu trúc để sang D3.
+  5. **Thứ tự ưu tiên khi nhiều thứ cùng hiện**:
+     - hộp chọn lá bắt buộc (Lo âu, Chứng run) luôn nằm trên `trade-notice`;
+     - nếu đang mở Luật chơi hoặc Nhật ký thì `trade-notice` vẫn thấy được, hoặc hiện ngay khi đóng lại.
+  6. Không thêm emoji mới; số loại emoji trong bàn chơi vẫn ≤ 3.
+- **Luật chơi**: mục "Đổi bài" thêm 1 câu về chỗ hiện lời mời.
+
+### C. Kịch bản test mới (đều chạy cả local lẫn 🌐 URL thật)
+- **S5 — ván thật 2 người** (`design.md` mục 8):
+  - 2 người thật, mỗi người 1 context ẩn danh riêng, cộng 2 máy;
+  - mỗi người đánh được ít nhất 1 lá của mỗi loại đang có trên tay;
+  - người kia thấy thay đổi trong ≤ 3 giây;
+  - không có lỗi console.
+- **S16 — tay > 6 lá**:
+  - trong ván thật, không đánh lá nào cho tới khi tay có ≥ 8 lá. Cách tạo: rút 2 lá mỗi lượt, lượt sau không đánh;
+  - nút Kết thúc lượt **bật** và ghi số lá phải bỏ;
+  - bấm → `DiscardModal` hiện → chọn đủ lá → lượt chuyển sang người kế; tay còn 6 lá;
+  - chạy ở 375×667 và 667×375;
+  - thêm ca `/?mock=1&hand=12&turn=me`: nút bật, hộp bỏ bài chọn được đủ 6 lá.
+- **S17 — đổi bài giữa 2 người thật**:
+  - A mời B (lúc đó **không phải** lượt B) → B thấy `trade-notice` trong ≤ 3 giây mà không cần mở menu;
+  - B đồng ý và đưa 1 lá → A thấy `trade-notice` → A xác nhận → bài trên tay cả 2 người thay đổi đúng;
+  - nhánh từ chối: cả 2 người thấy dòng "từ chối";
+  - nhánh huỷ: A huỷ → `trade-notice` của B biến mất;
+  - B đang mở Luật chơi khi lời mời tới → đóng luật thì vẫn thấy lời mời.
+- **Chạy lại** S0, S1, S2, S3, S4, S8, S13, S15. Tiêu chí S2 không đổi, thêm ca 1280×800 cho Phần 1 mục 2.
+- **Ảnh chụp** từ URL thật vào `gameplay_screenshots/`:
+  - `r3_trade_notice_375x667.png`;
+  - `r3_end_turn_8_cards_375x667.png`;
+  - `r3_discard_modal_375x667.png` và `r3_discard_modal_667x375.png`;
+  - `r3_1280x800_p2_h4.png`.
 
 ### D. Quy trình và điểm dừng
-- Commit từng bước nhỏ, message tiếng Việt có dấu hoặc tiếng Anh. Mỗi lần push, `result.md` phải ghi đúng hash có trong
-  `git log`.
-- `pnpm build` / `pnpm lint` (0 lỗi, 0 cảnh báo) / `pnpm test` đều qua.
-- Chạy e2e local → `git push origin main` → chờ `/version` trả về đúng `git rev-parse HEAD` → chạy e2e 🌐 trên URL thật → chụp ảnh.
-- Push lỗi xác thực → ghi lệnh vào `result.md` cho người dùng tự push rồi **dừng**. Chưa test trên URL thật thì không ghi đạt.
+- Commit từng bước nhỏ, message tiếng Việt có dấu hoặc tiếng Anh.
+- Trước khi push: `pnpm build`, `pnpm lint` (0 cảnh báo) và `pnpm test` đều qua.
+- Thứ tự: chạy e2e local → `git push origin main` → chờ `/version` = `git rev-parse HEAD` → chạy e2e 🌐 → chụp ảnh.
+- Push lỗi xác thực → ghi lệnh cho người dùng tự push rồi **dừng**. Chưa test URL thật thì không ghi đạt.
 - `result.md`:
-  - dòng đầu: `Trạng thái: DỪNG — chờ duyệt R2 | Commit: <hash> | Deploy: <commit trên /version>`;
-  - bảng S0, S1, S2, S3, S4, S8, S13, S15, mỗi kịch bản 2 cột Local / URL thật, kèm số đo thật;
-  - với S2, ghi cỡ lá **lớn nhất** đạt được và khoảng trống dưới cùng theo từng màn hình;
-  - danh sách ảnh chụp.
+  - dòng đầu: `Trạng thái: DỪNG — chờ người dùng thử lại R3 | Commit: <hash> | Deploy: <commit trên /version>`;
+  - bảng kết quả từng kịch bản, 2 cột Local / URL thật, kèm số đo thật;
+  - checklist 5–6 bước để người dùng thử lại 2 lỗi trên 2 điện thoại thật.
 - Thêm 1 dòng vào `work_progress.md`.
-- **Dừng sau R2.** Chưa làm D3 cho tới khi người dùng báo tiếp.
+- **Dừng sau R3.** Chưa làm D3.

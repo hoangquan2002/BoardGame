@@ -81,7 +81,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({
     } else if (b.id === 'anxiety') {
       extraNote = 'Kẻ gây hại luôn lấy được 1 lá bài đã chọn từ tay bạn.';
     } else if (b.id === 'gambling-addiction') {
-      extraNote = 'Kẻ gây hại luôn rút được ngẫu nhiên 3 lá từ tay bạn.';
+      extraNote = 'Kẻ gây hại rút ngẫu nhiên tối đa 3 lá từ tay bạn (tay ít hơn thì lấy hết).';
     } else if (b.id === 'depression' || b.id === 'impotence' || b.id === 'anorexia') {
       extraNote = 'Cộng dồn số vòng phạt theo từng lượt bị đánh.';
     }
@@ -265,7 +265,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             <div>• <strong>Thuốc:</strong> Đặt lên Bệnh Lý để chữa, nhưng sẽ mở cửa cho người khác đưa thêm bệnh mới.</div>
             <div>• <strong>Bệnh Lý:</strong> Đưa cho đối thủ nếu họ đang mở cửa cho bệnh đó qua tác dụng phụ của Thuốc.</div>
             <div>• <strong>Triệu Chứng:</strong> Tấn công Bệnh Lý chưa chữa của đối thủ để kích hoạt hình phạt nặng nề.</div>
-            <div>• <strong>Liệu Pháp:</strong> Loại bỏ vĩnh viễn 1 Bệnh Lý bất kỳ khỏi Thể Trạng của mình.</div>
+            <div>• <strong>Liệu Pháp:</strong> Loại bỏ 1 Bệnh Lý bất kỳ khỏi Thể Trạng của mình.</div>
           </div>
         </section>
 
@@ -300,7 +300,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({
           <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <li><strong>Rút bài:</strong> Rút 2 lá bài từ chồng bài rút (lượt đầu tiên bài trên tay sẽ lên 6 lá).</li>
             <li><strong>Đánh bài:</strong> Được đánh tối đa 2 lá bài từ tay ra bàn (được phép không đánh lá nào). Các lá đánh ra có tác dụng ngay lập tức, không ai có thể chặn.</li>
-            <li><strong>Bỏ bài thừa:</strong> Nếu sau khi kết thúc lượt còn nhiều hơn 6 lá trên tay, bạn phải chọn bỏ bớt xuống chồng bài bỏ cho đến khi còn đúng 6 lá.</li>
+            <li><strong>Bỏ bài thừa:</strong> Nếu sau khi kết thúc lượt còn nhiều hơn 6 lá trên tay, bạn phải chọn bỏ bớt xuống chồng bài bỏ cho đến khi còn đúng 6 lá. Tay quá 6 lá: bấm Kết thúc lượt rồi chọn lá để bỏ.</li>
           </ol>
           <div style={{ marginTop: '8px', fontSize: '13px', color: '#94a3b8' }}>
             * Khi chồng bài rút hết bài, toàn bộ chồng bài bỏ sẽ được xáo trộn lại thành chồng bài rút mới.
@@ -491,7 +491,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             8. Đổi bài giữa người chơi
           </h3>
           <p style={{ margin: '0 0 6px 0' }}>
-            Người chơi có thể đề nghị trao đổi bài trên tay với bất kỳ người chơi nào khác vào bất kỳ lúc nào, kể cả ngoài lượt đi của mình.
+            Người chơi có thể đề nghị trao đổi bài trên tay với bất kỳ người chơi nào khác vào bất kỳ lúc nào, kể cả ngoài lượt đi của mình. Khi có lời mời đổi bài gửi tới, một thông báo sẽ hiện ngay trên màn hình (hoặc bấm vào menu ⋯ để xem).
           </p>
           <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <li>Trao đổi bài là thoả thuận miệng, không bắt buộc các bên phải giữ lời hứa.</li>

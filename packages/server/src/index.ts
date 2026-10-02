@@ -16,6 +16,13 @@ const isDirectRun = Boolean(
 );
 
 if (isDirectRun) {
+  process.on('uncaughtException', (err) => {
+    console.error('[BoardGame Server] Uncaught Exception:', err);
+  });
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('[BoardGame Server] Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
   const server = createAppServer();
   const port = parseInt(process.env.PORT || '3000', 10);
   const host = process.env.HOST || '0.0.0.0';
@@ -23,3 +30,4 @@ if (isDirectRun) {
     console.log(`[BoardGame Server] Running on http://${host}:${actualPort}`);
   });
 }
+

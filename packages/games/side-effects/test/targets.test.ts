@@ -8,6 +8,7 @@ import {
   getValidTargets,
   mustDiscardCount,
   canEndTurn,
+  getEndTurnState,
 } from '../src/targets.js';
 import { validateSideEffects } from '../src/validate.js';
 import { createPlayerView } from '../src/player-view.js';
@@ -171,6 +172,72 @@ describe('targets helpers', () => {
       };
       expect(canEndTurn(view6, 'p1')).toBe(true);
       expect(canEndTurn(view6, 'p2')).toBe(false); // not active player
+    });
+
+    describe('getEndTurnState (Phần 2.A)', () => {
+      const makeViewWithHand = (handCount: number) => {
+        const dummyCards: CardInstance[] = Array.from({ length: handCount }, (_, i) => ({
+          instanceId: `card_${i}`,
+          cardId: 'episode',
+          type: 'episode' as const,
+        }));
+        return {
+          ...view,
+          activePlayerId: 'p1',
+          winner: null,
+          pendingChoice: null,
+          players: view.players.map((p) =>
+            p.id === 'p1' ? { ...p, hand: dummyCards, handCount } : p,
+          ),
+        };
+      };
+
+      it('hand 6: enabled = true, discardCount = 0', () => {
+        const v = makeViewWithHand(6);
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: true, discardCount: 0 });
+      });
+
+      it('hand 7: enabled = true, discardCount = 1', () => {
+        const v = makeViewWithHand(7);
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: true, discardCount: 1 });
+      });
+
+      it('hand 8: enabled = true, discardCount = 2', () => {
+        const v = makeViewWithHand(8);
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: true, discardCount: 2 });
+      });
+
+      it('hand 12: enabled = true, discardCount = 6', () => {
+        const v = makeViewWithHand(12);
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: true, discardCount: 6 });
+      });
+
+      it('not my turn: enabled = false', () => {
+        const v = makeViewWithHand(8);
+        // p2 is not activePlayerId
+        expect(getEndTurnState(v, 'p2')).toEqual({ enabled: false, discardCount: 0 });
+      });
+
+      it('with pendingChoice: enabled = false', () => {
+        const v = {
+          ...makeViewWithHand(8),
+          pendingChoice: {
+            type: 'TREMORS_DISCARD' as const,
+            playerId: 'p1',
+            count: 3,
+            timeoutSeconds: 7,
+          },
+        };
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: false, discardCount: 2 });
+      });
+
+      it('game ended (winner !== null): enabled = false', () => {
+        const v = {
+          ...makeViewWithHand(8),
+          winner: 'p2',
+        };
+        expect(getEndTurnState(v, 'p1')).toEqual({ enabled: false, discardCount: 2 });
+      });
     });
   });
 

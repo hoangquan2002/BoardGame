@@ -136,6 +136,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
                   return (
                     <div
                       key={c.instanceId}
+                      data-testid={`trade-give-card-${c.instanceId}`}
                       onClick={() => toggleGiveCard(c.instanceId)}
                       style={{
                         cursor: 'pointer',
@@ -153,6 +154,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
+                data-testid="accept-trade-button"
                 onClick={() => {
                   onSendAction({
                     type: 'RESPOND_TRADE',
@@ -179,6 +181,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
 
               <button
                 type="button"
+                data-testid="reject-trade-button"
                 onClick={() => {
                   onSendAction({
                     type: 'RESPOND_TRADE',
@@ -336,6 +339,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
                 type="button"
+                data-testid="confirm-trade-button"
                 onClick={() =>
                   onSendAction({
                     type: 'CONFIRM_TRADE',
@@ -361,6 +365,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
 
               <button
                 type="button"
+                data-testid="cancel-trade-button"
                 onClick={() =>
                   onSendAction({
                     type: 'CONFIRM_TRADE',
@@ -557,6 +562,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
               return (
                 <div
                   key={c.instanceId}
+                  data-testid={`trade-offer-card-${c.instanceId}`}
                   onClick={() => toggleOfferCard(c.instanceId)}
                   style={{
                     cursor: 'pointer',
@@ -575,6 +581,7 @@ export const TradeModal: React.FC<TradeModalProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button
             type="button"
+            data-testid="send-trade-button"
             onClick={() => {
               if (selectedTargetId && selectedOfferIds.length > 0) {
                 onSendAction({
