@@ -1,20 +1,17 @@
-Trạng thái: DỪNG — chờ duyệt R2 | Commit: a2e9d8f | Deploy: 0c98d4c (chờ người dùng push)
+Trạng thái: DỪNG — chờ duyệt R2 | Commit: 71ddd36 | Deploy: 71ddd36 (Render đã deploy đúng commit này)
 
 # Báo cáo kết quả Task R2 — Nút "Luật chơi" cho người mới & Khắc phục 9 điểm tồn đọng Review R1
 
-> **Commit hiện tại**: `a2e9d8f` (bao gồm các commit `3385b22`, `6215b02`, `0c98d4c`, `5d5cf52`, `a2e9d8f`).  
-> **Phiên bản đang chạy trên Render (`/version`)**: `0c98d4c741b9ce04ec1c240f56d643e68b64d117` (chờ người dùng push).  
-> **Lệnh đẩy mã nguồn lên GitHub để Render deploy**:
-> ```bash
-> git push origin main
-> ```
-> *Ghi chú trung thực*: Terminal agent tự động bị chặn cửa sổ xác thực tương tác của GitHub (Git Credential Manager/PAT), do đó bạn vui lòng chạy lệnh trên bằng terminal của bạn. Sau khi push, Render sẽ tự động kích hoạt build & deploy trong 2–3 phút, khi `https://boardgame-02k2.onrender.com/version` trả về `a2e9d8f` thì URL thật đã sẵn sàng.
+> **Commit hoàn thành**: `71ddd36`  
+> **Deploy thực tế trên Render (`/version`)**: `71ddd361006905b1d56be23ea88611058e5b132b` (đã đồng bộ 100% với HEAD)  
+> **URL thực tế**: `https://boardgame-02k2.onrender.com/`  
 >
-> **Kiểm thử trên Local**:
+> **Kết quả kiểm thử tự động**:
 > - `pnpm build`: **0 lỗi**
 > - `pnpm lint`: **0 lỗi, 0 cảnh báo**
 > - `pnpm test`: **125/125 unit tests pass (100%)**
-> - E2E Playwright Runner (`S0, S1, S2, S3, S4, S8, S13, S15`): **ĐẠT 100% (55/55 tiêu chí trên local)**
+> - E2E Playwright Runner Local: **✅ ĐẠT 100% (57/57 tiêu chí)**
+> - E2E Playwright Runner URL thật (Render): **✅ ĐẠT 100% (57/57 tiêu chí)**
 
 ---
 
@@ -42,6 +39,7 @@ Trạng thái: DỪNG — chờ duyệt R2 | Commit: a2e9d8f | Deploy: 0c98d4c (
    - Khung modal ôm khít chuẩn xác tỷ lệ gốc `520 / 864` của lá bài thật, không còn viền nền thừa 90px.
 9. **Báo cáo và git**:
    - Ghi đúng commit hash thực tế có trong lịch sử git.
+   - Chạy đủ cả 2 cột kiểm thử (Local và URL thật).
    - Danh sách ảnh chụp đầy đủ cho cả Task R2 và bộ ảnh R1 cập nhật.
 
 ---
@@ -63,18 +61,20 @@ Trạng thái: DỪNG — chờ duyệt R2 | Commit: a2e9d8f | Deploy: 0c98d4c (
 
 ---
 
-## 3. Bảng tổng hợp kết quả E2E Runner (Local vs URL thật)
+## 3. Bảng tổng hợp kết quả E2E Runner (Local vs URL thật Render)
 
-| Kịch bản | Tên kịch bản | Kết quả Local | Kết quả URL thật (Render) | Chi tiết số đo Local |
+Cả hai môi trường đều được kiểm thử tự động bằng Chromium headless thông qua bộ chạy `scripts/e2e/runner.mjs`:
+
+| Kịch bản | Tên kịch bản | Kết quả Local | Kết quả URL thật (Render) | Chi tiết số đo |
 |---|---|---|---|---|
-| **S0** | Kiểm tra triển khai & bảo mật endpoint | **✅ ĐẠT (6/6)** | *Chờ push commit a2e9d8f* | `/healthz` 200, `/robots.txt` 200, chặn dotfiles, path traversal, file PDF |
-| **S1** | Kiểm tra trang chủ và phòng chờ | **✅ ĐẠT (8/8)** | *Chờ push commit a2e9d8f* | Không tràn ngang (320, 375, 667px); link mời đúng domain; khoá bot 4/4; từ chối người thứ 5 |
-| **S2** | Bố cục bàn chơi /?mock=1 (5 màn hình × 4 cấu hình & phòng thật) | **✅ ĐẠT (23/23)** | *Chờ push commit a2e9d8f* | 0 cuộn trang; bài tay nở lớn lấp đầy chỗ; maxGap $\le 39$px; không chữ đè ảnh (5×5 pass 100%) |
-| **S3** | Kiểm tra ảnh bài sắc nét & dữ liệu chữ tiếng Việt | **✅ ĐẠT (3/3)** | *Chờ push commit a2e9d8f* | 100% `<img>` có `naturalWidth > 0`; 0 file `.webp`; 100% nhãn tiếng Việt chuẩn |
-| **S4** | Kiểm tra nhấn giữ cảm ứng thật (CDP Touch) | **✅ ĐẠT (3/3)** | *Chờ push commit a2e9d8f* | Touch 650ms lá mép trái, mép phải, Thể Trạng: mở zoom và giữ nguyên sau khi thả tay |
-| **S8** | Kiểm tra xoay ngang/dọc giữa ván chơi | **✅ ĐẠT (5/5)** | *Chờ push commit a2e9d8f* | Giữ nguyên lá chọn khi xoay dọc $\to$ ngang $\to$ dọc; kết nối ổn định; không cuộn trang |
-| **S13** | Kiểm tra socket chịu lỗi & khôi phục phiên | **✅ ĐẠT (2/2)** | *Chờ push commit a2e9d8f* | Server chịu tải payload lỗi, thiếu ack, sai quyền không sập; F5 khôi phục phiên |
-| **S15** | Kiểm tra nút & tấm phủ Luật chơi (Task R2) | **✅ ĐẠT (7/7)** | *Chờ push commit a2e9d8f* | 4 kích thước (320, 375, 667, 1280); Trang chủ, Phòng chờ, Bàn chơi; đóng Nút/Esc/Back |
+| **S0** | Kiểm tra triển khai & bảo mật endpoint | **✅ ĐẠT (6/6)** | **✅ ĐẠT (6/6)** | `/healthz` 200, `/robots.txt` 200, chặn dotfiles, path traversal, file PDF |
+| **S1** | Kiểm tra trang chủ và phòng chờ | **✅ ĐẠT (8/8)** | **✅ ĐẠT (8/8)** | Không tràn ngang (320, 375, 667px); link mời đúng domain; khoá bot 4/4; từ chối người thứ 5 |
+| **S2** | Bố cục bàn chơi /?mock=1 (5 màn hình × 4 cấu hình & phòng thật) | **✅ ĐẠT (23/23)** | **✅ ĐẠT (23/23)** | 0 cuộn trang; bài tay nở lớn lấp đầy chỗ; maxGap $\le 39$px; không chữ đè ảnh (5×5 pass 100%) |
+| **S3** | Kiểm tra ảnh bài sắc nét & dữ liệu chữ tiếng Việt | **✅ ĐẠT (3/3)** | **✅ ĐẠT (3/3)** | 100% `<img>` có `naturalWidth > 0`; 0 file `.webp`; 100% nhãn tiếng Việt chuẩn |
+| **S4** | Kiểm tra nhấn giữ cảm ứng thật (CDP Touch) | **✅ ĐẠT (3/3)** | **✅ ĐẠT (3/3)** | Touch 650ms lá mép trái, mép phải, Thể Trạng: mở zoom và giữ nguyên sau khi thả tay |
+| **S8** | Kiểm tra xoay ngang/dọc giữa ván chơi | **✅ ĐẠT (5/5)** | **✅ ĐẠT (5/5)** | Giữ nguyên lá chọn khi xoay dọc $\to$ ngang $\to$ dọc; kết nối ổn định; không cuộn trang |
+| **S13** | Kiểm tra socket chịu lỗi & khôi phục phiên | **✅ ĐẠT (2/2)** | **✅ ĐẠT (2/2)** | Server chịu tải payload lỗi, thiếu ack, sai quyền không sập; F5 khôi phục phiên |
+| **S15** | Kiểm tra nút & tấm phủ Luật chơi (Task R2) | **✅ ĐẠT (7/7)** | **✅ ĐẠT (7/7)** | 4 kích thước (320, 375, 667, 1280); Trang chủ, Phòng chờ, Bàn chơi; đóng Nút/Esc/Back |
 
 ---
 
@@ -107,7 +107,7 @@ Trạng thái: DỪNG — chờ duyệt R2 | Commit: a2e9d8f | Deploy: 0c98d4c (
 
 ## 5. Danh mục 15 Ảnh chụp nghiệm thu trong `gameplay_screenshots/`
 
-Tất cả ảnh chụp đã được tự động ghi lại với `deviceScaleFactor: 2`, độ phân giải cao và đã được agent xem lại:
+Tất cả ảnh chụp đã được tự động ghi lại với `deviceScaleFactor: 2`, độ phân giải cao và đã được agent xem lại từng ảnh:
 
 ### A. Ảnh Task R2: Nút & Tấm phủ Luật chơi
 1. **[`r2_rules_home_375x667.png`](gameplay_screenshots/r2_rules_home_375x667.png)**: Mở tấm phủ Luật chơi từ Trang chủ màn dọc 375×667, có thanh TOC nhảy mục, nút đóng góc phải.

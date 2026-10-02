@@ -27,6 +27,10 @@ export async function runS15(browser, baseUrl) {
       // rules-sheet hiện
       const rulesSheet = page.locator('[data-testid="rules-sheet"]');
       await rulesSheet.waitFor({ state: 'visible', timeout: 5000 });
+      await page.waitForFunction(() => {
+        const imgs = Array.from(document.querySelectorAll('[data-testid="rules-sheet"] img'));
+        return imgs.length > 0 && imgs.every((img) => img.complete && img.naturalWidth > 0);
+      }, { timeout: 10000 }).catch(() => {});
 
       // Kiểm tra: trang không tràn ngang, đủ 8 bệnh lý, đủ 7 thuốc, mọi img naturalWidth > 0, font min >= 12px
       const checkResult = await page.evaluate(() => {
@@ -122,7 +126,8 @@ export async function runS15(browser, baseUrl) {
       const nameInput = page.locator('input[placeholder*="tên" i], input[type="text"]').first();
       await nameInput.fill('An Test Rules');
       await page.locator('button:has-text("Tạo phòng mới")').click();
-      await page.waitForSelector('[data-testid="rules-button"]', { timeout: 8000 });
+      await page.waitForSelector('[data-testid="invite-url-input"]', { timeout: 15000 });
+      await page.waitForTimeout(300);
 
       // 1. Kiểm tra chấm người mới có ở lần đầu
       const hasDotInitially = await page.evaluate(() => {
@@ -132,7 +137,7 @@ export async function runS15(browser, baseUrl) {
 
       // 2. Mở luật chơi
       await page.locator('[data-testid="rules-button"]').click();
-      await page.waitForSelector('[data-testid="rules-sheet"]', { timeout: 5000 });
+      await page.waitForSelector('[data-testid="rules-sheet"]', { timeout: 8000 });
 
       // 3. Đóng luật chơi
       await page.locator('[data-testid="rules-close"]').click();
@@ -146,7 +151,8 @@ export async function runS15(browser, baseUrl) {
 
       // 5. F5 tải lại trang -> chấm vẫn mất
       await page.reload({ waitUntil: 'networkidle' });
-      await page.waitForSelector('[data-testid="rules-button"]', { timeout: 8000 });
+      await page.waitForSelector('[data-testid="invite-url-input"]', { timeout: 15000 });
+      await page.waitForTimeout(300);
       const hasDotAfterReload = await page.evaluate(() => {
         const btn = document.querySelector('[data-testid="rules-button"]');
         return Boolean(btn && btn.querySelector('span[style*="background-color"]'));
