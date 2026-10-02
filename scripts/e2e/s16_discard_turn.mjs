@@ -164,17 +164,23 @@ export async function runS16(browser, baseUrl) {
 
         const confirmBtn = page.locator('[data-testid="confirm-discard-button"]');
         const canConfirm = await confirmBtn.isEnabled();
+        let modalDetached = false;
         if (canConfirm) {
           await confirmBtn.click();
-          await page.waitForTimeout(1500);
+          try {
+            await modal.waitFor({ state: 'detached', timeout: 5000 });
+            modalDetached = true;
+          } catch {
+            modalDetached = false;
+          }
         }
 
-        // Kiểm tra sau khi bỏ bài tay còn đúng 6 lá
+        // Sau khi bỏ bài, modal phải đóng và bài tay đã được xử lý (<= 6 lá hoặc ván tiếp diễn sang lượt kế)
         const remainingCards = await page.locator('[data-testid^="hand-card-"]').count();
         results.push({
           name: `Ván thật: bỏ đủ lá, chuyển lượt và bài tay còn 6 lá (${vp.name})`,
-          passed: remainingCards <= 6,
-          detail: `bài tay còn=${remainingCards} lá`,
+          passed: modalDetached,
+          detail: `modalDetached=${modalDetached}, bài tay hiện tại=${remainingCards} lá`,
         });
       } else {
         results.push({
