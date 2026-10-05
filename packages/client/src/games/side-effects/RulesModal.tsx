@@ -102,13 +102,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({
         position: 'fixed',
         inset: 0,
         zIndex: 10000,
-        backgroundColor: '#0b1f1a',
+        backgroundColor: '#040d0a',
+        background: 'radial-gradient(ellipse at 50% 20%, #0f3527 0%, #092018 60%, #040e0b 100%)',
         color: '#f8fafc',
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
       }}
     >
       {/* ================= HEADER TẤM PHỦ LUẬT ================= */}
@@ -117,22 +118,26 @@ export const RulesModal: React.FC<RulesModalProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 16px',
-          backgroundColor: '#122520',
-          borderBottom: '1px solid #224036',
+          padding: '12px 18px',
+          background: 'linear-gradient(180deg, rgba(16, 40, 32, 0.98) 0%, rgba(10, 26, 21, 0.98) 100%)',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
           flexShrink: 0,
           boxSizing: 'border-box',
           width: '100%',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2
+            className="font-display"
             style={{
               margin: 0,
-              fontSize: '18px',
+              fontSize: '20px',
               fontWeight: 800,
-              color: '#f8fafc',
-              letterSpacing: '0.3px',
+              background: 'linear-gradient(135deg, #ffffff 0%, #fde047 40%, #eab308 75%, #ca8a04 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '0.8px',
             }}
           >
             Luật chơi
@@ -142,8 +147,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({
               style={{
                 backgroundColor: '#16a34a',
                 color: '#ffffff',
-                fontSize: '12px',
-                fontWeight: 700,
+                fontSize: '11px',
+                fontWeight: 800,
                 padding: '2px 8px',
                 borderRadius: '999px',
                 boxShadow: '0 0 10px rgba(22, 163, 74, 0.6)',
@@ -158,10 +163,11 @@ export const RulesModal: React.FC<RulesModalProps> = ({
           onClick={onClose}
           data-testid="rules-close"
           aria-label="Đóng luật chơi"
+          className="casino-btn-active"
           style={{
-            background: '#1a382e',
-            border: '1px solid #2a5244',
-            color: '#f8fafc',
+            background: 'rgba(212, 175, 55, 0.15)',
+            border: '1px solid rgba(212, 175, 55, 0.45)',
+            color: '#fde047',
             width: '32px',
             height: '32px',
             borderRadius: '50%',
@@ -170,9 +176,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '16px',
-            fontWeight: 700,
+            fontWeight: 800,
             lineHeight: 1,
             transition: 'all 0.15s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
           }}
         >
           ✕

@@ -475,7 +475,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   // Ván thật ẩn turn-timer cho tới D4; chỉ /?mock=1 được hiện số mẫu (Phần 1 mục 5)
   const isMock = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mock') === '1';
 
-  // ===================== KHUNG THANH TRÊN 30px =====================
+  // ===================== KHUNG THANH TRÊN 30px (DARK CASINO BRASS BAR) =====================
   const renderTopBar = () => (
     <header
       style={{
@@ -483,18 +483,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 8px',
-        backgroundColor: '#122520',
-        borderRadius: '6px',
+        padding: '0 10px',
+        background: 'linear-gradient(180deg, rgba(16, 40, 32, 0.96) 0%, rgba(10, 26, 21, 0.96) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.28)',
+        borderRadius: '7px',
         flexShrink: 0,
         boxSizing: 'border-box',
         width: '100%',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
       }}
     >
       {/* 1. Lượt đi */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700 }}>
         {isMyTurn ? (
-          <span style={{ color: '#4ade80' }}>Lượt của bạn</span>
+          <span style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#4ade80', boxShadow: '0 0 8px #4ade80' }} />
+            Lượt của bạn
+          </span>
         ) : (
           <span style={{ color: '#cbd5e1' }}>
             Lượt: {isActiveBot ? '🤖 ' : ''}{activePlayerName}
@@ -510,7 +515,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            backgroundColor: 'rgba(0,0,0,0.3)',
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            border: '1px solid rgba(212, 175, 55, 0.25)',
             padding: '2px 8px',
             borderRadius: '999px',
             fontSize: '12px',
@@ -533,17 +539,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             width: '22px',
             height: '22px',
             borderRadius: '50%',
-            backgroundColor: '#1a382e',
-            border: '1px solid #285446',
-            color: '#cbd5e1',
+            backgroundColor: 'rgba(212, 175, 55, 0.15)',
+            border: '1px solid rgba(212, 175, 55, 0.45)',
+            color: '#fde047',
             fontSize: '12px',
-            fontWeight: 700,
+            fontWeight: 800,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             lineHeight: 1,
             padding: 0,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+            transition: 'all 0.15s ease',
           }}
         >
           ?
@@ -555,14 +563,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             onClick={() => setShowMenu(!showMenu)}
             style={{
               position: 'relative',
-              background: 'none',
-              border: 'none',
-              color: '#f8fafc',
-              fontSize: '18px',
+              background: 'rgba(212, 175, 55, 0.1)',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
+              color: '#fde047',
+              fontSize: '14px',
+              fontWeight: 800,
               cursor: 'pointer',
-              padding: '2px 6px',
-              borderRadius: '4px',
+              padding: '0 6px',
+              borderRadius: '5px',
+              height: '22px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               lineHeight: 1,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
             }}
           >
             ⋯
@@ -571,13 +585,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 data-testid="menu-badge"
                 style={{
                   position: 'absolute',
-                  top: '2px',
-                  right: '2px',
+                  top: '-2px',
+                  right: '-2px',
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
                   backgroundColor: '#ef4444',
-                  boxShadow: '0 0 6px rgba(239, 68, 68, 0.9)',
+                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.95)',
                 }}
               />
             )}
@@ -589,15 +603,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 position: 'absolute',
                 top: '32px',
                 right: 0,
-                backgroundColor: '#122520',
-                border: '1px solid #1e3d34',
-                borderRadius: '8px',
-                padding: '4px',
+                backgroundColor: 'rgba(10, 24, 19, 0.96)',
+                border: '1px solid rgba(212, 175, 55, 0.35)',
+                borderRadius: '10px',
+                padding: '6px',
                 display: 'flex',
                 flexDirection: 'column',
+                gap: '2px',
                 zIndex: 999,
-                minWidth: '150px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                minWidth: '160px',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.85), 0 0 20px rgba(212, 175, 55, 0.12)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
               }}
             >
               <button
@@ -607,7 +624,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   setShowRules(true);
                 }}
                 style={{
-                  padding: '8px',
+                  padding: '8px 10px',
                   textAlign: 'left',
                   background: 'none',
                   border: 'none',
@@ -615,70 +632,74 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  borderRadius: '6px',
                 }}
               >
-                Luật chơi
+                📖 Luật chơi
               </button>
-            <button
-              data-testid="trade-menu-item"
-              onClick={() => {
-                setShowMenu(false);
-                setShowTradeModal(true);
-              }}
-              style={{
-                padding: '8px',
-                textAlign: 'left',
-                background: 'none',
-                border: 'none',
-                color: hasIncomingTrade ? '#38bdf8' : '#f8fafc',
-                fontSize: '12px',
-                fontWeight: hasIncomingTrade ? 700 : 600,
-                cursor: 'pointer',
-              }}
-            >
-              {hasIncomingTrade ? 'Đổi bài (1 lời mời)' : 'Đổi bài'}
-            </button>
-            <button
-              onClick={() => {
-                setShowMenu(false);
-                setShowLogsModal(true);
-              }}
-              style={{
-                padding: '8px',
-                textAlign: 'left',
-                background: 'none',
-                border: 'none',
-                color: '#f8fafc',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Nhật ký ván chơi
-            </button>
-            <button
-              onClick={async () => {
-                setShowMenu(false);
-                if (window.confirm('Máy sẽ chơi thay bạn, bạn có chắc chắn muốn thoát ván không?')) {
-                  await onLeaveRoom();
-                  window.location.href = '/';
-                }
-              }}
-              style={{
-                padding: '8px',
-                textAlign: 'left',
-                background: 'none',
-                border: 'none',
-                color: '#f87171',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              Thoát ván
-            </button>
-          </div>
-        )}
+              <button
+                data-testid="trade-menu-item"
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowTradeModal(true);
+                }}
+                style={{
+                  padding: '8px 10px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: hasIncomingTrade ? '#facc15' : '#f8fafc',
+                  fontSize: '12px',
+                  fontWeight: hasIncomingTrade ? 800 : 600,
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                }}
+              >
+                {hasIncomingTrade ? '🤝 Đổi bài (1 lời mời)' : '🤝 Đổi bài'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowLogsModal(true);
+                }}
+                style={{
+                  padding: '8px 10px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: '#f8fafc',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                }}
+              >
+                📜 Nhật ký ván chơi
+              </button>
+              <button
+                onClick={async () => {
+                  setShowMenu(false);
+                  if (window.confirm('Máy sẽ chơi thay bạn, bạn có chắc chắn muốn thoát ván không?')) {
+                    await onLeaveRoom();
+                    window.location.href = '/';
+                  }
+                }}
+                style={{
+                  padding: '8px 10px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: '#f87171',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                }}
+              >
+                🚪 Thoát ván
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
@@ -692,22 +713,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: isLandscape ? '0px 8px' : '2px 8px',
-        backgroundColor: '#122520',
-        borderRadius: '6px',
+        padding: isLandscape ? '0px 10px' : '2px 10px',
+        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.92) 0%, rgba(8, 22, 17, 0.95) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.22)',
+        borderRadius: '7px',
         fontSize: '11px',
         color: '#cbd5e1',
         boxSizing: 'border-box',
         width: '100%',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}
     >
       <div style={{ display: 'flex', gap: '8px' }}>
-        <span>Rút <strong>{gameView.drawPileCount}</strong></span>
+        <span>Rút <strong style={{ color: '#facc15' }}>{gameView.drawPileCount}</strong></span>
         <span>·</span>
-        <span>Bỏ <strong>{gameView.discardPileCount}</strong></span>
+        <span>Bỏ <strong style={{ color: '#94a3b8' }}>{gameView.discardPileCount}</strong></span>
       </div>
       <div>
-        <span>Đã đánh: <strong>{gameView.cardsPlayedThisTurn}/2 lá</strong></span>
+        <span>Đã đánh: <strong style={{ color: '#34d399' }}>{gameView.cardsPlayedThisTurn}/2 lá</strong></span>
       </div>
     </div>
   );
@@ -722,11 +745,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         justifyContent: 'space-between',
         gap: '6px',
         padding: isLandscape ? '0px 8px' : '2px 8px',
-        backgroundColor: '#122520',
-        borderRadius: '6px',
+        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.92) 0%, rgba(8, 22, 17, 0.95) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.22)',
+        borderRadius: '7px',
         boxSizing: 'border-box',
         width: '100%',
         minHeight: isLandscape ? '20px' : '32px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
       }}
     >
       <div style={{ flex: 1, minWidth: 0, paddingRight: '4px' }}>
@@ -740,14 +765,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         style={{
           height: isLandscape ? '20px' : '28px',
           padding: '0 12px',
-          borderRadius: '5px',
-          backgroundColor: isMyTurn ? '#16a34a' : '#224036',
-          color: isMyTurn ? '#ffffff' : '#94a3b8',
+          borderRadius: '6px',
+          background: !endTurnAllowed
+            ? 'rgba(20, 42, 34, 0.6)'
+            : discardCount > 0
+              ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+              : isMyTurn
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%)'
+                : 'rgba(22, 56, 45, 0.8)',
+          color: endTurnAllowed ? '#ffffff' : '#64748b',
           fontSize: '12px',
-          fontWeight: 700,
-          border: 'none',
+          fontWeight: 800,
+          border: endTurnAllowed ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(212, 175, 55, 0.1)',
           cursor: endTurnAllowed ? 'pointer' : 'not-allowed',
-          boxShadow: isMyTurn ? '0 2px 8px rgba(22, 163, 74, 0.4)' : 'none',
+          boxShadow: endTurnAllowed
+            ? discardCount > 0
+              ? '0 2px 10px rgba(245, 158, 11, 0.45)'
+              : '0 2px 10px rgba(16, 185, 129, 0.45)'
+            : 'none',
           whiteSpace: 'nowrap',
           flexShrink: 0,
           transition: 'all 0.15s ease',
@@ -774,10 +809,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         gap: isLandscape ? '4px' : '4px',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        // Nền nỉ xanh đậm gradient nhẹ (Phần 2 mục F)
-        background: 'linear-gradient(180deg, #0f2a24 0%, #0b1f1a 100%)',
+        // NỀN NỈ SÒNG BÀI DARK CASINO
+        background: 'radial-gradient(ellipse at 50% 30%, #0f3527 0%, #092018 60%, #040e0b 100%)',
         color: '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
       }}
     >
       {/* ===================== KHI XOAY NGANG: CỘT TRÁI (~42%) ===================== */}
@@ -894,32 +929,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             maxWidth: isLandscape ? '420px' : '456px',
             margin: '0 auto',
             zIndex: 1200,
-            backgroundColor: '#1e293b',
-            border: '1px solid #38bdf8',
-            borderRadius: '8px',
-            padding: '8px 12px',
+            background: 'linear-gradient(135deg, rgba(16, 38, 30, 0.98) 0%, rgba(10, 24, 19, 0.98) 100%)',
+            border: '1px solid rgba(234, 179, 8, 0.65)',
+            borderRadius: '12px',
+            padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '8px',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.7)',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(234, 179, 8, 0.25)',
             boxSizing: 'border-box',
+            backdropFilter: 'blur(12px)',
           }}
         >
           <div style={{ flex: 1, minWidth: 0, fontSize: '13px', color: '#f8fafc', lineHeight: 1.3 }}>
             {incomingTrade.status === 'PROPOSED' ? (
               <span>
-                <strong style={{ color: '#38bdf8' }}>
+                <strong style={{ color: '#facc15' }}>
                   {playerNames[incomingTrade.proposerId] || incomingTrade.proposerId}
                 </strong>{' '}
                 mời bạn đổi bài: đưa bạn{' '}
-                <strong style={{ color: '#4ade80' }}>
+                <strong style={{ color: '#34d399' }}>
                   {incomingTrade.offerCardCount ?? incomingTrade.offerCardIds?.length ?? 1} lá
                 </strong>
               </span>
             ) : (
               <span>
-                <strong style={{ color: '#38bdf8' }}>
+                <strong style={{ color: '#facc15' }}>
                   {playerNames[incomingTrade.targetPlayerId] || incomingTrade.targetPlayerId}
                 </strong>{' '}
                 đã trả lời, xác nhận đổi bài
@@ -932,15 +968,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               type="button"
               data-testid="trade-notice-view"
               onClick={() => setShowTradeModal(true)}
+              className="casino-btn-active"
               style={{
-                padding: '4px 10px',
-                borderRadius: '6px',
-                backgroundColor: '#16a34a',
+                padding: '5px 12px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: '#ffffff',
-                border: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 fontSize: '12px',
                 fontWeight: 700,
                 cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)',
               }}
             >
               Xem
@@ -956,12 +994,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     accept: false,
                   });
                 }}
+                className="casino-btn-active"
                 style={{
-                  padding: '4px 10px',
-                  borderRadius: '6px',
-                  backgroundColor: '#ef4444',
-                  color: '#ffffff',
-                  border: 'none',
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                  color: '#fca5a5',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
                   fontSize: '12px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -983,16 +1022,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             top: '48px',
             left: '50%',
             transform: 'translateX(-50%)',
-            backgroundColor: '#1e293b',
-            border: '1px solid #10b981',
-            color: '#f8fafc',
-            padding: '8px 16px',
-            borderRadius: '8px',
+            maxWidth: '90vw',
+            zIndex: 1300,
+            background: 'linear-gradient(135deg, rgba(16, 38, 30, 0.98) 0%, rgba(10, 24, 19, 0.98) 100%)',
+            color: '#fde047',
+            border: '1px solid rgba(234, 179, 8, 0.6)',
+            borderRadius: '999px',
+            padding: '6px 18px',
             fontSize: '13px',
-            fontWeight: 600,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
-            zIndex: 1250,
+            fontWeight: 700,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.8), 0 0 16px rgba(234, 179, 8, 0.25)',
             whiteSpace: 'nowrap',
+            pointerEvents: 'none',
           }}
         >
           {tradeResultMessage}

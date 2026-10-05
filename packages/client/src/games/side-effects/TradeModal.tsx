@@ -84,23 +84,28 @@ export const TradeModal: React.FC<TradeModalProps> = ({
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              borderRadius: '16px',
-              border: '1px solid #334155',
+              background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
+              borderRadius: '18px',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
               width: '100%',
               maxWidth: '420px',
               maxHeight: '94vh',
               overflowY: 'auto',
-              padding: '12px 16px',
+              padding: '14px 18px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
               boxSizing: 'border-box',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
+              backdropFilter: 'blur(16px)',
             }}
           >
             <div style={{ textAlign: 'center', flexShrink: 0 }}>
               <div style={{ fontSize: '24px', marginBottom: '2px' }}>🤝</div>
-              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
+              <h3
+                className="font-display"
+                style={{ fontSize: '17px', fontWeight: 800, color: '#facc15', margin: 0, letterSpacing: '0.4px' }}
+              >
                 Lời mời đổi bài
               </h3>
               <p style={{ fontSize: '12px', color: '#cbd5e1', marginTop: '2px' }}>
@@ -469,25 +474,30 @@ export const TradeModal: React.FC<TradeModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#1e293b',
-          borderRadius: '16px',
-          border: '1px solid #334155',
+          background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
+          borderRadius: '18px',
+          border: '1px solid rgba(212, 175, 55, 0.35)',
           width: '100%',
           maxWidth: '420px',
           maxHeight: '94vh',
-          padding: '12px 16px',
+          padding: '14px 18px',
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
           boxSizing: 'border-box',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
+          backdropFilter: 'blur(16px)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
+            <h3
+              className="font-display"
+              style={{ fontSize: '17px', fontWeight: 800, color: '#facc15', margin: 0, letterSpacing: '0.4px' }}
+            >
               Thương Lượng (Đổi bài)
             </h3>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+            <span style={{ fontSize: '11px', color: '#a7c2b7' }}>
               Có thể thực hiện bất kỳ lúc nào, kể cả ngoài lượt
             </span>
           </div>

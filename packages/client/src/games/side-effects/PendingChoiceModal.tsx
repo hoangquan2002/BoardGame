@@ -75,17 +75,19 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              borderRadius: '16px',
-              border: '1px solid #334155',
+              background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
+              borderRadius: '18px',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
               width: '100%',
               maxWidth: '420px',
               maxHeight: '94vh',
-              padding: '12px 16px',
+              padding: '14px 18px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
               boxSizing: 'border-box',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
+              backdropFilter: 'blur(16px)',
             }}
           >
             <div style={{ textAlign: 'center', flexShrink: 0 }}>
@@ -200,13 +202,15 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
       >
         <div
           style={{
-            backgroundColor: '#1e293b',
-            borderRadius: '16px',
-            border: '1px solid #334155',
-            padding: '24px',
+            background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
+            borderRadius: '18px',
+            border: '1px solid rgba(212, 175, 55, 0.35)',
+            padding: '24px 20px',
             textAlign: 'center',
             maxWidth: '360px',
             width: '100%',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
+            backdropFilter: 'blur(16px)',
           }}
         >
           <div style={{ fontSize: '32px', marginBottom: '8px' }}>👁️</div>
@@ -256,17 +260,19 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
         >
           <div
             style={{
-              backgroundColor: '#1e293b',
-              borderRadius: '16px',
+              background: 'linear-gradient(180deg, rgba(20, 36, 29, 0.98) 0%, rgba(10, 20, 16, 0.98) 100%)',
+              borderRadius: '18px',
               border: '2px solid #ef4444',
               width: '100%',
               maxWidth: '420px',
               maxHeight: '94vh',
-              padding: '12px 16px',
+              padding: '14px 18px',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
               boxSizing: 'border-box',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(239, 68, 68, 0.25)',
+              backdropFilter: 'blur(16px)',
             }}
           >
             <div style={{ textAlign: 'center', flexShrink: 0 }}>
@@ -417,13 +423,15 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
       >
         <div
           style={{
-            backgroundColor: '#1e293b',
-            borderRadius: '16px',
-            border: '1px solid #334155',
-            padding: '24px',
+            background: 'linear-gradient(180deg, rgba(20, 36, 29, 0.98) 0%, rgba(10, 20, 16, 0.98) 100%)',
+            borderRadius: '18px',
+            border: '1px solid rgba(212, 175, 55, 0.35)',
+            padding: '24px 20px',
             textAlign: 'center',
             maxWidth: '360px',
             width: '100%',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
+            backdropFilter: 'blur(16px)',
           }}
         >
           <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚡</div>

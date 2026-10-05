@@ -53,30 +53,32 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
       >
         <div
           style={{
-            backgroundColor: '#122520',
-            borderRadius: '16px',
-            border: '1px solid #224036',
+            background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
+            borderRadius: '18px',
+            border: '1px solid rgba(212, 175, 55, 0.35)',
             width: '100%',
             maxWidth: '460px',
             maxHeight: '92vh',
             display: 'flex',
             flexDirection: 'column',
-            padding: '14px 16px',
-            gap: '8px',
+            padding: '16px 18px',
+            gap: '10px',
             boxSizing: 'border-box',
-            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.7)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(212, 175, 55, 0.1)',
             overflow: 'hidden',
+            backdropFilter: 'blur(16px)',
           }}
         >
           {/* Header */}
           <div style={{ textAlign: 'center', flexShrink: 0 }}>
             <h3
+              className="font-display"
               style={{
                 margin: 0,
-                fontSize: '16px',
+                fontSize: '17px',
                 fontWeight: 800,
                 color: '#f87171',
-                letterSpacing: '0.2px',
+                letterSpacing: '0.4px',
               }}
             >
               Bỏ bớt bài trên tay
@@ -193,18 +195,19 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
               data-testid="confirm-discard-button"
               onClick={() => onConfirmDiscard(selectedIds)}
               disabled={!isReady}
+              className={isReady ? 'casino-btn-active' : undefined}
               style={{
                 width: '100%',
-                minHeight: '42px',
+                minHeight: '44px',
                 padding: '10px',
-                borderRadius: '8px',
-                backgroundColor: isReady ? '#dc2626' : '#224036',
-                color: isReady ? '#ffffff' : '#94a3b8',
+                borderRadius: '10px',
+                background: isReady ? 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)' : 'rgba(26, 54, 45, 0.6)',
+                color: isReady ? '#ffffff' : '#6e8f81',
                 fontSize: '14px',
-                fontWeight: 700,
-                border: 'none',
+                fontWeight: 800,
+                border: isReady ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(212, 175, 55, 0.15)',
                 cursor: isReady ? 'pointer' : 'not-allowed',
-                boxShadow: isReady ? '0 2px 8px rgba(220, 38, 38, 0.5)' : 'none',
+                boxShadow: isReady ? '0 4px 16px rgba(220, 38, 38, 0.5)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -217,15 +220,16 @@ export const DiscardModal: React.FC<DiscardModalProps> = ({
               <button
                 type="button"
                 onClick={onCancel}
+                className="casino-btn-active"
                 style={{
                   width: '100%',
                   padding: '8px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   backgroundColor: 'transparent',
                   color: '#94a3b8',
                   fontSize: '12px',
                   fontWeight: 600,
-                  border: '1px solid #334155',
+                  border: '1px solid rgba(212, 175, 55, 0.25)',
                   cursor: 'pointer',
                 }}
               >

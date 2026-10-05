@@ -115,21 +115,21 @@ export const Card: React.FC<CardProps> = ({
   // Bo góc <= 4px
   const borderRadius = '4px';
 
-  // Trạng thái theo Phần 2 mục B3 & F:
-  // - Outline / box-shadow bên ngoài lá
+  // Trạng thái theo phong cách Dark Casino:
+  // - Outline / box-shadow nổi khối 3D trên nền nỉ sòng bài
   // - Nhô lên translateY(-12px)
   // - Opacity 0.4 cho thứ không phải mục tiêu
   let outlineStyle = 'none';
-  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.45)';
+  let boxShadowStyle = '0 4px 12px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4)';
   let transformStyle = style?.transform;
 
   if (isSelected) {
-    outlineStyle = '2px solid #38bdf8';
-    boxShadowStyle = '0 8px 18px rgba(0,0,0,0.6)';
+    outlineStyle = '2px solid #facc15';
+    boxShadowStyle = '0 0 18px rgba(250, 204, 21, 0.7), 0 12px 28px rgba(0, 0, 0, 0.85)';
     transformStyle = 'translateY(-12px)';
   } else if (isTarget) {
-    outlineStyle = '2px solid #22c55e';
-    boxShadowStyle = '0 0 12px rgba(34, 197, 94, 0.6)';
+    outlineStyle = '2px solid #34d399';
+    boxShadowStyle = '0 0 16px rgba(52, 211, 153, 0.8), 0 8px 20px rgba(0, 0, 0, 0.7)';
   }
 
   // Phóng to (size=zoom): hiện trọn cả lá, to nhất có thể, KHÔNG viền đỏ, KHÔNG chữ che

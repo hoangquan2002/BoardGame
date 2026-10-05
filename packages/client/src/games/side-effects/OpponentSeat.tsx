@@ -92,16 +92,16 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
     }
   };
 
-  // Trạng thái theo Phần 2 mục F (Không khung lồng khung, border chỉ dùng cho trạng thái):
+  // Trạng thái theo phong cách Dark Casino:
   let outlineStyle = 'none';
-  let boxShadowStyle = '0 2px 6px rgba(0,0,0,0.35)';
+  let boxShadowStyle = '0 2px 8px rgba(0,0,0,0.45)';
 
   if (giveTarget) {
-    outlineStyle = '2px solid #22c55e';
-    boxShadowStyle = '0 0 10px rgba(34, 197, 94, 0.6)';
+    outlineStyle = '2px solid #34d399';
+    boxShadowStyle = '0 0 14px rgba(52, 211, 153, 0.75), 0 4px 12px rgba(0,0,0,0.5)';
   } else if (isActive) {
-    outlineStyle = '2px solid #38bdf8';
-    boxShadowStyle = '0 0 10px rgba(56, 189, 248, 0.5)';
+    outlineStyle = '2px solid #facc15';
+    boxShadowStyle = '0 0 14px rgba(250, 204, 21, 0.65), 0 4px 12px rgba(0,0,0,0.5)';
   }
 
   const cardHeight = cardWidth > 0 ? Math.round((cardWidth * 864) / 520) : 0;
@@ -118,9 +118,10 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '3px 6px',
-        backgroundColor: isActive ? '#16332a' : '#122520',
-        borderRadius: '6px',
+        padding: '3px 8px',
+        backgroundColor: isActive ? 'rgba(22, 56, 45, 0.95)' : 'rgba(12, 30, 24, 0.88)',
+        border: '1px solid rgba(212, 175, 55, 0.22)',
+        borderRadius: '8px',
         outline: outlineStyle,
         outlineOffset: '1px',
         boxShadow: boxShadowStyle,

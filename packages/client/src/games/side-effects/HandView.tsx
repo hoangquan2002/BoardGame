@@ -82,9 +82,9 @@ export const HandView: React.FC<HandViewProps> = ({
         <span
           style={{
             fontSize: '11px',
-            fontWeight: 600,
-            color: '#64748b',
-            letterSpacing: '0.3px',
+            fontWeight: 700,
+            color: '#a7c2b7',
+            letterSpacing: '0.4px',
             lineHeight: 1,
           }}
         >

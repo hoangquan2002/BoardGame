@@ -78,17 +78,22 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
             lineHeight: 1,
           }}
         >
-          {isSelf ? 'Thể Trạng' : 'Thể Trạng đối thủ'} ({psyche.length} ô)
+          {isSelf ? 'Thể Trạng của bạn' : 'Thể Trạng đối thủ'} ({psyche.length} ô)
         </span>
         {untreatedCount === 0 && psyche.length > 0 && (
           <span
             style={{
               fontSize: '11px',
-              color: '#4ade80',
-              fontWeight: 700,
+              color: '#34d399',
+              fontWeight: 800,
+              padding: '2px 8px',
+              borderRadius: '999px',
+              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+              border: '1px solid rgba(16, 185, 129, 0.45)',
+              boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)',
             }}
           >
-            Đã chữa hết bệnh
+            ✓ Đã chữa hết bệnh
           </span>
         )}
       </div>
@@ -192,14 +197,19 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '2px',
+                    gap: '3px',
                     fontSize: '11px',
-                    fontWeight: 700,
-                    color: '#4ade80',
+                    fontWeight: 800,
+                    color: '#34d399',
                     lineHeight: 1,
+                    backgroundColor: 'rgba(6, 40, 30, 0.9)',
+                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                    borderRadius: '4px',
+                    padding: '1px 4px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.6)',
                   }}
                 >
-                  <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#4ade80' }} />
+                  <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#34d399', boxShadow: '0 0 6px #34d399' }} />
                   Đã chữa
                 </div>
               )}

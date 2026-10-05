@@ -33,33 +33,48 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#122520',
+          background: 'linear-gradient(180deg, rgba(16, 38, 30, 0.98) 0%, rgba(8, 20, 16, 0.98) 100%)',
           borderRadius: '24px',
           border: '2px solid #eab308',
-          boxShadow: '0 0 40px rgba(234, 179, 8, 0.4), 0 20px 25px -5px rgba(0, 0, 0, 0.6)',
+          boxShadow: '0 0 50px rgba(234, 179, 8, 0.5), 0 25px 60px rgba(0, 0, 0, 0.9)',
           width: '100%',
           maxWidth: '380px',
           maxHeight: '94vh',
           overflowY: 'auto',
-          padding: '20px 16px',
+          padding: '24px 20px',
           textAlign: 'center',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '12px',
+          gap: '14px',
           boxSizing: 'border-box',
+          backdropFilter: 'blur(16px)',
         }}
       >
-        <div style={{ fontSize: '42px', animation: 'bounce 1s infinite' }}>🏆</div>
+        <div style={{ fontSize: '48px', filter: 'drop-shadow(0 0 16px rgba(234, 179, 8, 0.6))' }}>🏆</div>
 
         <div>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: '#facc15', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <span
+            className="font-display"
+            style={{ fontSize: '13px', fontWeight: 800, color: '#facc15', textTransform: 'uppercase', letterSpacing: '1.5px' }}
+          >
             {isMe ? 'XUẤT SẮC!' : 'KẾT THÚC VÁN CHƠI'}
           </span>
-          <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#ffffff', marginTop: '6px' }}>
+          <h2
+            className="font-display"
+            style={{
+              fontSize: '24px',
+              fontWeight: 900,
+              marginTop: '6px',
+              background: 'linear-gradient(135deg, #ffffff 0%, #fde047 38%, #eab308 72%, #ca8a04 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '0.5px',
+            }}
+          >
             {isMe ? 'Bạn đã chiến thắng!' : `${winnerName} đã chiến thắng!`}
           </h2>
-          <p style={{ fontSize: '14px', color: '#97baad', marginTop: '8px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '14px', color: '#a7c2b7', marginTop: '8px', lineHeight: 1.4 }}>
             Đã chữa khỏi toàn bộ Bệnh Lý trong Thể Trạng!
           </p>
         </div>
@@ -67,18 +82,19 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
         <button
           type="button"
           onClick={onHome}
+          className="casino-btn-active"
           style={{
             width: '100%',
             minHeight: '48px',
             padding: '12px',
             borderRadius: '12px',
-            backgroundColor: '#16a34a',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%)',
             color: '#ffffff',
-            fontSize: '16px',
-            fontWeight: 700,
-            border: 'none',
+            fontSize: '15px',
+            fontWeight: 800,
+            border: '1px solid rgba(255, 255, 255, 0.25)',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(22, 163, 74, 0.4)',
+            boxShadow: '0 4px 18px rgba(16, 185, 129, 0.5)',
             marginTop: '8px',
           }}
         >
