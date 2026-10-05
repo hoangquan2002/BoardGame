@@ -12,7 +12,7 @@ import {
 import type { UserSession } from '../../net/session.js';
 import { CardZoomModal } from './CardZoomModal.js';
 import { DiscardModal } from './DiscardModal.js';
-import { GameLogsModal } from './GameLogsModal.js';
+import { GameLogList, GameLogsModal } from './GameLogsModal.js';
 import { HandView } from './HandView.js';
 import { OpponentSeat } from './OpponentSeat.js';
 import { PendingChoiceModal } from './PendingChoiceModal.js';
@@ -56,6 +56,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   });
 
   const isLandscape = windowDimensions.width > windowDimensions.height;
+  // Máy tính: màn ngang rộng ≥ 1024px → bố cục 3 cột có bảng nhật ký bên phải
+  const isDesktop = isLandscape && windowDimensions.width >= 1024;
 
   useEffect(() => {
     const handleResize = () => {
@@ -705,6 +707,128 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     </header>
   );
 
+  // ===================== NÚT ĐỔI BÀI & NHẬT KÝ TRÊN BÀN =====================
+  const renderTradeButton = (large: boolean) => (
+    <button
+      type="button"
+      data-testid="trade-button"
+      onClick={() => setShowTradeModal(true)}
+      className="casino-btn-active"
+      style={{
+        position: 'relative',
+        height: large ? '36px' : isLandscape ? '16px' : '20px',
+        padding: large ? '0 14px' : '0 8px',
+        flex: large ? 1 : undefined,
+        borderRadius: large ? '9px' : '5px',
+        background: hasIncomingTrade
+          ? 'linear-gradient(135deg, #facc15 0%, #d4af37 100%)'
+          : 'rgba(212, 175, 55, 0.12)',
+        border: hasIncomingTrade ? '1px solid #fde68a' : '1px solid rgba(212, 175, 55, 0.4)',
+        color: hasIncomingTrade ? '#1a1205' : '#fde047',
+        fontSize: large ? '13px' : '11px',
+        lineHeight: 1,
+        fontWeight: 800,
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        boxShadow: hasIncomingTrade ? '0 0 12px rgba(250, 204, 21, 0.55)' : '0 2px 6px rgba(0,0,0,0.3)',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      {hasIncomingTrade && large ? 'Đổi bài (1 lời mời)' : 'Đổi bài'}
+      {hasIncomingTrade && !large && (
+        <span
+          data-testid="trade-button-badge"
+          style={{
+            position: 'absolute',
+            top: '-3px',
+            right: '-3px',
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            backgroundColor: '#ef4444',
+            boxShadow: '0 0 8px rgba(239, 68, 68, 0.95)',
+          }}
+        />
+      )}
+    </button>
+  );
+
+  const renderLogsButton = () => (
+    <button
+      type="button"
+      data-testid="logs-button"
+      onClick={() => setShowLogsModal(true)}
+      className="casino-btn-active"
+      style={{
+        height: isLandscape ? '16px' : '20px',
+        padding: '0 8px',
+        borderRadius: '5px',
+        background: 'rgba(212, 175, 55, 0.12)',
+        border: '1px solid rgba(212, 175, 55, 0.4)',
+        color: '#fde047',
+        fontSize: '11px',
+        lineHeight: 1,
+        fontWeight: 800,
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+      }}
+    >
+      Nhật ký
+    </button>
+  );
+
+  // ===================== BẢNG BÊN PHẢI (CHỈ MÁY TÍNH) =====================
+  const renderDesktopSidePanel = () => (
+    <section
+      data-testid="desktop-side-panel"
+      style={{
+        flex: '0 0 240px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        height: '100%',
+        minHeight: 0,
+        padding: '8px 0',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div style={{ display: 'flex', gap: '6px' }}>{renderTradeButton(true)}</div>
+
+      <div
+        data-testid="desktop-log-panel"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.92) 0%, rgba(8, 22, 17, 0.95) 100%)',
+          border: '1px solid rgba(212, 175, 55, 0.25)',
+          borderRadius: '10px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div
+          style={{
+            padding: '10px 12px 8px',
+            borderBottom: '1px solid rgba(212, 175, 55, 0.18)',
+            fontFamily: "'Cinzel', serif",
+            fontSize: '13px',
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+            color: '#facc15',
+          }}
+        >
+          Nhật ký ván chơi
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 10px' }}>
+          <GameLogList logs={gameView.logs} compact />
+        </div>
+      </div>
+    </section>
+  );
+
   // ===================== DẢI GIỮA BÀN =====================
   const renderCenterTable = () => (
     <div
@@ -729,8 +853,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         <span>·</span>
         <span>Bỏ <strong style={{ color: '#94a3b8' }}>{gameView.discardPileCount}</strong></span>
       </div>
-      <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <span>Đã đánh: <strong style={{ color: '#34d399' }}>{gameView.cardsPlayedThisTurn}/2 lá</strong></span>
+        {!isDesktop && renderTradeButton(false)}
+        {!isDesktop && renderLogsButton()}
       </div>
     </div>
   );
@@ -801,7 +927,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         flexDirection: isLandscape ? 'row' : 'column',
         justifyContent: 'space-between',
         width: '100%',
-        maxWidth: isLandscape ? '1200px' : '480px',
+        maxWidth: isDesktop ? '1600px' : isLandscape ? '1200px' : '480px',
         height: '100vh',
         maxHeight: '100vh',
         margin: '0 auto',
@@ -819,7 +945,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {isLandscape ? (
         <aside
           style={{
-            flex: '0 0 42%',
+            flex: isDesktop ? '0 0 33%' : '0 0 42%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-start',
@@ -900,6 +1026,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           />
         </section>
       </main>
+
+      {isDesktop && renderDesktopSidePanel()}
 
       {/* ===================== MODAL PHÓNG TO CARD (Mục B5) ===================== */}
       <CardZoomModal

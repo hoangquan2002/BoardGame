@@ -5,82 +5,122 @@ export interface GameLogsModalProps {
   onClose: () => void;
 }
 
+export interface GameLogListProps {
+  logs: string[];
+  compact?: boolean;
+}
+
+// Danh sách nhật ký (mới nhất ở trên), dùng chung cho modal và bảng bên phải trên máy tính
+export const GameLogList: React.FC<GameLogListProps> = ({ logs, compact = false }) => {
+  if (logs.length === 0) {
+    return (
+      <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', padding: '6px 2px' }}>
+        Chưa có sự kiện nào
+      </div>
+    );
+  }
+  return (
+    <div
+      data-testid="game-log-list"
+      style={{ display: 'flex', flexDirection: 'column', gap: compact ? '5px' : '8px' }}
+    >
+      {logs
+        .slice()
+        .reverse()
+        .map((log, index) => (
+          <div
+            key={logs.length - index}
+            style={{
+              fontSize: compact ? '12px' : '12.5px',
+              color: index === 0 ? '#f8fafc' : '#cbd5e1',
+              padding: compact ? '6px 8px' : '8px 10px',
+              background:
+                index === 0
+                  ? 'linear-gradient(90deg, rgba(212, 175, 55, 0.16) 0%, rgba(212, 175, 55, 0.04) 100%)'
+                  : 'rgba(4, 14, 11, 0.55)',
+              borderLeft: index === 0 ? '3px solid #facc15' : '3px solid rgba(212, 175, 55, 0.22)',
+              borderRadius: '5px',
+              lineHeight: 1.4,
+            }}
+          >
+            {log}
+          </div>
+        ))}
+    </div>
+  );
+};
+
 export const GameLogsModal: React.FC<GameLogsModalProps> = ({ logs, onClose }) => {
   return (
     <div
       role="dialog"
+      data-testid="game-logs-modal"
+      onClick={onClose}
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 9994,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(2, 8, 6, 0.82)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '16px',
-        backdropFilter: 'blur(3px)',
+        backdropFilter: 'blur(4px)',
       }}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: '#1e293b',
+          background: 'linear-gradient(180deg, rgba(16, 40, 32, 0.98) 0%, rgba(8, 22, 17, 0.98) 100%)',
           borderRadius: '16px',
-          border: '1px solid #334155',
+          border: '1px solid rgba(212, 175, 55, 0.4)',
+          boxShadow: '0 16px 48px rgba(0,0,0,0.85), 0 0 24px rgba(212, 175, 55, 0.12)',
           width: '100%',
-          maxWidth: '420px',
+          maxWidth: '440px',
           maxHeight: '80vh',
           display: 'flex',
           flexDirection: 'column',
           padding: '16px',
           gap: '12px',
+          boxSizing: 'border-box',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#f8fafc' }}>
-            📜 Nhật ký ván chơi
+          <h3
+            style={{
+              margin: 0,
+              fontFamily: "'Cinzel', serif",
+              fontSize: '17px',
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #fde68a 0%, #facc15 50%, #d4af37 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            Nhật ký ván chơi
           </h3>
           <button
             type="button"
+            aria-label="Đóng"
             onClick={onClose}
             style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#94a3b8',
-              fontSize: '20px',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              background: 'rgba(212, 175, 55, 0.12)',
+              border: '1px solid rgba(212, 175, 55, 0.4)',
+              color: '#fde047',
+              fontSize: '14px',
               cursor: 'pointer',
-              padding: '4px',
+              padding: 0,
             }}
           >
             ✕
           </button>
         </div>
 
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px',
-            paddingRight: '4px',
-          }}
-        >
-          {logs.slice().reverse().map((log, index) => (
-            <div
-              key={index}
-              style={{
-                fontSize: '12.5px',
-                color: '#cbd5e1',
-                padding: '8px 10px',
-                backgroundColor: index === 0 ? 'rgba(56, 189, 248, 0.1)' : '#0f172a',
-                borderLeft: index === 0 ? '3px solid #38bdf8' : '3px solid #475569',
-                borderRadius: '4px',
-                lineHeight: 1.4,
-              }}
-            >
-              {log}
-            </div>
-          ))}
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+          <GameLogList logs={logs} />
         </div>
 
         <button
@@ -90,11 +130,11 @@ export const GameLogsModal: React.FC<GameLogsModalProps> = ({ logs, onClose }) =
             width: '100%',
             padding: '10px',
             borderRadius: '10px',
-            backgroundColor: '#334155',
-            color: '#ffffff',
-            border: 'none',
+            background: 'rgba(212, 175, 55, 0.12)',
+            color: '#fde047',
+            border: '1px solid rgba(212, 175, 55, 0.4)',
             fontSize: '14px',
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer',
           }}
         >
