@@ -48,8 +48,9 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
   const canStart = roomState.players.length >= 2;
   const maxPlayers = sideEffectsGame.maxPlayers;
   const isFull = roomState.players.length >= maxPlayers;
+  const emptySlotsCount = Math.max(0, maxPlayers - roomState.players.length);
 
-  // Vẽ QR code
+  // Vẽ QR code nét cao
   useEffect(() => {
     if (canvasRef.current) {
       QRCode.toCanvas(
@@ -59,7 +60,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           width: 140,
           margin: 1,
           color: {
-            dark: '#0f172a',
+            dark: '#0a1a14',
             light: '#ffffff',
           },
         },
@@ -110,25 +111,20 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
     >
       {/* HEADER MÃ PHÒNG PHONG CÁCH VIP CASINO SUITE */}
       <section
-        className="casino-card-hover"
+        className="casino-glass casino-card-hover"
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.9) 0%, rgba(8, 20, 16, 0.95) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '18px',
+          borderRadius: '20px',
           padding: '20px 18px',
-          border: '1px solid rgba(212, 175, 55, 0.3)',
-          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.08)',
           gap: '12px',
           boxSizing: 'border-box',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '14px' }}>🎰</span>
+            <span style={{ fontSize: '15px' }}>🎰</span>
             <span
               className="font-display"
               style={{
@@ -147,21 +143,12 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
             type="button"
             data-testid="rules-button"
             onClick={handleOpenRules}
+            className="btn-gold"
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
               padding: '4px 12px',
               borderRadius: '999px',
-              backgroundColor: 'rgba(212, 175, 55, 0.12)',
-              border: '1px solid rgba(212, 175, 55, 0.45)',
-              color: '#fde047',
               fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-              transition: 'all 0.2s ease',
+              minHeight: '26px',
             }}
           >
             {!hasReadRules && (
@@ -182,73 +169,51 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
 
         {/* MÃ PHÒNG MẠ VÀNG NỔI KHỐI */}
         <div
+          className="font-display text-gold-gradient"
           style={{
             fontSize: '38px',
             fontWeight: 900,
             letterSpacing: '6px',
-            fontFamily: 'monospace',
-            background: 'linear-gradient(135deg, #ffffff 0%, #fde047 38%, #eab308 72%, #ca8a04 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
             filter: 'drop-shadow(0 2px 8px rgba(234, 179, 8, 0.35))',
-            margin: '4px 0',
+            margin: '2px 0',
           }}
         >
           {roomState.roomCode}
         </div>
 
-        {/* Nút sao chép mã & link */}
+        {/* Nút sao chép mã & link dạng pill-button với viền vàng / ngọc lục bảo */}
         <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '2px' }}>
           <button
             type="button"
             onClick={() => copyToClipboard(roomState.roomCode, true)}
-            className="casino-btn-active"
+            className="btn-gold"
             style={{
               flex: 1,
-              minHeight: '44px',
-              padding: '8px 12px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, rgba(26, 56, 46, 0.9) 0%, rgba(14, 34, 27, 0.9) 100%)',
-              border: '1px solid rgba(212, 175, 55, 0.35)',
-              color: '#f8fafc',
+              minHeight: '42px',
+              borderRadius: '999px',
               fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-              transition: 'all 0.2s ease',
+              color: copiedCode ? '#34d399' : '#facc15',
+              borderColor: copiedCode ? 'rgba(16, 185, 129, 0.6)' : 'rgba(212, 175, 55, 0.45)',
             }}
           >
-            {copiedCode ? '✅ Đã chép mã' : '📋 Chép mã phòng'}
+            {copiedCode ? '✓ Đã sao chép mã!' : '📋 Sao chép mã'}
           </button>
 
           <button
             type="button"
             onClick={() => copyToClipboard(inviteUrl, false)}
-            className="casino-btn-active"
+            className="btn-emerald"
             style={{
               flex: 1,
-              minHeight: '44px',
-              padding: '8px 12px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: '#ffffff',
+              minHeight: '42px',
+              borderRadius: '999px',
               fontSize: '13px',
-              fontWeight: 700,
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-              transition: 'all 0.2s ease',
+              background: copiedLink
+                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             }}
           >
-            {copiedLink ? '✅ Đã chép link' : '🔗 Chép link mời'}
+            {copiedLink ? '✓ Đã sao chép link!' : '🔗 Sao chép liên kết'}
           </button>
         </div>
 
@@ -258,29 +223,27 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           readOnly
           value={inviteUrl}
           onClick={(e) => (e.target as HTMLInputElement).select()}
+          className="casino-input"
           style={{
             width: '100%',
-            backgroundColor: 'rgba(6, 18, 14, 0.85)',
             color: '#a7c2b7',
-            border: '1px solid rgba(212, 175, 55, 0.22)',
-            borderRadius: '8px',
+            borderRadius: '10px',
             padding: '8px 10px',
             fontSize: '12px',
-            boxSizing: 'border-box',
             textAlign: 'center',
             letterSpacing: '0.3px',
           }}
         />
 
-        {/* Mã QR với viền mạ vàng và nền sáng */}
+        {/* Mã QR với viền mạ vàng kép và nền trắng tinh khiết */}
         <div
           style={{
-            marginTop: '6px',
+            marginTop: '4px',
             padding: '10px',
             backgroundColor: '#ffffff',
             borderRadius: '14px',
-            border: '2px solid rgba(212, 175, 55, 0.5)',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(234, 179, 8, 0.25)',
+            border: '2px solid rgba(212, 175, 55, 0.55)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6), 0 0 16px rgba(234, 179, 8, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -288,24 +251,19 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
         >
           <canvas ref={canvasRef} style={{ display: 'block', borderRadius: '4px' }} />
         </div>
-        <span style={{ fontSize: '12px', color: '#8fa89e', letterSpacing: '0.2px' }}>
-          Quét mã QR để cùng chơi trên điện thoại
+        <span style={{ fontSize: '12px', color: '#97baad', letterSpacing: '0.2px' }}>
+          Quét mã để cùng tham gia bàn chơi
         </span>
       </section>
 
-      {/* DANH SÁCH GHẾ NGỒI BÀN CHƠI (PLAYER SEATS) */}
+      {/* DANH SÁCH GHẾ NGỒI BÀN CHƠI (4 GHẾ QUANH BÀN) */}
       <section
-        className="casino-card-hover"
+        className="casino-glass casino-card-hover"
         style={{
           display: 'flex',
           flexDirection: 'column',
-          background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.9) 0%, rgba(8, 20, 16, 0.95) 100%)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '18px',
+          borderRadius: '20px',
           padding: '18px 16px',
-          border: '1px solid rgba(212, 175, 55, 0.25)',
-          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)',
           gap: '12px',
           boxSizing: 'border-box',
         }}
@@ -314,7 +272,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '15px' }}>👥</span>
             <h2 style={{ fontSize: '14px', fontWeight: 800, color: '#f8fafc', margin: 0, letterSpacing: '0.4px' }}>
-              Người chơi ({roomState.players.length}/{maxPlayers})
+              Vị trí ngồi ({roomState.players.length}/{maxPlayers})
             </h2>
           </div>
           <span
@@ -340,27 +298,14 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               type="button"
               onClick={() => onAddBot?.('normal')}
               disabled={isLoading || isFull}
-              className="casino-btn-active"
+              className="btn-gold"
               style={{
                 width: '100%',
                 minHeight: '42px',
-                padding: '8px 12px',
                 borderRadius: '10px',
-                background: isFull
-                  ? 'rgba(26, 54, 45, 0.6)'
-                  : 'linear-gradient(135deg, rgba(22, 70, 55, 0.9) 0%, rgba(14, 45, 35, 0.9) 100%)',
-                border: isFull ? '1px solid rgba(212, 175, 55, 0.15)' : '1px solid rgba(212, 175, 55, 0.4)',
-                color: isFull ? '#6e8f81' : '#fde047',
                 fontSize: '13px',
-                fontWeight: 700,
-                cursor: isLoading || isFull ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
                 opacity: isFull ? 0.6 : 1,
-                boxShadow: isFull ? 'none' : '0 4px 12px rgba(0, 0, 0, 0.3)',
-                transition: 'all 0.2s ease',
+                cursor: isLoading || isFull ? 'not-allowed' : 'pointer',
               }}
             >
               <span>🤖</span>
@@ -369,8 +314,9 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           </div>
         )}
 
-        {/* Danh sách ghế người chơi */}
+        {/* Danh sách 4 ghế quanh bàn: đã ngồi + ghế trống */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Ghế đã có người */}
           {roomState.players.map((p) => {
             const isMe = p.playerId === session.playerId;
             const isPlayerHost = p.playerId === roomState.hostId;
@@ -383,30 +329,30 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                   justifyContent: 'space-between',
                   padding: '10px 14px',
                   backgroundColor: isMe
-                    ? 'rgba(16, 185, 129, 0.14)'
-                    : 'rgba(6, 18, 14, 0.85)',
+                    ? 'rgba(16, 185, 129, 0.16)'
+                    : 'rgba(6, 18, 14, 0.88)',
                   border: isMe
-                    ? '1px solid rgba(212, 175, 55, 0.45)'
-                    : '1px solid rgba(212, 175, 55, 0.18)',
+                    ? '1px solid rgba(212, 175, 55, 0.5)'
+                    : '1px solid rgba(212, 175, 55, 0.22)',
                   borderRadius: '12px',
-                  boxShadow: isMe ? '0 4px 14px rgba(16, 185, 129, 0.15)' : 'none',
+                  boxShadow: isMe ? '0 4px 14px rgba(16, 185, 129, 0.18)' : 'none',
                   transition: 'all 0.2s ease',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {/* Avatar Chip */}
+                  {/* Avatar Chip sắc nét với viền kim loại */}
                   <div
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
                       backgroundColor: isMe ? '#065f46' : '#1e293b',
-                      border: isPlayerHost ? '2px solid #eab308' : '1px solid rgba(255,255,255,0.2)',
+                      border: isPlayerHost ? '2px solid #eab308' : '1px solid rgba(255,255,255,0.25)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '13px',
-                      boxShadow: isPlayerHost ? '0 0 8px rgba(234, 179, 8, 0.4)' : 'none',
+                      fontSize: '14px',
+                      boxShadow: isPlayerHost ? '0 0 10px rgba(234, 179, 8, 0.45)' : 'none',
                     }}
                   >
                     {isPlayerHost ? '👑' : p.isBot ? '🤖' : '👤'}
@@ -436,16 +382,17 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                     <span
                       style={{
                         padding: '2px 8px',
-                        backgroundColor: 'rgba(245, 158, 11, 0.18)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
                         color: '#fbbf24',
                         fontSize: '11px',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         borderRadius: '9999px',
-                        border: '1px solid rgba(245, 158, 11, 0.4)',
-                        letterSpacing: '0.3px',
+                        border: '1px solid rgba(245, 158, 11, 0.45)',
+                        letterSpacing: '0.4px',
+                        boxShadow: '0 0 8px rgba(245, 158, 11, 0.2)',
                       }}
                     >
-                      Chủ phòng
+                      👑 Chủ phòng
                     </span>
                   )}
                   {p.isBot && isHost && (
@@ -456,13 +403,14 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                       className="casino-btn-active"
                       style={{
                         padding: '3px 8px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.18)',
                         color: '#fca5a5',
                         fontSize: '11px',
                         fontWeight: 700,
                         borderRadius: '6px',
-                        border: '1px solid rgba(239, 68, 68, 0.35)',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
                         cursor: isLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       ✕ Xoá
@@ -475,56 +423,78 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               </div>
             );
           })}
+
+          {/* Các vị trí ghế trống với viền đứt nét và nhịp thở mời gọi bạn bè */}
+          {Array.from({ length: emptySlotsCount }).map((_, idx) => (
+            <div
+              key={`empty-slot-${idx}`}
+              className="animate-pulse-breathe"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '12px 14px',
+                border: '1px dashed rgba(212, 175, 55, 0.35)',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(6, 18, 14, 0.45)',
+                color: '#a7c2b7',
+                fontSize: '12px',
+                fontWeight: 600,
+                letterSpacing: '0.3px',
+              }}
+            >
+              <span>🪑</span>
+              <span>Đang chờ bạn bè tham gia...</span>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* HÀNH ĐỘNG BẮT ĐẦU / RỜI PHÒNG */}
       <footer style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
         {isHost ? (
-          <button
-            type="button"
-            onClick={onStartRoom}
-            disabled={!canStart || isLoading}
-            className={canStart ? 'casino-btn-active' : undefined}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={onStartRoom}
+              disabled={!canStart || isLoading}
+              className={`btn-emerald ${canStart ? 'animate-emerald-pulse' : ''}`}
+              style={{
+                width: '100%',
+                minHeight: '48px',
+                borderRadius: '12px',
+                fontSize: '15px',
+                opacity: canStart ? 1 : 0.5,
+                cursor: canStart && !isLoading ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <span>{canStart ? '🚀 Bắt đầu ván chơi' : 'Bắt đầu ván chơi'}</span>
+            </button>
+            {!canStart && (
+              <span style={{ fontSize: '11px', color: '#a7c2b7', textAlign: 'center', fontStyle: 'italic' }}>
+                Cần tối thiểu 2 người để bắt đầu
+              </span>
+            )}
+          </div>
+        ) : (
+          <div
+            className="casino-glass-panel"
             style={{
-              width: '100%',
-              minHeight: '48px',
-              padding: '12px',
+              padding: '14px',
+              textAlign: 'center',
               borderRadius: '12px',
-              background: canStart
-                ? 'linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%)'
-                : 'rgba(26, 54, 45, 0.6)',
-              color: canStart ? '#ffffff' : '#6e8f81',
-              fontSize: '15px',
-              fontWeight: 800,
-              letterSpacing: '0.5px',
-              border: canStart ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(212, 175, 55, 0.15)',
-              cursor: canStart && !isLoading ? 'pointer' : 'not-allowed',
-              opacity: canStart ? 1 : 0.65,
-              boxShadow: canStart ? '0 4px 18px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3)' : 'none',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#d1fae5',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              transition: 'all 0.2s ease',
             }}
           >
-            <span>{canStart ? '🚀 Bắt đầu chơi' : 'Chờ thêm người chơi (tối thiểu 2)'}</span>
-          </button>
-        ) : (
-          <div
-            style={{
-              padding: '14px',
-              textAlign: 'center',
-              background: 'linear-gradient(180deg, rgba(16, 36, 29, 0.9) 0%, rgba(8, 20, 16, 0.95) 100%)',
-              borderRadius: '12px',
-              border: '1px solid rgba(212, 175, 55, 0.25)',
-              fontSize: '13px',
-              fontWeight: 600,
-              color: '#d1fae5',
-            }}
-          >
-            ⏳ Đang chờ chủ phòng bắt đầu trò chơi…
+            <span style={{ animation: 'spin 3s linear infinite' }}>⏳</span>
+            <span>Đang đợi chủ phòng khai cuộc…</span>
           </div>
         )}
 
