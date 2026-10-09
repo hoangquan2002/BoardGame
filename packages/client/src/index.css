@@ -14,10 +14,11 @@
   --surface-panel: rgba(14, 30, 24, 0.85);
   --surface-panel-glass: rgba(12, 26, 21, 0.72);
   --surface-panel-border: rgba(212, 175, 55, 0.22);
-  --surface-panel-border-hover: rgba(212, 175, 55, 0.45);
+  --surface-panel-border-hover: rgba(212, 175, 55, 0.55);
 
   /* Gold & Brass Accents */
   --gold-100: #fef9c3;
+  --gold-200: #fef08a;
   --gold-300: #fde047;
   --gold-400: #facc15;
   --gold-500: #eab308;
@@ -36,6 +37,16 @@
   --emerald-700: #047857;
   --emerald-gradient: linear-gradient(135deg, #10b981 0%, #047857 60%, #064e3b 100%);
   --emerald-glow: 0 0 24px rgba(16, 185, 129, 0.4);
+
+  /* Card Type Identifiers */
+  --disorder-ruby: #ef4444;
+  --disorder-ruby-glow: rgba(239, 68, 68, 0.35);
+  --drug-sapphire: #38bdf8;
+  --drug-sapphire-glow: rgba(56, 189, 248, 0.35);
+  --episode-amber: #f59e0b;
+  --episode-amber-glow: rgba(245, 158, 11, 0.35);
+  --therapy-emerald: #10b981;
+  --therapy-emerald-glow: rgba(16, 185, 129, 0.35);
 
   /* Shadows */
   --shadow-card-casino: 0 10px 25px -4px rgba(0, 0, 0, 0.75), 0 4px 8px -2px rgba(0, 0, 0, 0.5);
@@ -125,6 +136,17 @@ body {
   }
 }
 
+@keyframes pulseBreathe {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
 @keyframes shimmerEffect {
   0% {
     background-position: -200% 0;
@@ -143,15 +165,143 @@ body {
   }
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardLift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-14px);
+  }
+}
+
+/* --- CASINO GLASS & PANEL UTILITIES --- */
+.casino-glass {
+  background: linear-gradient(180deg, rgba(16, 36, 29, 0.88) 0%, rgba(8, 20, 16, 0.95) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 35px rgba(212, 175, 55, 0.08);
+}
+
+.casino-glass-panel {
+  background: rgba(12, 26, 21, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* --- BUTTON UTILITIES --- */
+.btn-emerald {
+  background: var(--emerald-gradient);
+  color: #ffffff;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: var(--shadow-emerald-button), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-emerald:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  filter: brightness(1.05);
+}
+
+.btn-emerald:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, rgba(26, 56, 46, 0.9) 0%, rgba(14, 34, 27, 0.9) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #facc15;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gold:hover:not(:disabled) {
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.25);
+  color: #fef08a;
+}
+
+.btn-gold:active:not(:disabled) {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* --- FORM INPUT UTILITIES --- */
+.casino-input {
+  background-color: rgba(6, 18, 14, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #f8fafc;
+  outline: none;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.casino-input:focus {
+  border-color: #eab308;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.3);
+}
+
 /* --- INTERACTIVE UTILITY CLASSES --- */
 .casino-card-hover {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .casino-card-hover:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-elevated);
 }
 
 .casino-btn-active:active {
-  transform: scale(0.98);
+  transform: translateY(1px) scale(0.98);
+}
+
+.animate-gold-pulse {
+  animation: goldPulse 2s infinite ease-in-out;
+}
+
+.animate-emerald-pulse {
+  animation: emeraldPulse 2s infinite ease-in-out;
+}
+
+.animate-pulse-breathe {
+  animation: pulseBreathe 2.5s infinite ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+/* --- ACCESSIBILITY: REDUCED MOTION --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
