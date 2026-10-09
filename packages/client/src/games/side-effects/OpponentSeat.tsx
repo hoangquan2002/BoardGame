@@ -194,14 +194,19 @@ export const OpponentSeat: React.FC<OpponentSeatProps> = ({
             <span
               style={{
                 fontSize: '11px',
-                fontWeight: 600,
-                color: '#94a3b8',
-                backgroundColor: 'rgba(0,0,0,0.3)',
-                padding: '1px 5px',
-                borderRadius: '3px',
+                fontWeight: 800,
+                color: '#facc15',
+                background: 'radial-gradient(circle at 35% 35%, #15803d 0%, #064e3b 80%, #022c22 100%)',
+                border: '1px solid #eab308',
+                padding: '1px 6px',
+                borderRadius: '999px',
+                boxShadow: '0 0 6px rgba(234, 179, 8, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px',
               }}
             >
-              {opponent.handCount} lá
+              🃏 {opponent.handCount} lá
             </span>
           </div>
         </div>

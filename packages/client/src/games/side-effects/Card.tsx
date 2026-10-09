@@ -126,7 +126,9 @@ export const Card: React.FC<CardProps> = ({
   if (isSelected) {
     outlineStyle = '2px solid #facc15';
     boxShadowStyle = '0 0 18px rgba(250, 204, 21, 0.7), 0 12px 28px rgba(0, 0, 0, 0.85)';
-    transformStyle = 'translateY(-12px)';
+    if (transformStyle === undefined) {
+      transformStyle = 'translateY(-12px)';
+    }
   } else if (isTarget) {
     outlineStyle = '2px solid #34d399';
     boxShadowStyle = '0 0 16px rgba(52, 211, 153, 0.8), 0 8px 20px rgba(0, 0, 0, 0.7)';

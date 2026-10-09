@@ -162,18 +162,23 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
                     }
                   }}
                   disabled={!selectedAnxietyCardId}
+                  className={selectedAnxietyCardId ? 'btn-emerald' : undefined}
                   style={{
                     width: '100%',
                     minHeight: '48px',
                     padding: '12px',
                     borderRadius: '12px',
-                    backgroundColor: selectedAnxietyCardId ? '#2563eb' : '#334155',
-                    color: '#ffffff',
+                    background: selectedAnxietyCardId
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : 'rgba(26, 54, 45, 0.6)',
+                    color: selectedAnxietyCardId ? '#ffffff' : '#64748b',
                     fontSize: '15px',
-                    fontWeight: 700,
-                    border: 'none',
+                    fontWeight: 800,
+                    border: selectedAnxietyCardId
+                      ? '1px solid rgba(255, 255, 255, 0.25)'
+                      : '1px solid rgba(212, 175, 55, 0.15)',
                     cursor: selectedAnxietyCardId ? 'pointer' : 'not-allowed',
-                    opacity: selectedAnxietyCardId ? 1 : 0.6,
+                    boxShadow: selectedAnxietyCardId ? '0 4px 16px rgba(16, 185, 129, 0.45)' : 'none',
                   }}
                 >
                   {selectedAnxietyCardId ? 'Lấy lá bài này về tay' : 'Chọn 1 lá bài'}
@@ -383,18 +388,19 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
                     }
                   }}
                   disabled={!isReady}
+                  className={isReady ? 'casino-btn-active' : undefined}
                   style={{
                     width: '100%',
                     minHeight: '48px',
                     padding: '12px',
                     borderRadius: '12px',
-                    backgroundColor: isReady ? '#ef4444' : '#334155',
-                    color: '#ffffff',
+                    background: isReady ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'rgba(26, 54, 45, 0.6)',
+                    color: isReady ? '#ffffff' : '#64748b',
                     fontSize: '15px',
-                    fontWeight: 700,
-                    border: 'none',
+                    fontWeight: 800,
+                    border: isReady ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(212, 175, 55, 0.15)',
                     cursor: isReady ? 'pointer' : 'not-allowed',
-                    opacity: isReady ? 1 : 0.6,
+                    boxShadow: isReady ? '0 4px 16px rgba(239, 68, 68, 0.5)' : 'none',
                   }}
                 >
                   {isReady ? 'Xác nhận bỏ 3 lá bài' : `Chọn thêm ${3 - selectedTremorsIds.length} lá`}

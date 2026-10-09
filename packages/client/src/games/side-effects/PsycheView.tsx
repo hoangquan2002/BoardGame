@@ -37,6 +37,10 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
   // Thuốc lệch xuống 34% chiều cao lá để lộ trọn tiêu đề Bệnh Lý (33-35%)
   const staggerOffset = Math.round(cardHeight * 0.34);
 
+  // Màn hình ngang nhỏ (điện thoại xoay ngang < 550px): nén dòng tổng kết vào tiêu đề để không tràn màn hình
+  const isCompactLandscape =
+    isLandscape && (typeof window !== 'undefined' ? window.innerHeight < 550 : false);
+
   // Số bệnh chưa chữa
   const untreatedCount = psyche.filter((s) => s.drug === null).length;
 
@@ -79,6 +83,11 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
           }}
         >
           {isSelf ? 'Thể Trạng của bạn' : 'Thể Trạng đối thủ'} ({psyche.length} ô)
+          {isSelf && isCompactLandscape && (
+            <span style={{ marginLeft: '6px', color: untreatedCount === 0 ? '#4ade80' : '#fda4af', fontWeight: 700 }}>
+              · {untreatedCount === 0 ? 'Đã chữa hết bệnh' : `Còn ${untreatedCount} bệnh`}
+            </span>
+          )}
         </span>
         {untreatedCount === 0 && psyche.length > 0 && (
           <span
@@ -219,7 +228,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
       </div>
 
       {/* DÒNG THÔNG TIN THỂ TRẠNG BÊN DƯỚI (Phần 2 mục C): >= 12px */}
-      {isSelf && (
+      {isSelf && !isCompactLandscape && (
         <div
           style={{
             fontSize: '12px',

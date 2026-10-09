@@ -23,6 +23,7 @@ export const HandView: React.FC<HandViewProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(360);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -44,7 +45,7 @@ export const HandView: React.FC<HandViewProps> = ({
   // Chiều cao theo tỷ lệ gốc 520x864
   const cardHeight = Math.round((cardWidth * 864) / 520);
 
-  // Tính khoảng cách giữa các lá bài (Phần 1 mục 1 & mục 7):
+  // Tính khoảng cách giữa các lá bài:
   // 1. Nếu xếp vừa hàng ngang thì KHÔNG chồng lên nhau (khoảng cách = cardWidth + 8px)
   // 2. Nếu không vừa thì xếp chồng so le với khoảng lộ tối thiểu 24px
   const gap = 8;
@@ -77,7 +78,7 @@ export const HandView: React.FC<HandViewProps> = ({
         gap: isLandscape ? '2px' : '4px',
       }}
     >
-      {/* Nhãn nhỏ mờ - có khoảng cách dưới đảm bảo lá nhô lên không che chữ */}
+      {/* Nhãn nhỏ mờ - khoảng cách dưới đảm bảo lá nhô lên không che chữ */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: isLandscape ? '1px' : '14px' }}>
         <span
           style={{
@@ -92,20 +93,35 @@ export const HandView: React.FC<HandViewProps> = ({
         </span>
       </div>
 
-      {/* Vùng bài tay */}
+      {/* Vùng bài tay xếp so le co giãn mượt mà */}
       <div
         style={{
           position: 'relative',
           width: '100%',
           height: `${cardHeight}px`,
-          marginTop: isLandscape ? '-3px' : '0px',
+          marginTop: '0px',
           boxSizing: 'border-box',
           overflow: 'visible',
         }}
       >
         {hand.map((card, idx) => {
           const isSelected = card.instanceId === selectedCardId;
+          const isHovered = card.instanceId === hoveredCardId && !isSelected;
           const leftPos = startOffset + Math.round(idx * overlapStep);
+
+          let transform = 'none';
+          if (isSelected) {
+            transform = isLandscape ? 'translateY(-2px)' : 'translateY(-14px)';
+          } else if (isHovered) {
+            transform = isLandscape ? 'none' : 'translateY(-6px)';
+          }
+
+          let zIndex = idx + 1;
+          if (isSelected) {
+            zIndex = 50;
+          } else if (isHovered) {
+            zIndex = 40;
+          }
 
           return (
             <div
@@ -113,16 +129,22 @@ export const HandView: React.FC<HandViewProps> = ({
               data-testid={`hand-card-${card.instanceId}`}
               data-card-index={idx}
               data-selected={isSelected ? 'true' : 'false'}
+              onMouseEnter={() => setHoveredCardId(card.instanceId)}
+              onMouseLeave={() => setHoveredCardId(null)}
               style={{
                 position: 'absolute',
                 left: `${leftPos}px`,
                 top: 0,
                 width: `${cardWidth}px`,
                 height: `${cardHeight}px`,
-                // Lá đang chọn có zIndex cao nhất để lộ hết trọn vẹn (Mục E)
-                zIndex: isSelected ? 50 : idx + 1,
-                transform: isSelected ? (isLandscape ? 'translateY(-2px)' : 'translateY(-10px)') : 'none',
-                transition: 'transform 0.15s ease, z-index 0.15s ease',
+                zIndex,
+                transform,
+                filter: isSelected
+                  ? 'drop-shadow(0 0 12px rgba(250, 204, 21, 0.65))'
+                  : isHovered
+                    ? 'drop-shadow(0 4px 10px rgba(250, 204, 21, 0.35))'
+                    : 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5))',
+                transition: 'transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.15s ease, filter 0.18s ease',
                 cursor: 'pointer',
               }}
             >

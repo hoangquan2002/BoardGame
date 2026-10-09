@@ -243,6 +243,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   useEffect(() => {
     const prevTrades = prevTradesRef.current;
     const currentTrades = gameView.trades;
+    prevTradesRef.current = currentTrades;
+    const prevLogsLength = prevLogsLengthRef.current;
+    prevLogsLengthRef.current = gameView.logs.length;
 
     // Tìm trade liên quan đến myId vừa biến mất (bị từ chối, huỷ, hoặc hoàn tất)
     const disappearedTrade = prevTrades.find(
@@ -258,7 +261,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           : disappearedTrade.proposerId;
       const otherName = playerNames[otherId] || otherId;
 
-      const newLogs = gameView.logs.slice(prevLogsLengthRef.current);
+      const newLogs = gameView.logs.slice(prevLogsLength);
       const relevantLog = [...newLogs].reverse().find(
         (log) => log.includes('giao dịch') || log.includes('đổi bài'),
       );
@@ -287,9 +290,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       }, 3000);
       return () => clearTimeout(timer);
     }
-
-    prevTradesRef.current = currentTrades;
-    prevLogsLengthRef.current = gameView.logs.length;
   }, [gameView.trades, gameView.logs, myId, playerNames]);
 
   const handleSelectCard = (instanceId: string) => {
@@ -838,20 +838,46 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: isLandscape ? '0px 10px' : '2px 10px',
-        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.92) 0%, rgba(8, 22, 17, 0.95) 100%)',
-        border: '1px solid rgba(212, 175, 55, 0.22)',
-        borderRadius: '7px',
+        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.94) 0%, rgba(8, 22, 17, 0.98) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.28)',
+        borderRadius: '8px',
         fontSize: '11px',
         color: '#cbd5e1',
         boxSizing: 'border-box',
         width: '100%',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.35)',
       }}
     >
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <span>Rút <strong style={{ color: '#facc15' }}>{gameView.drawPileCount}</strong></span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '10px',
+              height: '13px',
+              backgroundColor: '#0c2e22',
+              border: '1px solid #d4af37',
+              borderRadius: '2px',
+              boxShadow: '1px 1px 0 #04130d, 2px 2px 0 #071f16',
+            }}
+          />
+          Rút <strong style={{ color: '#facc15' }}>{gameView.drawPileCount}</strong>
+        </span>
         <span>·</span>
-        <span>Bỏ <strong style={{ color: '#94a3b8' }}>{gameView.discardPileCount}</strong></span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '10px',
+              height: '13px',
+              backgroundColor: '#1e293b',
+              border: '1px solid #94a3b8',
+              borderRadius: '2px',
+              boxShadow: '1px 1px 0 #0f172a, 2px 2px 0 #0a0f1d',
+            }}
+          />
+          Bỏ <strong style={{ color: '#94a3b8' }}>{gameView.discardPileCount}</strong>
+        </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         <span>Đã đánh: <strong style={{ color: '#34d399' }}>{gameView.cardsPlayedThisTurn}/2 lá</strong></span>
@@ -871,9 +897,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         justifyContent: 'space-between',
         gap: '6px',
         padding: isLandscape ? '0px 8px' : '2px 8px',
-        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.92) 0%, rgba(8, 22, 17, 0.95) 100%)',
-        border: '1px solid rgba(212, 175, 55, 0.22)',
-        borderRadius: '7px',
+        background: 'linear-gradient(180deg, rgba(14, 34, 27, 0.94) 0%, rgba(8, 22, 17, 0.98) 100%)',
+        border: '1px solid rgba(212, 175, 55, 0.25)',
+        borderRadius: '8px',
         boxSizing: 'border-box',
         width: '100%',
         minHeight: isLandscape ? '20px' : '32px',
@@ -888,10 +914,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         onClick={handleEndTurnClick}
         disabled={!endTurnAllowed}
         data-testid="end-turn-button"
+        className={endTurnAllowed ? 'casino-btn-active' : undefined}
         style={{
           height: isLandscape ? '20px' : '28px',
           padding: '0 12px',
-          borderRadius: '6px',
+          borderRadius: '7px',
           background: !endTurnAllowed
             ? 'rgba(20, 42, 34, 0.6)'
             : discardCount > 0
@@ -902,11 +929,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           color: endTurnAllowed ? '#ffffff' : '#64748b',
           fontSize: '12px',
           fontWeight: 800,
-          border: endTurnAllowed ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(212, 175, 55, 0.1)',
+          border: endTurnAllowed
+            ? discardCount > 0
+              ? '1px solid #fde68a'
+              : '1px solid rgba(255, 255, 255, 0.25)'
+            : '1px solid rgba(212, 175, 55, 0.1)',
           cursor: endTurnAllowed ? 'pointer' : 'not-allowed',
           boxShadow: endTurnAllowed
             ? discardCount > 0
-              ? '0 2px 10px rgba(245, 158, 11, 0.45)'
+              ? '0 0 14px rgba(245, 158, 11, 0.65), 0 2px 8px rgba(0,0,0,0.5)'
               : '0 2px 10px rgba(16, 185, 129, 0.45)'
             : 'none',
           whiteSpace: 'nowrap',
@@ -1049,6 +1080,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {hasIncomingTrade && incomingTrade && !showTradeModal && (
         <div
           data-testid="trade-notice"
+          className="animate-fade-in"
           style={{
             position: 'fixed',
             top: isLandscape ? '44px' : '48px',
@@ -1058,16 +1090,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             margin: '0 auto',
             zIndex: 1200,
             background: 'linear-gradient(135deg, rgba(16, 38, 30, 0.98) 0%, rgba(10, 24, 19, 0.98) 100%)',
-            border: '1px solid rgba(234, 179, 8, 0.65)',
-            borderRadius: '12px',
+            border: '1px solid rgba(234, 179, 8, 0.75)',
+            borderRadius: '14px',
             padding: '10px 14px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '8px',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(234, 179, 8, 0.25)',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 24px rgba(234, 179, 8, 0.3)',
             boxSizing: 'border-box',
-            backdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(16px)',
           }}
         >
           <div style={{ flex: 1, minWidth: 0, fontSize: '13px', color: '#f8fafc', lineHeight: 1.3 }}>
