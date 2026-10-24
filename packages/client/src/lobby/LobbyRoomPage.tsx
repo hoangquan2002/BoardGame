@@ -127,6 +127,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '15px' }}>🎰</span>
+            <span style={{ fontSize: '15px' }}>{plugin.icon}</span>
             <span
               className="font-display"
               style={{
@@ -137,7 +138,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
                 textTransform: 'uppercase',
               }}
             >
-              Phòng chờ VIP
+              {plugin.title} • Phòng chờ VIP
             </span>
           </div>
 

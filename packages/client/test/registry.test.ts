@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import React from 'react';
+import { renderToString } from 'react-dom/server';
 import type { GameDefinition } from '@boardgame/core';
 import {
   ClientGameRegistry,
@@ -8,6 +9,7 @@ import {
   sideEffectsClientPlugin,
   type ClientGamePlugin,
 } from '../src/games/registry.js';
+import { GameMenuCard } from '../src/lobby/GameMenuCard.js';
 
 describe('ClientGameRegistry', () => {
   it('mặc định đăng ký side-effects với đầy đủ metadata, BoardComponent, RulesModalComponent, createMockData', () => {
@@ -17,6 +19,9 @@ describe('ClientGameRegistry', () => {
     expect(plugin?.title).toBe('Side Effects');
     expect(plugin?.subtitle).toBe('Board game chiến thuật Dược lý & Tâm lý học');
     expect(plugin?.icon).toBe('💊');
+    expect(plugin?.accentColor).toBe('#10b981');
+    expect(plugin?.durationTextVi).toBe('15–25 phút');
+    expect(plugin?.categoryVi).toBe('Chiến thuật / Thẻ bài');
     expect(plugin?.rulesStorageKey).toBe('side_effects_rules_read');
     expect(plugin?.BoardComponent).toBeDefined();
     expect(plugin?.RulesModalComponent).toBeDefined();
@@ -56,6 +61,9 @@ describe('ClientGameRegistry', () => {
       title: dummyGameDef.meta!.nameVi,
       subtitle: dummyGameDef.meta!.subtitleVi!,
       icon: dummyGameDef.meta!.icon!,
+      accentColor: '#3b82f6',
+      durationTextVi: '10–20 phút',
+      categoryVi: 'Party game',
       rulesStorageKey: 'dummy_game_rules_read',
       BoardComponent: DummyBoard,
       RulesModalComponent: DummyRules,
@@ -69,8 +77,52 @@ describe('ClientGameRegistry', () => {
     expect(retrieved?.id).toBe('dummy-game');
     expect(retrieved?.title).toBe('Trò chơi thử nghiệm');
     expect(retrieved?.icon).toBe('🃏');
+    expect(retrieved?.accentColor).toBe('#3b82f6');
+    expect(retrieved?.durationTextVi).toBe('10–20 phút');
+    expect(retrieved?.categoryVi).toBe('Party game');
     expect(retrieved?.game.maxPlayers).toBe(6);
     expect(registry.getOrDefault('dummy-game').id).toBe('dummy-game');
     expect(registry.getOrDefault('non-existent').id).toBe('side-effects');
+  });
+
+  describe('GameMenuCard Component', () => {
+    it('render chính xác thông tin game, icon, badges và trạng thái khi được chọn', () => {
+      const htmlSelected = renderToString(
+        React.createElement(GameMenuCard, {
+          plugin: sideEffectsClientPlugin,
+          isSelected: true,
+          onSelect: () => {},
+          onOpenRules: () => {},
+        }),
+      );
+
+      expect(htmlSelected).toContain('Side Effects');
+      expect(htmlSelected).toContain('Board game chiến thuật Dược lý &amp; Tâm lý học');
+      expect(htmlSelected).toContain('💊');
+      expect(htmlSelected).toContain('2–4 người');
+      expect(htmlSelected).toContain('15–25 phút');
+      expect(htmlSelected).toContain('Chiến thuật / Thẻ bài');
+      expect(htmlSelected).toContain('Có Máy');
+      expect(htmlSelected).toContain('data-testid="rules-button"');
+      expect(htmlSelected).toContain('data-testid="game-card-side-effects"');
+      expect(htmlSelected).toContain('aria-selected="true"');
+      expect(htmlSelected).toContain('✓ Đang chọn');
+      expect(htmlSelected).not.toContain('Chạm để chọn');
+    });
+
+    it('render đúng nhãn chạm để chọn khi isSelected = false', () => {
+      const htmlUnselected = renderToString(
+        React.createElement(GameMenuCard, {
+          plugin: sideEffectsClientPlugin,
+          isSelected: false,
+          onSelect: () => {},
+          onOpenRules: () => {},
+        }),
+      );
+
+      expect(htmlUnselected).toContain('Chạm để chọn');
+      expect(htmlUnselected).not.toContain('✓ Đang chọn');
+      expect(htmlUnselected).toContain('aria-selected="false"');
+    });
   });
 });

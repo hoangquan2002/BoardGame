@@ -24,6 +24,9 @@ export interface ClientGamePlugin<V = any, A = any> {
   title: string;
   subtitle: string;
   icon: string;
+  accentColor?: string;
+  durationTextVi?: string;
+  categoryVi?: string;
   rulesStorageKey: string;
   BoardComponent: React.ComponentType<ClientGameBoardProps<V, A>>;
   RulesModalComponent: React.ComponentType<{ isOpen: boolean; onClose: () => void }>;
@@ -71,6 +74,9 @@ export const sideEffectsClientPlugin: ClientGamePlugin<SEPlayerView, SEAction> =
   title: sideEffectsGame.meta?.nameVi ?? 'Side Effects',
   subtitle: sideEffectsGame.meta?.subtitleVi ?? 'Board game chiến thuật Dược lý & Tâm lý học',
   icon: sideEffectsGame.meta?.icon ?? '💊',
+  accentColor: '#10b981',
+  durationTextVi: '15–25 phút',
+  categoryVi: 'Chiến thuật / Thẻ bài',
   rulesStorageKey: 'side_effects_rules_read',
   BoardComponent: GameBoard,
   RulesModalComponent: RulesModal,
