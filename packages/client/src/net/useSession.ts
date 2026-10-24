@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RoomState } from '@boardgame/core';
-import type { SEAction, SEPlayerView } from '@boardgame/game-side-effects';
 import {
   adoptStoredSession,
   clearAllSessions,
@@ -13,13 +12,14 @@ import {
 } from './session.js';
 import { getSocket, type GameSocket } from './socket.js';
 
-export interface UseSessionReturn {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface UseSessionReturn<V = any, A = any> {
   session: UserSession | null;
   pendingRestoreSession: UserSession | null;
   confirmResumeStoredSession: () => void;
   dismissStoredSession: () => void;
   roomState: RoomState | null;
-  gameView: SEPlayerView | null;
+  gameView: V | null;
   deadline: number | undefined;
   isConnected: boolean;
   isLoading: boolean;
@@ -31,10 +31,11 @@ export interface UseSessionReturn {
   addBot: (level: string) => Promise<boolean>;
   removeBot: (playerId: string) => Promise<boolean>;
   leaveRoom: () => Promise<boolean>;
-  sendAction: (action: SEAction) => Promise<boolean>;
+  sendAction: (action: A) => Promise<boolean>;
 }
 
-export function useSession(): UseSessionReturn {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useSession<V = any, A = any>(): UseSessionReturn<V, A> {
   const [session, setSession] = useState<UserSession | null>(() => loadTabSession());
   const [pendingRestoreSession, setPendingRestoreSession] = useState<UserSession | null>(() => {
     const tabSession = loadTabSession();
@@ -43,7 +44,7 @@ export function useSession(): UseSessionReturn {
   });
 
   const [roomState, setRoomState] = useState<RoomState | null>(null);
-  const [gameView, setGameView] = useState<SEPlayerView | null>(null);
+  const [gameView, setGameView] = useState<V | null>(null);
   const [deadline, setDeadline] = useState<number | undefined>(undefined);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -129,8 +130,8 @@ export function useSession(): UseSessionReturn {
       setRoomState(state);
     }
 
-    function handleGameView(payload: { view: SEPlayerView; deadline?: number }) {
-      setGameView(payload.view);
+    function handleGameView(payload: { view: unknown; deadline?: number }) {
+      setGameView(payload.view as V);
       setDeadline(payload.deadline);
     }
 
@@ -250,7 +251,7 @@ export function useSession(): UseSessionReturn {
   }, []);
 
   const sendAction = useCallback(
-    async (action: SEAction): Promise<boolean> => {
+    async (action: A): Promise<boolean> => {
       const socket = socketRef.current;
       if (!socket) return false;
       return new Promise<boolean>((resolve) => {

@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react';
 import { OfflineBanner } from './app/OfflineBanner.js';
 import { Toast } from './app/Toast.js';
-import { GameBoard } from './games/side-effects/GameBoard.js';
-import { createMockGameData } from './games/side-effects/mockGameView.js';
+import { clientGameRegistry, DEFAULT_GAME_ID } from './games/registry.js';
 import { HomePage } from './lobby/HomePage.js';
 import { LobbyRoomPage } from './lobby/LobbyRoomPage.js';
 import { useSession } from './net/useSession.js';
@@ -16,11 +15,13 @@ export const App: React.FC = () => {
     return new URLSearchParams();
   }, []);
   const isMock = searchParams.get('mock') === '1';
+  const mockGameId = searchParams.get('game') ?? DEFAULT_GAME_ID;
+  const mockPlugin = useMemo(() => clientGameRegistry.getOrDefault(mockGameId), [mockGameId]);
 
   const mockGameData = useMemo(() => {
     if (!isMock) return null;
-    return createMockGameData(searchParams);
-  }, [isMock, searchParams]);
+    return mockPlugin.createMockData?.(searchParams) ?? null;
+  }, [isMock, mockPlugin, searchParams]);
 
   const {
     session,
@@ -45,8 +46,9 @@ export const App: React.FC = () => {
 
   // Nếu là mock mode, hiển thị chính GameBoard thật với mock data
   if (isMock && mockGameData) {
+    const MockBoard = mockPlugin.BoardComponent;
     return (
-      <GameBoard
+      <MockBoard
         session={mockGameData.session}
         roomState={mockGameData.roomState}
         gameView={mockGameData.gameView}
@@ -61,6 +63,8 @@ export const App: React.FC = () => {
   }
 
   const isPlaying = Boolean(session && roomState && roomState.status !== 'lobby' && gameView);
+  const activePlugin = roomState ? clientGameRegistry.getOrDefault(roomState.gameId) : null;
+  const ActiveBoard = activePlugin?.BoardComponent;
 
   return (
     <div
@@ -109,8 +113,8 @@ export const App: React.FC = () => {
         )}
 
         {/* Bàn chơi khi đang chơi hoặc kết thúc */}
-        {session && roomState && roomState.status !== 'lobby' && gameView && (
-          <GameBoard
+        {session && roomState && roomState.status !== 'lobby' && gameView && ActiveBoard && (
+          <ActiveBoard
             session={session}
             roomState={roomState}
             gameView={gameView}

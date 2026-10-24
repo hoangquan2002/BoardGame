@@ -12,10 +12,17 @@ export interface BotDefinition<V = unknown, A = unknown> {
   chooseAction(view: V, playerId: string, rng: Rng): A | null;
 }
 
+export interface GameMeta {
+  nameVi: string;
+  subtitleVi?: string;
+  icon?: string;
+}
+
 export interface GameDefinition<S, A, V> {
   id: string;
   minPlayers: number;
   maxPlayers: number;
+  meta?: GameMeta;
   setup(playerIds: string[], options: unknown, rng: Rng): S;
   validate(state: S, playerId: string, action: A): string | null; // null = hợp lệ
   apply(state: S, playerId: string, action: A, rng: Rng): S;
@@ -23,6 +30,14 @@ export interface GameDefinition<S, A, V> {
   winner(state: S): string | null;
   scheduledAction?(state: S): ScheduledAction<A> | null;
   bots?: BotDefinition<V, A>[];
+  /**
+   * Trả về playerId của bot cần ra quyết định ngay lúc này (dùng để Server kích hoạt Bot).
+   */
+  getActionablePlayerId?(state: S, botPlayerIds: ReadonlySet<string>): string | null;
+  /**
+   * Hành động dự phòng khi Bot trả về null hoặc nước đi không hợp lệ.
+   */
+  getBotFallbackAction?(state: S, playerId: string): A | null;
 }
 
 export type ActionResult<S> =

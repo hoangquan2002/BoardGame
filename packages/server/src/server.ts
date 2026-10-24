@@ -185,37 +185,10 @@ export function createAppServer(options: ServerOptions = {}) {
     }
 
     // Xác định bot nào cần hành động
-    let targetBotId: string | null = null;
-
-    if (room.gameState.pendingChoice !== null) {
-      const choicePlayerId = room.gameState.pendingChoice.playerId;
-      const bot = room.players.find((p) => p.playerId === choicePlayerId && p.isBot);
-      if (bot) {
-        targetBotId = bot.playerId;
-      }
-    } else {
-      const trades = room.gameState.trades;
-      if (Array.isArray(trades) && trades.length > 0) {
-        const trade = trades[0];
-        if (trade) {
-          if (trade.status === 'PROPOSED') {
-            const bot = room.players.find((p) => p.playerId === trade.targetPlayerId && p.isBot);
-            if (bot) targetBotId = bot.playerId;
-          } else if (trade.status === 'RESPONDED') {
-            const bot = room.players.find((p) => p.playerId === trade.proposerId && p.isBot);
-            if (bot) targetBotId = bot.playerId;
-          }
-        }
-      }
-
-      if (!targetBotId) {
-        const activeId = room.gameState.activePlayerId;
-        const bot = room.players.find((p) => p.playerId === activeId && p.isBot);
-        if (bot) {
-          targetBotId = bot.playerId;
-        }
-      }
-    }
+    const botPlayerIds = new Set(room.players.filter((p) => p.isBot).map((p) => p.playerId));
+    const targetBotId = game.getActionablePlayerId
+      ? game.getActionablePlayerId(room.gameState, botPlayerIds)
+      : null;
 
     if (!targetBotId) {
       room.clearBotTimer();
@@ -250,18 +223,21 @@ export function createAppServer(options: ServerOptions = {}) {
           ? runAction(game, room.gameState, botPlayer.playerId, action, room.rng!)
           : { ok: false as const, error: 'bot returned null' };
 
-        // Fallback: nếu action bị từ chối hoặc null, thử gửi END_TURN
+        // Fallback: nếu action bị từ chối hoặc null, thử gửi fallback action
         if (!result.ok) {
-          const fallbackAction = { type: 'END_TURN' };
-          const fallbackRes = runAction(
-            game,
-            room.gameState,
-            botPlayer.playerId,
-            fallbackAction,
-            room.rng!,
-          );
-          if (fallbackRes.ok) {
-            result = fallbackRes;
+          const fallbackAction =
+            game.getBotFallbackAction?.(room.gameState, botPlayer.playerId) ?? null;
+          if (fallbackAction !== null) {
+            const fallbackRes = runAction(
+              game,
+              room.gameState,
+              botPlayer.playerId,
+              fallbackAction,
+              room.rng!,
+            );
+            if (fallbackRes.ok) {
+              result = fallbackRes;
+            }
           }
         }
 

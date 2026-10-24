@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { RoomState } from '@boardgame/core';
-import { sideEffectsGame } from '@boardgame/game-side-effects';
 import QRCode from 'qrcode';
 import type { UserSession } from '../net/session.js';
-import { RulesModal } from '../games/side-effects/RulesModal.js';
+import { clientGameRegistry } from '../games/registry.js';
 
 interface LobbyRoomPageProps {
   roomState: RoomState;
@@ -24,13 +23,15 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
   onRemoveBot,
   onLeaveRoom,
 }) => {
+  const plugin = clientGameRegistry.getOrDefault(roomState.gameId);
+  const ActiveRulesModal = plugin.RulesModalComponent;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [hasReadRules, setHasReadRules] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('side_effects_rules_read') === 'true';
+      return localStorage.getItem(plugin.rulesStorageKey) === 'true';
     }
     return true;
   });
@@ -38,15 +39,16 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
   const handleOpenRules = () => {
     setShowRules(true);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('side_effects_rules_read', 'true');
+      localStorage.setItem(plugin.rulesStorageKey, 'true');
       setHasReadRules(true);
     }
   };
 
   const inviteUrl = `${window.location.origin}/?room=${roomState.roomCode}`;
   const isHost = roomState.hostId === session.playerId;
-  const canStart = roomState.players.length >= 2;
-  const maxPlayers = sideEffectsGame.maxPlayers;
+  const minPlayers = plugin.game.minPlayers ?? 2;
+  const maxPlayers = plugin.game.maxPlayers ?? 4;
+  const canStart = roomState.players.length >= minPlayers;
   const isFull = roomState.players.length >= maxPlayers;
   const emptySlotsCount = Math.max(0, maxPlayers - roomState.players.length);
 
@@ -281,12 +283,12 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
               fontWeight: 700,
               padding: '3px 8px',
               borderRadius: '999px',
-              backgroundColor: roomState.players.length >= 2 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)',
-              border: roomState.players.length >= 2 ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(234, 179, 8, 0.4)',
-              color: roomState.players.length >= 2 ? '#34d399' : '#facc15',
+              backgroundColor: roomState.players.length >= minPlayers ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+              border: roomState.players.length >= minPlayers ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(234, 179, 8, 0.4)',
+              color: roomState.players.length >= minPlayers ? '#34d399' : '#facc15',
             }}
           >
-            {roomState.players.length >= 2 ? '✓ Đủ điều kiện bắt đầu' : '⏳ Cần tối thiểu 2 người'}
+            {roomState.players.length >= minPlayers ? '✓ Đủ điều kiện bắt đầu' : `⏳ Cần tối thiểu ${minPlayers} người`}
           </span>
         </div>
 
@@ -473,7 +475,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
             </button>
             {!canStart && (
               <span style={{ fontSize: '11px', color: '#a7c2b7', textAlign: 'center', fontStyle: 'italic' }}>
-                Cần tối thiểu 2 người để bắt đầu
+                Cần tối thiểu {minPlayers} người để bắt đầu
               </span>
             )}
           </div>
@@ -520,7 +522,7 @@ export const LobbyRoomPage: React.FC<LobbyRoomPageProps> = ({
           🚪 Rời phòng
         </button>
       </footer>
-      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+      <ActiveRulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 };

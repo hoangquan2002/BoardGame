@@ -71,4 +71,99 @@ describe('Bots Verification & Non-cheating Invariants (Task T6a)', () => {
       }
     }
   });
+
+  describe('getActionablePlayerId & getBotFallbackAction', () => {
+    it('returns active bot playerId on bot turn, or null on human turn', () => {
+      const rng = createRng('actionable-turn');
+      const state = sideEffectsGame.setup(['human_1', 'bot_1'], {}, rng);
+      const botIds = new Set(['bot_1']);
+
+      state.activePlayerId = 'human_1';
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBeNull();
+
+      state.activePlayerId = 'bot_1';
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBe('bot_1');
+    });
+
+    it('prioritizes pendingChoice for bot and blocks other bots when human has pendingChoice', () => {
+      const rng = createRng('actionable-pending');
+      const state = sideEffectsGame.setup(['human_1', 'bot_1'], {}, rng);
+      const botIds = new Set(['bot_1']);
+
+      // Active is bot_1, but human_1 has pendingChoice -> should return null
+      state.activePlayerId = 'bot_1';
+      state.pendingChoice = {
+        type: 'TREMORS_DISCARD',
+        playerId: 'human_1',
+        attackerId: 'bot_1',
+        timeoutSeconds: 15,
+      };
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBeNull();
+
+      // Active is human_1, but bot_1 has pendingChoice -> should return bot_1
+      state.activePlayerId = 'human_1';
+      state.pendingChoice = {
+        type: 'ANXIETY_STEAL',
+        playerId: 'bot_1',
+        victimId: 'human_1',
+      };
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBe('bot_1');
+    });
+
+    it('handles trades (PROPOSED and RESPONDED) for bot and human', () => {
+      const rng = createRng('actionable-trade');
+      const state = sideEffectsGame.setup(['human_1', 'bot_1'], {}, rng);
+      const botIds = new Set(['bot_1']);
+
+      state.activePlayerId = 'human_1';
+      state.pendingChoice = null;
+
+      // Trade PROPOSED to bot_1 -> bot_1 needs to respond
+      state.trades = [
+        {
+          tradeId: 't1',
+          proposerId: 'human_1',
+          targetPlayerId: 'bot_1',
+          offerCardIds: ['c1'],
+          status: 'PROPOSED',
+        },
+      ];
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBe('bot_1');
+
+      // Trade RESPONDED when proposer is human_1 -> human_1 needs to confirm, bot_1 waits
+      state.trades = [
+        {
+          tradeId: 't1',
+          proposerId: 'human_1',
+          targetPlayerId: 'bot_1',
+          offerCardIds: ['c1'],
+          giveCardIds: ['c2'],
+          status: 'RESPONDED',
+        },
+      ];
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBeNull();
+
+      // Trade RESPONDED when proposer is bot_1 -> bot_1 needs to confirm
+      state.activePlayerId = 'bot_1';
+      state.trades = [
+        {
+          tradeId: 't2',
+          proposerId: 'bot_1',
+          targetPlayerId: 'human_1',
+          offerCardIds: ['c1'],
+          giveCardIds: ['c2'],
+          status: 'RESPONDED',
+        },
+      ];
+      expect(sideEffectsGame.getActionablePlayerId!(state, botIds)).toBe('bot_1');
+    });
+
+    it('getBotFallbackAction returns END_TURN', () => {
+      const rng = createRng('fallback-test');
+      const state = sideEffectsGame.setup(['human_1', 'bot_1'], {}, rng);
+      expect(sideEffectsGame.getBotFallbackAction!(state, 'bot_1')).toEqual({
+        type: 'END_TURN',
+      });
+    });
+  });
 });

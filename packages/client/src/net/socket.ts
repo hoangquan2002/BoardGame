@@ -1,8 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@boardgame/core';
-import type { SEAction, SEPlayerView } from '@boardgame/game-side-effects';
 
-export type GameSocket = Socket<ServerToClientEvents<SEPlayerView>, ClientToServerEvents<SEAction>>;
+export type GameSocket = Socket<ServerToClientEvents<unknown>, ClientToServerEvents<unknown>>;
 
 let socketInstance: GameSocket | null = null;
 

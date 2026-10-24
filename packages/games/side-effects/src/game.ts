@@ -15,6 +15,11 @@ export const sideEffectsGame: GameDefinition<SEState, SEAction, SEPlayerView> = 
   id: 'side-effects',
   minPlayers: 2,
   maxPlayers: 4,
+  meta: {
+    nameVi: 'Side Effects',
+    subtitleVi: 'Board game chiến thuật Dược lý & Tâm lý học',
+    icon: '💊',
+  },
   setup(playerIds: string[], options: unknown, rng: Rng): SEState {
     return setupSideEffects(playerIds, options, rng);
   },
@@ -51,5 +56,33 @@ export const sideEffectsGame: GameDefinition<SEState, SEAction, SEPlayerView> = 
       chooseAction: chooseNormalAction,
     },
   ],
+  getActionablePlayerId(state: SEState, botPlayerIds: ReadonlySet<string>): string | null {
+    if (state.pendingChoice !== null) {
+      return botPlayerIds.has(state.pendingChoice.playerId)
+        ? state.pendingChoice.playerId
+        : null;
+    }
+
+    if (Array.isArray(state.trades) && state.trades.length > 0) {
+      const trade = state.trades[0];
+      if (trade) {
+        if (trade.status === 'PROPOSED' && botPlayerIds.has(trade.targetPlayerId)) {
+          return trade.targetPlayerId;
+        }
+        if (trade.status === 'RESPONDED' && botPlayerIds.has(trade.proposerId)) {
+          return trade.proposerId;
+        }
+      }
+    }
+
+    if (botPlayerIds.has(state.activePlayerId)) {
+      return state.activePlayerId;
+    }
+
+    return null;
+  },
+  getBotFallbackAction(_state: SEState, _playerId: string): SEAction {
+    return { type: 'END_TURN' };
+  },
 };
 

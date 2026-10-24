@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { loadSavedPlayerName } from '../net/session.js';
-import { RulesModal } from '../games/side-effects/RulesModal.js';
+import { clientGameRegistry, DEFAULT_GAME_ID } from '../games/registry.js';
 
 import type { UserSession } from '../net/session.js';
 
@@ -9,7 +9,7 @@ interface HomePageProps {
   pendingRestoreSession?: UserSession | null;
   onConfirmResumeStoredSession?: () => void;
   onDismissStoredSession?: () => void;
-  onCreateRoom: (name: string) => Promise<boolean>;
+  onCreateRoom: (name: string, gameId?: string) => Promise<boolean>;
   onJoinRoom: (roomCode: string, name: string) => Promise<boolean>;
 }
 
@@ -21,6 +21,11 @@ export const HomePage: React.FC<HomePageProps> = ({
   onCreateRoom,
   onJoinRoom,
 }) => {
+  const games = clientGameRegistry.getAll();
+  const [selectedGameId, setSelectedGameId] = useState<string>(DEFAULT_GAME_ID);
+  const activePlugin = clientGameRegistry.getOrDefault(selectedGameId);
+  const ActiveRulesModal = activePlugin.RulesModalComponent;
+
   const [name, setName] = useState<string>(() => loadSavedPlayerName());
   const [roomCode, setRoomCode] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -42,7 +47,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       return;
     }
     setValidationError(null);
-    await onCreateRoom(name.trim());
+    await onCreateRoom(name.trim(), selectedGameId);
   };
 
   const handleJoin = async (e: React.FormEvent) => {
@@ -184,7 +189,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               transition: 'transform 0.3s ease',
             }}
           >
-            <span style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}>💊</span>
+            <span style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}>{activePlugin.icon}</span>
             <div
               style={{
                 position: 'absolute',
@@ -225,7 +230,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 textShadow: '0 2px 10px rgba(234, 179, 8, 0.2)',
               }}
             >
-              Side Effects
+              {activePlugin.title}
             </h1>
             <button
               type="button"
@@ -244,9 +249,46 @@ export const HomePage: React.FC<HomePageProps> = ({
             </button>
           </div>
           <p style={{ fontSize: '13px', color: '#a7c2b7', margin: 0, letterSpacing: '0.4px', lineHeight: 1.4 }}>
-            Board game chiến thuật Dược lý &amp; Tâm lý học
+            {activePlugin.subtitle}
           </p>
         </header>
+
+        {/* BỘ CHỌN GAME KHI CÓ NHIỀU HƠN 1 GAME ĐƯỢC ĐĂNG KÝ */}
+        {games.length > 1 && (
+          <div
+            data-testid="game-selector"
+            style={{
+              display: 'flex',
+              gap: '8px',
+              width: '100%',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {games.map((g) => {
+              const isSelected = g.id === activePlugin.id;
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setSelectedGameId(g.id)}
+                  className={isSelected ? 'btn-emerald' : 'btn-gold'}
+                  style={{
+                    flex: '1 1 140px',
+                    minHeight: '38px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    padding: '6px 12px',
+                    opacity: isSelected ? 1 : 0.75,
+                  }}
+                >
+                  <span>{g.icon}</span>
+                  <span>{g.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* THÔNG BÁO LỖI (VALIDATION MESSAGE) XUẤT HIỆN ÊM ÁI */}
         {validationError && (
@@ -412,7 +454,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
       </div>
 
-      <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
+      <ActiveRulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 };
