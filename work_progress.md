@@ -24,15 +24,21 @@
 | R2 | Nút & Tấm phủ "Luật chơi" cho người mới + Khắc phục 9 điểm R1 | ✅ | Hoàn thành: nút Luật chơi ở Trang chủ, Phòng chờ (chấm vàng người mới), Bàn chơi (nút ? & menu ⋯); tấm phủ chuẩn TOC, chữ $\ge 12$px, 7 Thuốc & 8 Bệnh Lý sinh từ cardsData; lá lớn dần lấp đầy chỗ trống, khoảng hở $\le 40$px, Thuốc lệch 34% lộ trọn tên bệnh, bài tay không chồng khi đủ chỗ, chống xuyên thấu, zoom khít 520/864, ẩn đồng hồ giả ở ván thật; unit test 125/125 pass, E2E (S0–S15) đạt 100% |
 | R3 | Sửa lỗi kẹt ván khi bỏ bài thừa (> 6 lá) & Đổi bài giữa người thật | ✅ | Hoàn thành: nút Kết thúc lượt bật và ghi "bỏ N lá" khi tay > 6 lá mở DiscardModal; thanh thông báo nổi trade-notice xuất hiện $\le 3$s kèm nút Xem/Từ chối và menu-badge; 132/132 unit tests pass, E2E S0–S17 đạt 100% trên local. Dừng sau R3 chờ push và test URL thật |
 | UI-Casino | Nâng cấp toàn diện UI/UX Dark Casino Luxury Velvet & Gold Brass | ✅ | Hoàn thành qua 4 Sub-agent: (1) index.css tokens nỉ nhung + vàng kim; (2) Trang chủ & phòng chờ VIP luxury; (3) Bàn chơi sòng bài, Thể Trạng 3D, bài tay nhấc mượt, tất cả modal cao cấp; (4) 132/132 unit tests pass, E2E S0–S17 đạt 100%, 5 ảnh đối chứng đã chụp. |
+| Game-EK | Tích hợp Game mới Mèo Nổ (Exploding Kittens: Original Edition) | ✅ | Hoàn thành toàn diện theo chuẩn ADDING_NEW_GAME.md qua 4 Sub-agents: (1) 41 ảnh bài + cards.json 56 lá; (2) Engine thuần, state machine 8 pha, bot Normal & Hard; (3) UI sòng bài, Web Audio/Haptics, GameBoard/Modals, Game Selector; (4) 171/171 unit tests pass, lint 0 lỗi, build OK, 8/8 checklist đạt 100% |
 | D3–D7 | Kế hoạch tiếp theo (design.md) | ⬜ | D3 thông báo + nhịp máy, D4 đồng hồ + thoát phòng, D5 máy Khó, D6 âm thanh/rung |
 
 ## Câu hỏi đang chờ người dùng
-- (không có) — Hoàn thành nâng cấp giao diện Dark Casino theo đúng `promt.md`. Chờ người dùng nghiệm thu và duyệt giao diện mới.
+- (không có) — Đã hoàn thành toàn diện việc tích hợp game mới Mèo Nổ (`exploding-kittens`). Chờ người dùng nghiệm thu và trải nghiệm.
 
 ## Việc tồn đọng
 - (không có)
 
 ## Nhật ký
+- 2026-10-24: Hoàn thành tích hợp Game mới Mèo Nổ (`exploding-kittens`) theo đúng `ADDING_NEW_GAME.md` và `implementation_plan.md` qua 4 Subagents:
+  + Subagent 1: Trích xuất & đồng bộ 41 ảnh bài gốc + `card-back.png` sang `assets/card-photos/exploding_kitten/` và `packages/client/public/games/exploding-kittens/cards/`; chuẩn hóa 56 lá bài với Description tiếng Việt chuẩn xác trong `cards.json`.
+  + Subagent 2: Phát triển Game Engine thuần hàm `@boardgame/game-exploding-kittens` (pure state machine, cửa sổ Nope 5s, Attack cộng dồn, Combo 2/3/5 lá, che giấu bài ẩn), xây dựng 2 Bot AI (Normal & Hard), 23 unit tests + mô phỏng 200 ván bot không crash.
+  + Subagent 3: Xây dựng giao diện bàn chơi sòng bài Mèo Nổ mobile-first (`GameBoard.tsx`, `Card.tsx`, `CardZoomModal.tsx`, `NopeBanner.tsx`, `DefuseModal.tsx`, `SeeFutureModal.tsx`, `ComboModals.tsx`, `RulesModal.tsx`), hệ thống âm thanh tổng hợp Web Audio API + Rung Haptics, tích hợp Game Selector ở trang chủ và đăng ký cả server lẫn client registry.
+  + Subagent 4: Kiểm thử toàn diện QA: `pnpm test` (171/171 tests pass trên 24 test files), `pnpm lint` (0 lỗi), `pnpm build` (thành công 5 workspace projects), kiểm tra tính toàn vẹn 41 ảnh + `card-back.png`, kiểm tra mock render 5 pha (`normal`, `nope`, `defuse`, `seefuture`, `favor`) đạt 100% 8 tiêu chí checklist `ADDING_NEW_GAME.md`.
 - 2026-09-30: Tổng hợp luật, lên plan, chốt web PWA + online theo phòng + Node/TypeScript + Render free.
 - 2026-09-30: Chốt điều kiện thắng; MVP = luật base (có Thương Lượng, không lá Gia Vị); ảnh lá bài để sau; tạo AGENTS.md.
 - 2026-09-30: Nhận PDF bộ bài Việt hoá (`Side effects.pdf`, 24 trang) và bản Print & Play EN (`SideEffectsPNP-EN-1.pdf`, 22 trang, có mật khẩu). Cả hai là ảnh scan, không có text → T0 phải đọc bằng ảnh.

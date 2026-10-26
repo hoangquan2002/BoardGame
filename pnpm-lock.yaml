@@ -32,6 +32,9 @@ importers:
       '@boardgame/core':
         specifier: workspace:*
         version: link:../core
+      '@boardgame/game-exploding-kittens':
+        specifier: workspace:*
+        version: link:../games/exploding-kittens
       '@boardgame/game-side-effects':
         specifier: workspace:*
         version: link:../games/side-effects
@@ -69,6 +72,12 @@ importers:
 
   packages/core: {}
 
+  packages/games/exploding-kittens:
+    dependencies:
+      '@boardgame/core':
+        specifier: workspace:*
+        version: link:../../core
+
   packages/games/side-effects:
     dependencies:
       '@boardgame/core':
@@ -80,6 +89,9 @@ importers:
       '@boardgame/core':
         specifier: workspace:*
         version: link:../core
+      '@boardgame/game-exploding-kittens':
+        specifier: workspace:*
+        version: link:../games/exploding-kittens
       '@boardgame/game-side-effects':
         specifier: workspace:*
         version: link:../games/side-effects

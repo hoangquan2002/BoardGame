@@ -20,6 +20,7 @@
   "dependencies": {
     "@boardgame/core": "workspace:*",
     "@boardgame/game-side-effects": "workspace:*",
+    "@boardgame/game-exploding-kittens": "workspace:*",
     "socket.io": "^4.8.4"
   },
   "devDependencies": {

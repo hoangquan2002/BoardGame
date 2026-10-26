@@ -1,5 +1,6 @@
 import type { GameDefinition } from '@boardgame/core';
 import { sideEffectsGame } from '@boardgame/game-side-effects';
+import { explodingKittensGame } from '@boardgame/game-exploding-kittens';
 
 export class GameRegistry {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,3 +23,4 @@ export class GameRegistry {
 
 export const defaultRegistry = new GameRegistry();
 defaultRegistry.register(sideEffectsGame);
+defaultRegistry.register(explodingKittensGame);

@@ -7,6 +7,7 @@ import {
   clientGameRegistry,
   DEFAULT_GAME_ID,
   sideEffectsClientPlugin,
+  explodingKittensClientPlugin,
   type ClientGamePlugin,
 } from '../src/games/registry.js';
 import { GameMenuCard } from '../src/lobby/GameMenuCard.js';
@@ -29,6 +30,29 @@ describe('ClientGameRegistry', () => {
 
     expect(clientGameRegistry.getOrDefault('unknown-game').id).toBe(DEFAULT_GAME_ID);
     expect(clientGameRegistry.getAll().map((p) => p.id)).toContain('side-effects');
+  });
+
+  it('đăng ký thành công exploding-kittens vào clientGameRegistry với đầy đủ components & mock data', () => {
+    expect(explodingKittensClientPlugin.id).toBe('exploding-kittens');
+    const plugin = clientGameRegistry.get('exploding-kittens');
+    expect(plugin).toBeDefined();
+    expect(plugin?.id).toBe('exploding-kittens');
+    expect(plugin?.title).toContain('Mèo Nổ');
+    expect(plugin?.icon).toBe('🐱');
+    expect(plugin?.accentColor).toBe('#ef4444');
+    expect(plugin?.durationTextVi).toBe('10–15 phút');
+    expect(plugin?.categoryVi).toBe('Chiến thuật / Sinh tồn');
+    expect(plugin?.BoardComponent).toBeDefined();
+    expect(plugin?.RulesModalComponent).toBeDefined();
+    expect(typeof plugin?.createMockData).toBe('function');
+
+    if (plugin?.createMockData) {
+      const mock = plugin.createMockData(new URLSearchParams('game=exploding-kittens&turn=me'));
+      expect(mock.session.playerId).toBe('user-me');
+      expect(mock.gameView.myHand.length).toBeGreaterThan(0);
+      expect(mock.gameView.explosionRiskPercent).toBeGreaterThanOrEqual(0);
+      expect(mock.roomState.gameId).toBe('exploding-kittens');
+    }
   });
 
   it('có thể đăng ký thêm game thứ 2 vào instance ClientGameRegistry và truy xuất đúng theo gameId', () => {

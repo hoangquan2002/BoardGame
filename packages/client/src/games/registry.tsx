@@ -2,10 +2,18 @@
 import React from 'react';
 import type { GameDefinition, RoomState } from '@boardgame/core';
 import { sideEffectsGame, type SEAction, type SEPlayerView } from '@boardgame/game-side-effects';
+import {
+  explodingKittensGame,
+  type EKAction,
+  type EKPlayerView,
+} from '@boardgame/game-exploding-kittens';
 import type { UserSession } from '../net/session.js';
 import { GameBoard } from './side-effects/GameBoard.js';
 import { RulesModal } from './side-effects/RulesModal.js';
 import { createMockGameData } from './side-effects/mockGameView.js';
+import { GameBoard as EKGameBoard } from './exploding-kittens/GameBoard.js';
+import { RulesModal as EKRulesModal } from './exploding-kittens/RulesModal.js';
+import { createMockGameData as createEKMockGameData } from './exploding-kittens/mockGameView.js';
 
 export const DEFAULT_GAME_ID = 'side-effects';
 
@@ -83,5 +91,21 @@ export const sideEffectsClientPlugin: ClientGamePlugin<SEPlayerView, SEAction> =
   createMockData: createMockGameData,
 };
 
+export const explodingKittensClientPlugin: ClientGamePlugin<EKPlayerView, EKAction> = {
+  id: 'exploding-kittens',
+  game: explodingKittensGame,
+  title: explodingKittensGame.meta?.nameVi ?? 'Mèo Nổ (Exploding Kittens)',
+  subtitle: explodingKittensGame.meta?.subtitleVi ?? 'Cò quay Nga thẻ bài kịch tính & hài hước',
+  icon: '🐱',
+  accentColor: '#ef4444',
+  durationTextVi: '10–15 phút',
+  categoryVi: 'Chiến thuật / Sinh tồn',
+  rulesStorageKey: 'exploding_kittens_rules_read',
+  BoardComponent: EKGameBoard,
+  RulesModalComponent: EKRulesModal,
+  createMockData: createEKMockGameData,
+};
+
 export const clientGameRegistry = new ClientGameRegistry();
 clientGameRegistry.register(sideEffectsClientPlugin);
+clientGameRegistry.register(explodingKittensClientPlugin);
