@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bộ sưu tập Ảnh chụp Ván bài Thực tế — Side Effects</title>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 20%, #153a30 0%, #0c201a 60%, #071310 100%);
+      --card-bg: rgba(22, 54, 46, 0.7);
+      --card-border: rgba(94, 186, 151, 0.25);
+      --card-border-hover: rgba(120, 230, 185, 0.7);
+      --text-primary: #e6f5ee;
+      --text-secondary: #97baad;
+      --accent: #38ef7d;
+      --accent-gold: #f6c85f;
+      --badge-bg: rgba(56, 239, 125, 0.15);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 24px;
+      background: rgba(12, 32, 26, 0.75);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      border: 1px solid rgba(56, 239, 125, 0.3);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .meta-info {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px 24px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-item a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .meta-item a:hover {
+      text-decoration: underline;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .step-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-border-hover);
+      box-shadow: var(--shadow-lg), 0 0 16px rgba(56, 239, 125, 0.2);
+    }
+
+    .card-thumb-wrap {
+      position: relative;
+      background: #06110e;
+      aspect-ratio: 9 / 16;
+      max-height: 380px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    .step-card:hover .card-thumb-wrap img {
+      transform: scale(1.03);
+    }
+
+    .step-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .card-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Modal Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 12, 10, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      user-select: none;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .lb-title-group h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .lb-title-group p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .lb-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .lb-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background 0.2s;
+    }
+
+    .lb-btn:hover {
+      background: rgba(56, 239, 125, 0.25);
+      border-color: var(--accent);
+    }
+
+    .lb-content {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .lb-image {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .lb-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lb-nav:hover {
+      background: var(--accent);
+      color: #071310;
+      border-color: var(--accent);
+    }
+
+    .lb-nav.prev { left: 20px; }
+    .lb-nav.next { right: 20px; }
+
+    .lb-footer {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 0 4px;
+    }
+
+    .lb-mini-thumb {
+      width: 40px;
+      height: 60px;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      opacity: 0.5;
+      transition: all 0.2s;
+    }
+
+    .lb-mini-thumb.active,
+    .lb-mini-thumb:hover {
+      opacity: 1;
+      border-color: var(--accent);
+      transform: scale(1.08);
+    }
+
+    .lb-mini-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .lb-nav.prev { left: 5px; }
+      .lb-nav.next { right: 5px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-pill">🎮 Board Game Side Effects — Render Live</div>
+      <h1>Bộ Sưu Tập Ảnh Chụp Từng Hành Động Ván Bài</h1>
+      <p style="color: var(--text-secondary); max-width: 750px; margin: 0 auto; font-size: 15px;">
+        Toàn bộ ảnh chụp màn hình độ nét cao ghi lại trọn vẹn 18 bước thao tác từ Khởi tạo phòng, Thêm máy, Đánh bài theo Thể Trạng bậc thang cho đến khi kết thúc ván bài.
+      </p>
+      
+      <div class="meta-info">
+        <div class="meta-item">
+          <span>🌐 URL thực tế:</span>
+          <a href="https://boardgame-02k2.onrender.com/" target="_blank">boardgame-02k2.onrender.com</a>
+        </div>
+        <div class="meta-item">
+          <span>📱 Thiết bị:</span>
+          <strong>iPhone Retina (390×844)</strong>
+        </div>
+        <div class="meta-item">
+          <span>👥 Đối kháng:</span>
+          <strong>An (Người chơi) vs Máy 1 (AI)</strong>
+        </div>
+        <div class="meta-item">
+          <span>📸 Tổng cộng:</span>
+          <strong>18 ảnh chụp (Action 01 → 18)</strong>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid" id="galleryGrid"></div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div class="lightbox" id="lightbox">
+    <div class="lb-header">
+      <div class="lb-title-group">
+        <h2 id="lbStepTitle">Bước 01</h2>
+        <p id="lbStepDesc">Mô tả chi tiết</p>
+      </div>
+      <div class="lb-actions">
+        <button class="lb-btn" id="lbCloseBtn" title="Đóng (Esc)">✕</button>
+      </div>
+    </div>
+
+    <div class="lb-content">
+      <button class="lb-nav prev" id="lbPrevBtn" title="Trước (←)">‹</button>
+      <img id="lbMainImg" class="lb-image" src="" alt="Screenshot" />
+      <button class="lb-nav next" id="lbNextBtn" title="Sau (→)">›</button>
+    </div>
+
+    <div class="lb-footer" id="lbThumbBar"></div>
+  </div>
+
+  <script>
+    const steps = [
+      {
+        file: 'step_01_trang_chu.png',
+        title: 'Bước 01 — Mở Trang Chủ',
+        desc: 'Giao diện Trang chủ Side Effects, form nhập tên người chơi và nút Tạo phòng mới căn giữa cân đối.'
+      },
+      {
+        file: 'step_02_phong_cho.png',
+        title: 'Bước 02 — Phòng Chờ',
+        desc: 'Tạo phòng thành công: mã phòng 5XKYE to rõ, mã QR trực tiếp và nút sao chép link mời.'
+      },
+      {
+        file: 'step_03_them_may.png',
+        title: 'Bước 03 — Thêm Máy 1',
+        desc: 'Bấm nút thêm Máy 1 (Thường) vào phòng chơi, đạt đủ 2/4 người và sẵn sàng chơi 1v1.'
+      },
+      {
+        file: 'step_04_bat_dau_van_bai.png',
+        title: 'Bước 04 — Khởi Tạo Ván Bài',
+        desc: 'Chia 4 Bệnh Lý ban đầu vào Thể Trạng mỗi bên, rút 4 lá bài tay xếp 1 hàng so le, ghế đối thủ mini.'
+      },
+      {
+        file: 'step_05_may_dang_di_luot_1.png',
+        title: 'Bước 05 — Máy 1 Đi Lượt Đầu',
+        desc: 'Máy 1 tự động đánh Thuốc Sildenafil vào Liệt dương (còn 2 bệnh chưa chữa).'
+      },
+      {
+        file: 'step_06_dau_luot_an_2.png',
+        title: 'Bước 06 — Đầu Lượt Của An',
+        desc: 'Đồng hồ đếm ngược ⏱ hiển thị, nhãn "Lượt của bạn" xanh lá. Rút thêm 2 lá bài vào tay.'
+      },
+      {
+        file: 'step_07_phong_to_la_bai.png',
+        title: 'Bước 07 — Phóng To Lá Bài (Góp ý A)',
+        desc: 'Nhấn giữ ≥400ms phóng to toàn màn hình lá bài thật từ PDF gốc (520×864), chiếm ~90% màn hình, không viền đỏ, không bị chữ che.'
+      },
+      {
+        file: 'step_08_an_chon_la_3_luot_2.png',
+        title: 'Bước 08 — Chọn Lá Thuốc',
+        desc: 'Lá bài tay nhô lên viền xanh, dải thông tin trên tay hiện tên thuốc và tác dụng phụ, ô mục tiêu hợp lệ sáng viền xanh lá.'
+      },
+      {
+        file: 'step_09_an_danh_thanh_cong_luot_2.png',
+        title: 'Bước 09 — Đánh Thuốc Vào Thể Trạng (Góp ý B)',
+        desc: 'Lá Thuốc nằm TRÊN Bệnh Lý, lệch xuống dưới 25% để lộ tên bệnh, không có chữ đè lên mặt ảnh.'
+      },
+      {
+        file: 'step_10_truoc_ket_thuc_luot_2.png',
+        title: 'Bước 10 — Chuẩn Bị Kết Thúc Lượt',
+        desc: 'An kiểm tra lại toàn bộ bài tay và Thể Trạng rồi bấm nút "Kết thúc lượt".'
+      },
+      {
+        file: 'step_11_sau_ket_thuc_luot_2.png',
+        title: 'Bước 11 — Chuyển Lượt Sang Máy 1',
+        desc: 'Trạng thái chuyển mượt mà sang lượt đối thủ: "Lượt: 🤖 Máy 1 (Thường)".'
+      },
+      {
+        file: 'step_12_may_dang_di_luot_5.png',
+        title: 'Bước 12 — Máy 1 Đi Nước Tiếp Theo',
+        desc: 'Máy 1 tự động tính toán và điều trị các Bệnh Lý trên Thể Trạng của mình.'
+      },
+      {
+        file: 'step_13_dau_luot_an_7.png',
+        title: 'Bước 13 — Lượt Mới Của An',
+        desc: 'Đến lượt mới của An, rút thêm bài và kiểm tra các Bệnh Lý còn lại để ra chiến thuật.'
+      },
+      {
+        file: 'step_14_an_chon_la_6_luot_7.png',
+        title: 'Bước 14 — Chọn Lá Bài Hợp Lệ',
+        desc: 'Chọn tiếp lá bài thích hợp trên tay để chữa bệnh hoặc đưa tác dụng phụ sang đối thủ.'
+      },
+      {
+        file: 'step_15_an_danh_thanh_cong_luot_7.png',
+        title: 'Bước 15 — Đánh Bài Thành Công',
+        desc: 'Thực hiện đánh bài thành công vào mục tiêu Thể Trạng.'
+      },
+      {
+        file: 'step_16_truoc_ket_thuc_luot_7.png',
+        title: 'Bước 16 — Bấm Kết Thúc Lượt',
+        desc: 'Hoàn thành lượt đánh và bấm kết thúc lượt.'
+      },
+      {
+        file: 'step_17_sau_ket_thuc_luot_7.png',
+        title: 'Bước 17 — Chuyển Lượt Cuối Ván',
+        desc: 'Chuyển lượt sang đối thủ để tiến tới kết thúc ván bài.'
+      },
+      {
+        file: 'step_18_ket_thuc_van_bai.png',
+        title: 'Bước 18 — Kết Thúc Ván Bài Chiến Thắng',
+        desc: 'Hộp thoại chiến thắng 🏆 xuất hiện trang trọng: chúc mừng người chơi chiến thắng kèm nút Về trang chủ.'
+      }
+    ];
+
+    let currentIndex = 0;
+    const grid = document.getElementById('galleryGrid');
+    const lightbox = document.getElementById('lightbox');
+    const lbMainImg = document.getElementById('lbMainImg');
+    const lbStepTitle = document.getElementById('lbStepTitle');
+    const lbStepDesc = document.getElementById('lbStepDesc');
+    const lbThumbBar = document.getElementById('lbThumbBar');
+    const lbCloseBtn = document.getElementById('lbCloseBtn');
+    const lbPrevBtn = document.getElementById('lbPrevBtn');
+    const lbNextBtn = document.getElementById('lbNextBtn');
+
+    // Render Grid
+    steps.forEach((step, idx) => {
+      const card = document.createElement('div');
+      card.className = 'step-card';
+      card.innerHTML = `
+        <div class="card-thumb-wrap">
+          <span class="step-badge">Bước ${String(idx + 1).padStart(2, '0')} / 18</span>
+          <img src="./${step.file}" alt="${step.title}" loading="lazy">
+        </div>
+        <div class="card-body">
+          <div class="card-title">${step.title}</div>
+          <div class="card-desc">${step.desc}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => openLightbox(idx));
+      grid.appendChild(card);
+
+      // Mini thumb for lightbox
+      const mini = document.createElement('div');
+      mini.className = 'lb-mini-thumb';
+      mini.id = 'thumb-' + idx;
+      mini.innerHTML = `<img src="./${step.file}" alt="">`;
+      mini.addEventListener('click', () => updateLightbox(idx));
+      lbThumbBar.appendChild(mini);
+    });
+
+    function openLightbox(idx) {
+      lightbox.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      updateLightbox(idx);
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function updateLightbox(idx) {
+      currentIndex = idx;
+      const step = steps[idx];
+      lbMainImg.src = './' + step.file;
+      lbStepTitle.textContent = step.title;
+      lbStepDesc.textContent = step.desc;
+
+      document.querySelectorAll('.lb-mini-thumb').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+        if (i === idx) {
+          el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      });
+    }
+
+    lbCloseBtn.addEventListener('click', closeLightbox);
+    lbPrevBtn.addEventListener('click', () => {
+      const prev = (currentIndex - 1 + steps.length) % steps.length;
+      updateLightbox(prev);
+    });
+    lbNextBtn.addEventListener('click', () => {
+      const next = (currentIndex + 1) % steps.length;
+      updateLightbox(next);
+    });
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('active')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') lbPrevBtn.click();
+      if (e.key === 'ArrowRight') lbNextBtn.click();
+    });
+
+    // Close on background click
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target.classList.contains('lb-content')) {
+        closeLightbox();
+      }
+    });
+  </script>
+</body>
+</html>

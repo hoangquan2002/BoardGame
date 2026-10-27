@@ -1,0 +1,146 @@
+[
+  {
+    "index": 1,
+    "filename": "step_01_trang_chu.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_01_trang_chu.png",
+    "name": "trang_chu",
+    "description": "Giao diện Trang chủ Side Effects, form nhập tên người chơi và nút Tạo phòng mới",
+    "timestamp": "2026-10-01T09:01:01.552Z"
+  },
+  {
+    "index": 2,
+    "filename": "step_02_phong_cho.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_02_phong_cho.png",
+    "name": "phong_cho",
+    "description": "Tạo phòng thành công: mã phòng to rõ, mã QR trực tiếp và nút sao chép link mời",
+    "timestamp": "2026-10-01T09:01:02.650Z"
+  },
+  {
+    "index": 3,
+    "filename": "step_03_them_may.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_03_them_may.png",
+    "name": "them_may",
+    "description": "Đã thêm Máy 1 vào phòng chơi (đủ 2 người 1v1)",
+    "timestamp": "2026-10-01T09:01:04.036Z"
+  },
+  {
+    "index": 4,
+    "filename": "step_04_bat_dau_van_bai.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_04_bat_dau_van_bai.png",
+    "name": "bat_dau_van_bai",
+    "description": "Chia 4 Bệnh Lý ban đầu vào Thể Trạng mỗi bên, rút 4 lá bài tay xếp 1 hàng so le, ghế đối thủ mini",
+    "timestamp": "2026-10-01T09:01:05.650Z"
+  },
+  {
+    "index": 5,
+    "filename": "step_05_may_dang_di_luot_1.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_05_may_dang_di_luot_1.png",
+    "name": "may_dang_di_luot_1",
+    "description": "Máy 1 tự động suy nghĩ và đi lượt đầu tiên",
+    "timestamp": "2026-10-01T09:01:07.378Z"
+  },
+  {
+    "index": 6,
+    "filename": "step_06_dau_luot_an_2.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_06_dau_luot_an_2.png",
+    "name": "dau_luot_an_2",
+    "description": "Đồng hồ đếm ngược ⏱ hiển thị, nhãn \"Lượt của bạn\" xanh lá. Rút thêm 2 lá bài vào tay",
+    "timestamp": "2026-10-01T09:01:08.114Z"
+  },
+  {
+    "index": 7,
+    "filename": "step_07_phong_to_la_bai.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_07_phong_to_la_bai.png",
+    "name": "phong_to_la_bai",
+    "description": "Nhấn giữ ≥400ms phóng to trọn vẹn lá bài thật từ PDF (520×864), chiếm ~90% màn hình, không chữ đè",
+    "timestamp": "2026-10-01T09:01:09.635Z"
+  },
+  {
+    "index": 8,
+    "filename": "step_08_an_chon_la_3_luot_2.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_08_an_chon_la_3_luot_2.png",
+    "name": "an_chon_la_3_luot_2",
+    "description": "Lá bài tay nhô lên viền xanh, dải thông tin hiện tên thuốc/tác dụng phụ, ô mục tiêu hợp lệ sáng viền xanh",
+    "timestamp": "2026-10-01T09:01:11.318Z"
+  },
+  {
+    "index": 9,
+    "filename": "step_09_an_danh_thanh_cong_luot_2.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_09_an_danh_thanh_cong_luot_2.png",
+    "name": "an_danh_thanh_cong_luot_2",
+    "description": "Lá Thuốc nằm TRÊN Bệnh Lý, lệch xuống dưới 25% lộ tên bệnh; dải Thể Trạng cập nhật",
+    "timestamp": "2026-10-01T09:01:12.727Z"
+  },
+  {
+    "index": 10,
+    "filename": "step_10_truoc_ket_thuc_luot_2.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_10_truoc_ket_thuc_luot_2.png",
+    "name": "truoc_ket_thuc_luot_2",
+    "description": "An kiểm tra lại toàn bộ bài tay và Thể Trạng rồi bấm nút \"Kết thúc lượt\"",
+    "timestamp": "2026-10-01T09:01:12.919Z"
+  },
+  {
+    "index": 11,
+    "filename": "step_11_sau_ket_thuc_luot_2.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_11_sau_ket_thuc_luot_2.png",
+    "name": "sau_ket_thuc_luot_2",
+    "description": "Trạng thái chuyển mượt mà sang lượt đối thủ: \"Lượt: 🤖 Máy 1 (Thường)\"",
+    "timestamp": "2026-10-01T09:01:14.377Z"
+  },
+  {
+    "index": 12,
+    "filename": "step_12_may_dang_di_luot_5.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_12_may_dang_di_luot_5.png",
+    "name": "may_dang_di_luot_5",
+    "description": "Máy 1 tự động tính toán và điều trị các Bệnh Lý trên Thể Trạng của mình",
+    "timestamp": "2026-10-01T09:01:16.610Z"
+  },
+  {
+    "index": 13,
+    "filename": "step_13_dau_luot_an_7.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_13_dau_luot_an_7.png",
+    "name": "dau_luot_an_7",
+    "description": "Lượt mới của An: số lá đối thủ thay đổi, Thể Trạng cập nhật tiến độ điều trị",
+    "timestamp": "2026-10-01T09:01:17.334Z"
+  },
+  {
+    "index": 14,
+    "filename": "step_14_an_chon_la_6_luot_7.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_14_an_chon_la_6_luot_7.png",
+    "name": "an_chon_la_6_luot_7",
+    "description": "An xem xét chọn lá bài thứ hai để tối ưu hoá chiến thuật tâm lý",
+    "timestamp": "2026-10-01T09:01:18.032Z"
+  },
+  {
+    "index": 15,
+    "filename": "step_15_an_danh_thanh_cong_luot_7.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_15_an_danh_thanh_cong_luot_7.png",
+    "name": "an_danh_thanh_cong_luot_7",
+    "description": "Thực hiện hành động chiến thuật trên bàn chơi",
+    "timestamp": "2026-10-01T09:01:18.310Z"
+  },
+  {
+    "index": 16,
+    "filename": "step_16_truoc_ket_thuc_luot_7.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_16_truoc_ket_thuc_luot_7.png",
+    "name": "truoc_ket_thuc_luot_7",
+    "description": "Chuẩn bị kết thúc lượt tiếp theo",
+    "timestamp": "2026-10-01T09:01:18.577Z"
+  },
+  {
+    "index": 17,
+    "filename": "step_17_sau_ket_thuc_luot_7.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_17_sau_ket_thuc_luot_7.png",
+    "name": "sau_ket_thuc_luot_7",
+    "description": "Chuyển lượt sang cho đối thủ hoàn thành ván đấu",
+    "timestamp": "2026-10-01T09:01:18.857Z"
+  },
+  {
+    "index": 18,
+    "filename": "step_18_ket_thuc_van_bai.png",
+    "filePath": "D:\\vnpt prj\\quan\\BoardGame\\gameplay_screenshots\\step_18_ket_thuc_van_bai.png",
+    "name": "ket_thuc_van_bai",
+    "description": "Kết thúc ván bài: Xuất hiện hộp thoại vinh danh chiến thắng 🏆 phong cách sòng bài xanh gold",
+    "timestamp": "2026-10-01T09:01:20.745Z"
+  }
+]
