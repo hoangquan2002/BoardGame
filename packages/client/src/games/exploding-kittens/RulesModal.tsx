@@ -13,21 +13,26 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative max-w-2xl w-full max-h-[90vh] bg-slate-900 border border-amber-500/30 rounded-3xl p-5 shadow-2xl flex flex-col overflow-hidden text-gray-200">
+    <div className="modal-backdrop animate-fade-in" onClick={onClose} role="dialog" aria-modal="true">
+      <div
+        className="modal-card casino-glass"
+        style={{ maxWidth: '540px', maxHeight: '88vh', padding: '16px', gap: '10px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-2 border-b border-yellow-500/20">
           <div className="flex items-center gap-2">
             <span className="text-2xl">💣🐱</span>
             <div>
-              <h2 className="text-lg font-bold text-amber-300">Luật Chơi Mèo Nổ (Exploding Kittens)</h2>
+              <h2 className="text-base font-bold text-amber-300">Luật Chơi Mèo Nổ (Exploding Kittens)</h2>
               <p className="text-xs text-gray-400">Phiên bản Bản Thường chuẩn quốc tế (2–5 người)</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-gray-300 flex items-center justify-center border border-white/10"
+            className="icon-btn"
+            title="Đóng luật chơi"
           >
             ✕
           </button>
@@ -243,11 +248,12 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-800 flex justify-end">
+        <div className="pt-2 border-t border-yellow-500/20 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl shadow-lg transition-transform active:scale-95"
+            className="btn-gold action-btn-main"
+            style={{ width: '100%' }}
           >
             Đã hiểu luật chơi
           </button>

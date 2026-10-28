@@ -55,10 +55,32 @@ export function createPlayerView(state: EKState, playerId: string): EKPlayerView
   let nopeWindow: EKPlayerView['nopeWindow'] = null;
   if (state.phase === 'NOPE_WINDOW' && state.pendingState?.type === 'NOPE_WINDOW') {
     const pw = state.pendingState as EKPendingNopeWindow;
+    let targetCard = null;
+    let actionNameVi = '';
+    let comboType = null;
+
+    if (pw.originalAction.type === 'PLAY_ACTION_CARD') {
+      targetCard = getCardById(pw.originalAction.cardId) ?? null;
+      actionNameVi = targetCard ? `${targetCard.nameEn} (${targetCard.nameVi})` : 'Lá bài hành động';
+    } else if (pw.originalAction.type === 'PLAY_COMBO') {
+      comboType = pw.originalAction.comboType;
+      const firstCard = getCardById(pw.originalAction.cardIds[0]);
+      if (comboType === 'TWO_OF_A_KIND') {
+        actionNameVi = `Combo 2 lá giống nhau (${firstCard ? firstCard.nameEn : 'Cặp lá'})`;
+      } else if (comboType === 'THREE_OF_A_KIND') {
+        actionNameVi = `Combo 3 lá giống nhau (${firstCard ? firstCard.nameEn : 'Bộ 3 lá'})`;
+      } else if (comboType === 'FIVE_DIFFERENT') {
+        actionNameVi = 'Combo 5 lá khác nhau';
+      }
+    }
+
     nopeWindow = {
       isOpen: true,
       originalActionType: pw.originalAction.type,
       originalPlayerId: pw.originalPlayerId,
+      targetCard,
+      actionNameVi,
+      comboType,
       isCurrentlyNoped: pw.nopeCount % 2 !== 0,
       nopeCount: pw.nopeCount,
       secondsRemaining: pw.timeoutSeconds,

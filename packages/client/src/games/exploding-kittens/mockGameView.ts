@@ -24,12 +24,22 @@ export function createMockGameData(searchParams: URLSearchParams): {
     return allCards[0];
   };
 
-  // Mẫu bài trên tay: Defuse, Attack, Skip, Favor, Nope, 2x Tacocat (combo 2 lá), See The Future
-  const sampleCardIds = ['EK_05', 'EK_11', 'EK_15', 'EK_19', 'EK_23', 'EK_37', 'EK_38', 'EK_32'];
+  // Mẫu bài trên tay: Defuse, Attack, Skip, Favor, Nope, 3x Tacocat (combo 2 & 3 lá), See The Future
+  const sampleCardIds = [
+    'DF_01',
+    'AT_01',
+    'SK_01',
+    'FV_01',
+    'NP_01',
+    'CT_TACO_01',
+    'CT_TACO_02',
+    'CT_TACO_03',
+    'SF_02',
+  ];
   const myHand: EKCard[] = sampleCardIds.map(getCard);
 
-  const topDiscard = getCard('EK_12'); // Attack
-  const discardPile = [getCard('EK_28'), getCard('EK_41'), topDiscard];
+  const topDiscard = getCard('AT_02'); // Attack
+  const discardPile = [getCard('SH_01'), getCard('SK_02'), topDiscard];
 
   const opponents = [
     { id: 'bot-1', handCount: 5, alive: true },
@@ -44,12 +54,14 @@ export function createMockGameData(searchParams: URLSearchParams): {
   if (phaseParam === 'nope') {
     nopeWindow = {
       isOpen: true,
-      originalActionType: 'ATTACK',
+      originalActionType: 'ATTACK' as const,
       originalPlayerId: 'bot-1',
       isCurrentlyNoped: false,
       nopeCount: 0,
       secondsRemaining: 4,
       hasPassed: false,
+      actionNameVi: 'Tấn Công (Attack 2x)',
+      targetCard: getCard('AT_01'),
     };
   }
 
@@ -63,7 +75,7 @@ export function createMockGameData(searchParams: URLSearchParams): {
 
   let knownTopCards = null;
   if (phaseParam === 'seefuture') {
-    knownTopCards = [getCard('EK_01'), getCard('EK_16'), getCard('EK_29')]; // Lá 1 là Mèo Nổ!
+    knownTopCards = [getCard('EK_01'), getCard('AT_03'), getCard('NP_02')]; // Lá 1 là Mèo Nổ!
   }
 
   let favorPrompt = null;
@@ -104,10 +116,10 @@ export function createMockGameData(searchParams: URLSearchParams): {
     status: 'playing',
     hostId: myId,
     players: [
-      { playerId: myId, name: 'Tôi (Người chơi VIP)', connected: true },
-      { playerId: 'bot-1', name: 'Mèo Thần Tài (Bot)', connected: true, isBot: true },
-      { playerId: 'bot-2', name: 'Mèo Quý Tộc (Bot)', connected: true, isBot: true },
-      { playerId: 'bot-3', name: 'Mèo Điên (Bot Đã Nổ)', connected: false, isBot: true },
+      { playerId: myId, name: 'Bạn', connected: true },
+      { playerId: 'bot-1', name: '🤖 Máy 1', connected: true, isBot: true },
+      { playerId: 'bot-2', name: 'Bình', connected: true, isBot: false },
+      { playerId: 'bot-3', name: '🤖 Máy 2', connected: false, isBot: true },
     ],
   };
 
@@ -115,7 +127,7 @@ export function createMockGameData(searchParams: URLSearchParams): {
     roomCode: 'DEMOEK',
     token: 'mock-session-token',
     playerId: myId,
-    playerName: 'Tôi (Người chơi VIP)',
+    playerName: 'Bạn',
   };
 
   return {

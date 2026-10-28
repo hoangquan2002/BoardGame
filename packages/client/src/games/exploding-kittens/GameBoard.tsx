@@ -35,6 +35,7 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
   session,
   roomState,
   gameView,
+  deadline,
   onSendAction,
   onLeaveRoom,
 }) => {
@@ -43,8 +44,10 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
   const [zoomedCard, setZoomedCard] = useState<EKCard | null>(null);
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isDiscardListOpen, setIsDiscardListOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => feedback.isSoundEnabled());
   const [isSeeFutureDismissed, setIsSeeFutureDismissed] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(45);
 
   // States chọn mục tiêu phụ trợ
   const [pendingComboAction, setPendingComboAction] = useState<
@@ -60,7 +63,12 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
   const playerNameMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const p of roomState.players) {
-      map.set(p.playerId, p.name);
+      // Chuẩn hóa tên bot hiển thị
+      let name = p.name;
+      if (p.isBot && !name.startsWith('🤖')) {
+        name = `🤖 ${name}`;
+      }
+      map.set(p.playerId, name);
     }
     return map;
   }, [roomState.players]);
@@ -72,6 +80,38 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
 
   const isMyTurn = gameView.activePlayerId === session.playerId;
   const isAlive = gameView.alive;
+
+  // Format action text: thay thế toàn bộ id kỹ thuật bằng tên hiển thị
+  const formatActionText = (text: string | null | undefined): string => {
+    if (!text) return 'Trò chơi đang diễn ra...';
+    let formatted = text;
+    for (const p of roomState.players) {
+      const displayName = p.playerId === session.playerId ? 'Bạn' : playerNameMap.get(p.playerId) ?? p.name;
+      formatted = formatted.split(p.playerId).join(displayName);
+    }
+    return formatted;
+  };
+
+  // Đồng hồ đếm ngược
+  useEffect(() => {
+    if (!deadline) {
+      setTimeLeft(45);
+      return;
+    }
+    const update = () => {
+      const diff = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      setTimeLeft(diff);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
   // Âm thanh khi chuyển lượt tới mình
   useEffect(() => {
@@ -108,55 +148,127 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
     setSelectedCardIds([]);
   };
 
-  // --- Kiểm tra combo từ các thẻ đã chọn ---
+  // --- Thẻ bài đã chọn ---
   const selectedCards = useMemo(() => {
-    return gameView.myHand.filter((c: EKCard) => selectedCardIds.includes(c.id));
+    return selectedCardIds
+      .map((id) => gameView.myHand.find((c) => c.id === id))
+      .filter((c): c is EKCard => c !== undefined);
   }, [gameView.myHand, selectedCardIds]);
 
+  // --- Kiểm tra combo từ các thẻ đã chọn ---
   const comboValidation = useMemo(() => {
     const count = selectedCards.length;
-    if (count === 0) return { valid: false, message: '' };
+    if (count === 0) {
+      return {
+        valid: false,
+        title: 'Chưa chọn lá bài nào',
+        desc: 'Chạm vào lá bài để chọn đánh, hoặc chạm giữ để phóng to đọc chi tiết.',
+        buttonLabel: 'Đánh bài',
+      };
+    }
 
     if (count === 1) {
       const c = selectedCards[0];
       const singlePlayable = ['ATTACK', 'SKIP', 'FAVOR', 'SHUFFLE', 'SEE_THE_FUTURE'].includes(c.code);
+      const title = c.variantSubtitleVi ? `${c.nameEn} — ${c.variantSubtitleVi}` : `${c.nameEn} (${c.nameVi})`;
+
       if (singlePlayable) {
-        return { valid: true, type: 'SINGLE' as const, card: c, label: `Đánh ${c.nameVi}` };
+        return {
+          valid: true,
+          type: 'SINGLE' as const,
+          card: c,
+          title,
+          desc: c.descriptionVi,
+          buttonLabel: `Đánh ${c.nameEn}`,
+        };
       }
       if (c.code === 'NOPE') {
-        return { valid: false, message: 'Lá Nope chỉ có thể đánh trong Cửa sổ Nope!' };
+        return {
+          valid: false,
+          title,
+          desc: 'Lá Nope chỉ có thể đánh phản ứng trong Cửa sổ Nope 5 giây!',
+          buttonLabel: 'Đánh bài',
+        };
       }
       if (c.code === 'DEFUSE') {
-        return { valid: false, message: 'Defuse chỉ tự kích hoạt khi bạn rút phải Mèo Nổ!' };
+        return {
+          valid: false,
+          title,
+          desc: 'Defuse chỉ tự kích hoạt khi bạn rút phải Mèo Nổ để cứu mạng!',
+          buttonLabel: 'Đánh bài',
+        };
       }
-      return { valid: false, message: 'Lá Mèo này cần ghép bộ 2, 3 hoặc 5 lá!' };
+      return {
+        valid: false,
+        title,
+        desc: 'Lá Mèo này cần ghép bộ Combo 2, 3 hoặc 5 lá mới có thể đánh ra.',
+        buttonLabel: 'Đánh bài',
+      };
     }
 
     if (count === 2) {
       const [c1, c2] = selectedCards;
       if (c1.code === c2.code) {
-        return { valid: true, type: 'COMBO_2' as const, label: 'Đánh Combo 2 Lá (Cướp bài)' };
+        return {
+          valid: true,
+          type: 'COMBO_2' as const,
+          title: `✨ Combo 2 lá giống nhau (${c1.nameEn})`,
+          desc: 'Chọn 1 đối thủ để cướp ngẫu nhiên 1 lá bài bất kỳ trên tay họ.',
+          buttonLabel: 'Đánh Combo (2 lá)',
+        };
       }
-      return { valid: false, message: 'Combo 2 lá phải có cùng tên / chủng loại!' };
+      return {
+        valid: false,
+        title: 'Chọn 2 lá bài',
+        desc: 'Combo 2 lá phải có cùng tên / chủng loại mèo!',
+        buttonLabel: 'Đánh bài',
+      };
     }
 
     if (count === 3) {
       const [c1, c2, c3] = selectedCards;
       if (c1.code === c2.code && c2.code === c3.code) {
-        return { valid: true, type: 'COMBO_3' as const, label: 'Đánh Combo 3 Lá (Đòi bài)' };
+        return {
+          valid: true,
+          type: 'COMBO_3' as const,
+          title: `✨ Combo 3 lá giống nhau (${c1.nameEn})`,
+          desc: 'Chỉ định 1 đối thủ và gọi tên lá bài muốn cướp (nếu họ có, họ phải đưa cho bạn).',
+          buttonLabel: 'Đánh Combo (3 lá)',
+        };
       }
-      return { valid: false, message: 'Combo 3 lá phải có cùng tên / chủng loại!' };
+      return {
+        valid: false,
+        title: 'Chọn 3 lá bài',
+        desc: 'Combo 3 lá phải có cùng tên / chủng loại mèo!',
+        buttonLabel: 'Đánh bài',
+      };
     }
 
     if (count === 5) {
-      const codes = new Set(selectedCards.map((c: EKCard) => c.code));
+      const codes = new Set(selectedCards.map((c) => c.code));
       if (codes.size === 5) {
-        return { valid: true, type: 'COMBO_5' as const, label: 'Đánh Combo 5 Lá (Lục bài bỏ)' };
+        return {
+          valid: true,
+          type: 'COMBO_5' as const,
+          title: '✨ Combo 5 lá khác nhau',
+          desc: 'Chọn lấy 1 lá bài bất kỳ mà bạn muốn từ chồng bài bỏ.',
+          buttonLabel: 'Đánh Combo (5 lá)',
+        };
       }
-      return { valid: false, message: 'Combo 5 lá phải gồm 5 lá có tên khác nhau!' };
+      return {
+        valid: false,
+        title: 'Chọn 5 lá bài',
+        desc: 'Combo 5 lá phải gồm 5 lá có biểu tượng khác nhau hoàn toàn!',
+        buttonLabel: 'Đánh bài',
+      };
     }
 
-    return { valid: false, message: `Chọn ${count} lá chưa tạo thành Combo hợp lệ` };
+    return {
+      valid: false,
+      title: `Đã chọn ${count} lá bài`,
+      desc: 'Bộ bài đã chọn không tạo thành combo 2, 3 hoặc 5 lá hợp lệ.',
+      buttonLabel: 'Đánh bài',
+    };
   }, [selectedCards]);
 
   // --- Các hành động chính ---
@@ -173,7 +285,6 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
     if (comboValidation.type === 'SINGLE' && comboValidation.card) {
       const card = comboValidation.card;
       if (card.code === 'FAVOR') {
-        // Cần chọn mục tiêu người chơi
         setPendingComboAction({ type: 'FAVOR_TARGET', cardId: card.id });
         return;
       }
@@ -204,7 +315,7 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
 
     if (comboValidation.type === 'COMBO_5') {
       feedback.playCardPlay();
-      const cardIds = selectedCards.map((c: EKCard) => c.id) as [string, string, string, string, string];
+      const cardIds = selectedCards.map((c) => c.id) as [string, string, string, string, string];
       await onSendAction({
         type: 'PLAY_COMBO',
         comboType: 'FIVE_DIFFERENT',
@@ -303,333 +414,281 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
 
   // Tính màu sắc nguy cơ nổ bom
   const risk = gameView.explosionRiskPercent;
-  const riskColor =
-    risk < 15
-      ? 'text-emerald-400 border-emerald-500/40 bg-emerald-950/40'
-      : risk < 35
-      ? 'text-amber-400 border-amber-500/50 bg-amber-950/40'
-      : 'text-red-400 border-red-500 bg-red-950/60 animate-pulse';
+  const riskClass = risk < 15 ? 'safe' : risk < 35 ? 'warning' : 'danger';
+
+  // Lấy ảnh lá bài trên cùng chồng bài bỏ
+  const topDiscardImage = gameView.topDiscard
+    ? gameView.topDiscard.imageUrl ??
+      (gameView.topDiscard.imageFile ? `/games/exploding-kittens/cards/${gameView.topDiscard.imageFile}` : '')
+    : null;
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-felt-table text-white font-sans select-none overflow-x-hidden relative">
-      {/* Top Header Bar */}
-      <header className="w-full bg-slate-950/80 backdrop-blur border-b border-amber-500/20 px-3 py-2 flex items-center justify-between z-30">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🐱💣</span>
-          <div>
-            <h1 className="font-extrabold text-sm sm:text-base text-gold-gradient tracking-wide">
-              MÈO NỔ (Exploding Kittens)
-            </h1>
-            <div className="text-[10px] text-gray-400 flex items-center gap-2">
-              <span>Phòng: #{roomState.roomCode}</span>
-              <span>• Lượt #{gameView.turnCount}</span>
-            </div>
+    <main className="ek-table">
+      {/* ========================================================
+          CỘT TRÁI (Trong Landscape/Desktop) / NỬA TRÊN (Trong Portrait)
+          ======================================================== */}
+      <section className="col-left">
+        {/* 1. TOP BAR (38px) */}
+        <header className="top-bar casino-glass-panel" data-room-code={roomState.roomCode}>
+          <span style={{ display: 'none' }}>Phòng: #{roomState.roomCode}</span>
+          <div className="turn-status">
+            <span
+              className={`status-dot ${!isAlive ? 'danger' : isMyTurn ? '' : 'opponent'}`}
+            />
+            <span className={`turn-label ${isMyTurn ? '' : 'opponent'}`}>
+              {!isAlive
+                ? 'Đã bị loại'
+                : isMyTurn
+                ? 'Lượt của bạn'
+                : `Lượt: ${getPlayerName(gameView.activePlayerId)}`}
+            </span>
+            {gameView.turnsRemaining > 1 && (
+              <span className="attack-badge">
+                Phải đi {gameView.turnsRemaining} lượt
+              </span>
+            )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={toggleSound}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs border border-slate-700 transition-colors"
-            title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
-          >
-            {soundEnabled ? '🔊' : '🔇'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsRulesOpen(true)}
-            className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1"
-          >
-            <span>📜</span> <span className="hidden sm:inline">Luật chơi</span>
-          </button>
-          <button
-            type="button"
-            onClick={onLeaveRoom}
-            className="px-2.5 py-1 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-xs text-red-300 border border-red-800/50 transition-colors"
-          >
-            Rời phòng
-          </button>
-        </div>
-      </header>
+          <div className="timer-pill">⏱ {formatTimer(timeLeft)}</div>
 
-      {/* Main Playing Felt Table Area */}
-      <main className="flex-1 flex flex-col justify-between items-center p-2 sm:p-4 max-w-5xl mx-auto w-full relative">
-        {/* Khu Ghế Đối Thủ (Opponents Area) */}
-        <section className="w-full flex flex-wrap justify-center items-center gap-2 sm:gap-4 my-1">
+          <div className="top-actions">
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={toggleSound}
+              title={soundEnabled ? 'Tắt âm thanh' : 'Bật âm thanh'}
+            >
+              {soundEnabled ? '🔊' : '🔇'}
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => setIsRulesOpen(true)}
+              title="Xem luật chơi"
+            >
+              ?
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => setIsMenuOpen(true)}
+              title="Menu phòng"
+            >
+              ⋯
+            </button>
+          </div>
+        </header>
+
+        {/* 2. OPPONENTS ROW (3 OPPONENT SEATS) */}
+        <section className="opponents-row" aria-label="Ghế đối thủ">
           {gameView.opponents.map((opp: EKOpponentView) => {
             const isOppActive = gameView.activePlayerId === opp.id;
             const oppName = getPlayerName(opp.id);
 
             return (
-              <div
+              <article
                 key={opp.id}
-                className={`relative px-3 py-2 rounded-2xl border transition-all flex items-center gap-2.5 ${
-                  !opp.alive
-                    ? 'bg-black/60 border-gray-800 opacity-50 grayscale'
-                    : isOppActive
-                    ? 'bg-amber-950/50 border-amber-400 ring-2 ring-amber-400 shadow-gold-glow'
-                    : 'bg-slate-900/80 border-slate-800 shadow-md'
+                className={`opponent-seat casino-glass-panel ${
+                  !opp.alive ? 'eliminated' : isOppActive ? 'active-turn' : ''
                 }`}
               >
-                {/* Avatar Icon */}
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-amber-400 text-sm">
-                    {opp.alive ? (
-                      oppName.slice(0, 1).toUpperCase()
-                    ) : (
-                      <span className="text-xl">💀</span>
-                    )}
-                  </div>
-                  {isOppActive && opp.alive && (
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
-                    </span>
-                  )}
+                <div className="opp-top">
+                  <span className="opp-name">{oppName}</span>
+                  <span
+                    className="opp-net-dot"
+                    style={{ color: opp.alive ? '#34d399' : '#ef4444' }}
+                    title={opp.alive ? 'Đang kết nối' : 'Đã bị loại'}
+                  >
+                    {opp.alive ? '●' : '✕'}
+                  </span>
                 </div>
-
-                {/* Thông tin đối thủ */}
-                <div className="flex flex-col text-left">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-bold text-white max-w-[90px] sm:max-w-[120px] truncate">
-                      {oppName}
-                    </span>
-                    {opp.hasPassedNope && (
-                      <span className="text-[9px] bg-slate-800 text-gray-400 px-1 rounded">
-                        Đã bỏ qua
-                      </span>
-                    )}
-                  </div>
-
+                <div className="opp-bottom">
                   {opp.alive ? (
-                    <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
-                      <span>🎴 {opp.handCount} lá</span>
-                      {isOppActive && gameView.turnsRemaining > 1 && (
-                        <span className="text-[10px] bg-red-950 text-red-300 px-1 rounded font-bold">
-                          Nợ {gameView.turnsRemaining} lượt
-                        </span>
-                      )}
-                    </div>
+                    <span className="opp-cards-badge">🎴 {opp.handCount} lá</span>
                   ) : (
-                    <span className="text-[10px] text-red-400 font-bold uppercase tracking-wider">
-                      Đã nổ tung
-                    </span>
+                    <span className="opp-exploded-badge">💥 Đã nổ tung</span>
                   )}
                 </div>
-              </div>
+              </article>
             );
           })}
         </section>
 
-        {/* Nope Banner (khi mở Cửa sổ Nope) */}
-        <NopeBanner
-          gameView={gameView}
-          getPlayerName={getPlayerName}
-          onPlayNope={handlePlayNope}
-          onPassNope={handlePassNope}
-        />
-
-        {/* Khu Vực Giữa Bàn: Chồng Rút + Chồng Bỏ + Thông Tin Lượt */}
-        <section className="w-full flex flex-col items-center my-3 space-y-3">
-          {/* Thông tin lượt đi & Nhật ký hành động */}
-          <div className="text-center space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 shadow-md">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-              <span className="text-xs font-semibold text-gray-200">
-                {isMyTurn ? (
-                  <strong className="text-amber-300">ĐẾN LƯỢT BẠN!</strong>
-                ) : (
-                  <>
-                    Lượt của: <strong className="text-white">{getPlayerName(gameView.activePlayerId)}</strong>
-                  </>
-                )}
-              </span>
-              {gameView.turnsRemaining > 1 && (
-                <span className="text-xs bg-red-900/80 text-red-200 px-1.5 py-0.2 rounded font-bold">
-                  Phải đi {gameView.turnsRemaining} lượt!
-                </span>
-              )}
-            </div>
-
-            {gameView.lastActionDescriptionVi && (
-              <p className="text-[11px] text-amber-200/90 italic drop-shadow max-w-md mx-auto line-clamp-1">
-                📢 {gameView.lastActionDescriptionVi}
-              </p>
-            )}
-          </div>
-
-          {/* Hai Chồng Bài Ở Trung Tâm */}
-          <div className="flex items-center justify-center gap-6 sm:gap-10 py-1">
-            {/* Chồng Bài Rút (Draw Deck) */}
-            <div className="flex flex-col items-center gap-1.5">
+        {/* 3. CENTER STAGE (DRAW DECK & DISCARD PILE) */}
+        <section className="center-stage" aria-label="Sân khấu trung tâm">
+          <div className="piles-container">
+            {/* Draw Deck */}
+            <div className="pile-column">
               <div
+                className="pile-card-wrap draw-stack-3d"
                 onClick={isMyTurn && gameView.phase === 'TURN_PLAY' ? handleDrawCard : undefined}
-                className={`relative group ${
-                  isMyTurn && gameView.phase === 'TURN_PLAY'
-                    ? 'cursor-pointer transform hover:scale-105 active:scale-95 transition-transform'
-                    : ''
-                }`}
+                style={{
+                  cursor: isMyTurn && gameView.phase === 'TURN_PLAY' ? 'pointer' : 'default',
+                }}
                 title={
                   isMyTurn && gameView.phase === 'TURN_PLAY'
                     ? 'Nhấn để rút bài kết thúc lượt'
                     : 'Chồng bài rút'
                 }
               >
-                {/* 3D stacked deck effect */}
-                <div className="absolute -top-1 -left-1 w-[80px] sm:w-[95px] h-[112px] sm:h-[135px] rounded-xl bg-slate-800 border border-amber-900/40" />
-                <div className="absolute -top-0.5 -left-0.5 w-[80px] sm:w-[95px] h-[112px] sm:h-[135px] rounded-xl bg-slate-900 border border-amber-900/60" />
-
-                <Card showBack size="small" className="relative z-10 shadow-2xl" />
-
-                {/* Badge số lá bài còn lại */}
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="bg-black/75 text-white font-extrabold text-sm px-2 py-0.5 rounded-full border border-white/20 shadow-md">
-                    {gameView.drawDeckCount} lá
-                  </span>
+                <div className="card-frame back-frame">
+                  <img
+                    src="/games/exploding-kittens/cards/card-back.png"
+                    alt="Chồng bài rút"
+                  />
                 </div>
+                <div className="deck-count-pill">{gameView.drawDeckCount} lá</div>
               </div>
-
-              {/* Huy hiệu Nguy cơ nổ bom */}
-              <div
-                className={`text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full border ${riskColor}`}
-              >
+              <div className={`risk-badge ${riskClass}`}>
                 💣 Nguy cơ nổ: {gameView.explosionRiskPercent}%
               </div>
             </div>
 
-            {/* Chồng Bài Bỏ (Discard Pile) */}
-            <div className="flex flex-col items-center gap-1.5">
+            {/* Discard Pile */}
+            <div className="pile-column">
               <div
+                className="pile-card-wrap"
                 onClick={() => setIsDiscardListOpen(true)}
-                className="cursor-pointer group transform hover:scale-105 active:scale-95 transition-transform relative"
+                style={{ cursor: 'pointer' }}
                 title="Bấm để xem danh sách bài bỏ"
               >
-                {gameView.topDiscard ? (
-                  <Card
-                    card={gameView.topDiscard}
-                    size="small"
-                    className="shadow-2xl"
-                    onHold={(c: EKCard) => setZoomedCard(c)}
-                  />
-                ) : (
-                  <div className="w-[78px] h-[110px] rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-gray-500 text-xs p-2 text-center">
-                    <span>🗑️</span>
-                    <span>Chưa có bài bỏ</span>
-                  </div>
-                )}
-
+                <div className="card-frame">
+                  {topDiscardImage ? (
+                    <img src={topDiscardImage} alt="Chồng bài bỏ" />
+                  ) : (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        color: '#64748b',
+                      }}
+                    >
+                      <span>🗑️</span>
+                      <span>Chưa có bài bỏ</span>
+                    </div>
+                  )}
+                </div>
                 {gameView.discardPileCount > 0 && (
-                  <div className="absolute -top-2 -right-2 bg-slate-800 text-amber-300 font-bold text-[10px] px-1.5 py-0.5 rounded-full border border-amber-500/30 shadow-md">
-                    {gameView.discardPileCount}
-                  </div>
+                  <div className="discard-count-badge">{gameView.discardPileCount}</div>
                 )}
               </div>
-
               <button
                 type="button"
+                className="discard-caption"
                 onClick={() => setIsDiscardListOpen(true)}
-                className="text-[10px] text-gray-400 hover:text-amber-300 transition-colors underline"
               >
-                Xem bài bỏ ({gameView.discardPileCount})
+                Xem bài bỏ
               </button>
             </div>
           </div>
+
+          {/* Dải thông báo sự kiện / Cửa sổ Nope */}
+          {gameView.nopeWindow?.isOpen ? (
+            <NopeBanner
+              gameView={gameView}
+              getPlayerName={getPlayerName}
+              onPlayNope={handlePlayNope}
+              onPassNope={handlePassNope}
+            />
+          ) : (
+            <div className="event-banner" role="status">
+              <span>{formatActionText(gameView.lastActionDescriptionVi)}</span>
+            </div>
+          )}
         </section>
+      </section>
 
-        {/* Thanh Thông Báo / Hành Động Đang Chờ */}
-        {!isAlive && (
-          <div className="w-full bg-red-950/80 border border-red-500 text-red-200 py-2 px-4 rounded-2xl text-center text-xs font-bold mb-2 animate-pulse">
-            💀 Bạn đã bị nổ tung và loại khỏi ván đấu. Đang ở chế độ theo dõi khán giả.
-          </div>
-        )}
-
-        {/* Khu Vực Bài Trên Tay (My Hand Area) */}
-        <section className="w-full flex flex-col items-center space-y-2 mt-auto">
-          {/* Header tay bài + Nút Bỏ chọn */}
-          <div className="w-full flex items-center justify-between px-2 text-xs">
-            <span className="font-bold text-gray-300">
-              Bài của bạn ({gameView.myHand.length} lá)
+      {/* ========================================================
+          CỘT PHẢI (Trong Landscape/Desktop) / NỬA DƯỚI (Trong Portrait)
+          ======================================================== */}
+      <section className="col-right">
+        {/* 4. DẢI THÔNG TIN LÁ ĐANG CHỌN & 2 NÚT THAO TÁC */}
+        <section className="controls-zone" aria-label="Bảng điều khiển hành động">
+          <div className="selection-info-bar casino-glass-panel">
+            <div className="selection-header">
+              <span className="selection-title">{comboValidation.title}</span>
               {selectedCardIds.length > 0 && (
-                <span className="text-amber-400 font-extrabold ml-1.5">
-                  • Đang chọn {selectedCardIds.length} lá
-                </span>
+                <button
+                  type="button"
+                  className="clear-select-btn"
+                  onClick={handleClearSelection}
+                >
+                  Bỏ chọn
+                </button>
               )}
-            </span>
-
-            {selectedCardIds.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearSelection}
-                className="text-[11px] text-gray-400 hover:text-white underline"
-              >
-                Bỏ chọn tất cả
-              </button>
-            )}
+            </div>
+            <p className="selection-desc">{comboValidation.desc}</p>
           </div>
 
-          {/* Dãy Thẻ Bài Cuộn Ngang */}
-          <div className="w-full overflow-x-auto pb-3 pt-2 px-1 flex items-center gap-2 sm:gap-3 scrollbar-none snap-x justify-start sm:justify-center">
-            {gameView.myHand.map((card: EKCard) => {
-              const isSelected = selectedCardIds.includes(card.id);
-
-              return (
-                <div key={card.id} className="snap-center flex-shrink-0">
-                  <Card
-                    card={card}
-                    size="normal"
-                    isSelected={isSelected}
-                    onClick={() => handleToggleCardSelect(card.id)}
-                    onHold={(c: EKCard) => setZoomedCard(c)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Thanh Nút Thao Tác (Action Control Bar) */}
-          <div className="w-full max-w-lg flex items-center justify-center gap-3 p-2 bg-slate-950/90 backdrop-blur rounded-2xl border border-slate-800 shadow-2xl">
-            {/* Nút Đánh Bài / Combo */}
+          <div className="action-buttons-row">
             <button
               type="button"
               disabled={!comboValidation.valid || !isMyTurn || !isAlive || gameView.phase !== 'TURN_PLAY'}
               onClick={handleExecutePlay}
-              className={`flex-1 py-3 px-3 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-1.5 ${
-                comboValidation.valid && isMyTurn && isAlive && gameView.phase === 'TURN_PLAY'
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black active:scale-95 shadow-gold-glow'
-                  : 'bg-slate-800 text-gray-500 cursor-not-allowed border border-slate-700'
-              }`}
+              className="btn-gold action-btn-main"
+              style={{
+                opacity:
+                  comboValidation.valid && isMyTurn && isAlive && gameView.phase === 'TURN_PLAY'
+                    ? 1
+                    : 0.5,
+              }}
             >
-              <span>✨</span>
-              <span className="truncate">
-                {comboValidation.valid ? comboValidation.label : 'Đánh bài'}
-              </span>
+              ✨ {comboValidation.buttonLabel}
             </button>
 
-            {/* Nút Rút Bài (Bắt buộc để kết thúc lượt) */}
             <button
               type="button"
               disabled={!isMyTurn || !isAlive || gameView.phase !== 'TURN_PLAY'}
               onClick={handleDrawCard}
-              className={`flex-1 py-3 px-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-1.5 ${
-                isMyTurn && isAlive && gameView.phase === 'TURN_PLAY'
-                  ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 active:scale-95 shadow-emerald-button'
-                  : 'bg-slate-800 text-gray-500 cursor-not-allowed border border-slate-700'
-              }`}
+              className="btn-emerald action-btn-main"
+              style={{
+                opacity: isMyTurn && isAlive && gameView.phase === 'TURN_PLAY' ? 1 : 0.5,
+              }}
             >
-              <span>🎴</span>
-              <span className="truncate">Rút bài ({gameView.explosionRiskPercent}%)</span>
+              🎴 Rút bài ({gameView.explosionRiskPercent}% nổ)
             </button>
           </div>
-
-          {/* Gợi ý lỗi hoặc chỉ dẫn */}
-          {selectedCardIds.length > 0 && !comboValidation.valid && (
-            <p className="text-[11px] text-amber-300/90 italic">{comboValidation.message}</p>
-          )}
         </section>
-      </main>
 
-      {/* --- CÁC MODAL HỆ THỐNG --- */}
+        {/* 5. KHU BÀI TRÊN TAY (FAN / OVERLAP) */}
+        <section className="hand-zone" aria-label="Bài trên tay bạn">
+          <div className="hand-zone-header">
+            <span>
+              Bài của bạn (<strong>{gameView.myHand.length} lá</strong>)
+            </span>
+            <span>💡 Chạm giữ hoặc chuột phải để phóng to</span>
+          </div>
+
+          <div className="hand-fan">
+            {gameView.myHand.map((card: EKCard) => {
+              const isSelected = selectedCardIds.includes(card.id);
+              const orderIndex =
+                isSelected && selectedCardIds.length >= 2
+                  ? selectedCardIds.indexOf(card.id) + 1
+                  : null;
+
+              return (
+                <Card
+                  key={card.id}
+                  card={card}
+                  className="hand-card"
+                  isSelected={isSelected}
+                  orderBadge={orderIndex}
+                  onClick={() => handleToggleCardSelect(card.id)}
+                  onHold={(c) => setZoomedCard(c)}
+                />
+              );
+            })}
+          </div>
+        </section>
+      </section>
+
+      {/* ========================================================
+          CÁC MODAL HỆ THỐNG
+          ======================================================== */}
 
       {/* 1. Modal Phóng To Thẻ Bài */}
       <CardZoomModal
@@ -704,43 +763,55 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
       {/* 9. Modal Xem Toàn Bộ Chồng Bài Bỏ */}
       {isDiscardListOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+          className="modal-backdrop animate-fade-in"
           onClick={() => setIsDiscardListOpen(false)}
+          role="dialog"
+          aria-modal="true"
         >
           <div
-            className="relative max-w-lg w-full max-h-[85vh] bg-slate-900 border border-slate-700 rounded-3xl p-5 shadow-2xl flex flex-col space-y-4"
+            className="modal-card casino-glass"
+            style={{ maxWidth: '440px', maxHeight: '85vh' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-base font-bold text-amber-300">
+            <div className="modal-header">
+              <div className="modal-title">
                 Chồng Bài Bỏ ({gameView.discardPile.length} lá)
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsDiscardListOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-800 text-gray-300 flex items-center justify-center"
-              >
-                ✕
-              </button>
+              </div>
+              <div className="modal-subtitle">
+                Các lá bài đã đánh ra hoặc bị hủy trong ván đấu
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 bg-slate-950/60 rounded-xl">
-              <div className="flex flex-wrap gap-2 justify-center">
-                {gameView.discardPile.map((card: EKCard, idx: number) => (
+            <div
+              style={{
+                maxHeight: '320px',
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px',
+                padding: '4px',
+              }}
+            >
+              {gameView.discardPile.map((card: EKCard, idx: number) => (
+                <div
+                  key={`${card.id}-${idx}`}
+                  style={{ width: '100%', aspectRatio: '720 / 1012', cursor: 'pointer' }}
+                  onClick={() => setZoomedCard(card)}
+                  title="Nhấn để xem chi tiết"
+                >
                   <Card
-                    key={`${card.id}-${idx}`}
                     card={card}
-                    size="small"
-                    onHold={(c: EKCard) => setZoomedCard(c)}
+                    onHold={(c) => setZoomedCard(c)}
+                    style={{ width: '100%', height: '100%' }}
                   />
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
 
             <button
               type="button"
               onClick={() => setIsDiscardListOpen(false)}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 font-semibold text-xs rounded-xl"
+              className="btn-gold action-btn-main"
             >
               Đóng
             </button>
@@ -748,33 +819,96 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
         </div>
       )}
 
-      {/* 10. Modal Luật Chơi */}
+      {/* 10. Modal Menu phòng (Nút ⋯) */}
+      {isMenuOpen && (
+        <div
+          className="modal-backdrop animate-fade-in"
+          onClick={() => setIsMenuOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="modal-card casino-glass"
+            style={{ maxWidth: '320px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div className="modal-title">Menu Phòng Chơi</div>
+              <div className="modal-subtitle">Mã phòng: #{roomState.roomCode}</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                className="preset-btn"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsDiscardListOpen(true);
+                }}
+              >
+                🗑️ Xem bài bỏ ({gameView.discardPileCount})
+              </button>
+              <button
+                type="button"
+                className="preset-btn"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsRulesOpen(true);
+                }}
+              >
+                📜 Luật chơi Mèo Nổ
+              </button>
+              <button
+                type="button"
+                className="btn-danger action-btn-main"
+                style={{ marginTop: '8px' }}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onLeaveRoom();
+                }}
+              >
+                🚪 Rời phòng chơi
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(false)}
+              className="preset-btn"
+              style={{ marginTop: '4px' }}
+            >
+              Đóng menu
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 11. Modal Luật Chơi */}
       <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
 
-      {/* 11. Modal Kết Thúc Ván Đấu (Winner) */}
+      {/* 12. Modal Kết Thúc Ván Đấu (Winner) */}
       {gameView.winner && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
-          <div className="relative max-w-sm w-full bg-slate-900 border-2 border-amber-500 rounded-3xl p-6 shadow-2xl text-center space-y-4">
-            <div className="text-5xl animate-bounce">🏆🐱</div>
-            <h2 className="text-2xl font-black text-amber-300 tracking-wider uppercase">
-              VÁN ĐẤU KẾT THÚC!
-            </h2>
-            <p className="text-sm text-gray-200">
+        <div className="modal-backdrop animate-fade-in" role="dialog" aria-modal="true">
+          <div className="modal-card casino-glass" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '42px', margin: '4px 0' }}>🏆🐱</div>
+            <div className="modal-title" style={{ fontSize: '18px' }}>VÁN ĐẤU KẾT THÚC!</div>
+            <div className="modal-subtitle">
               Người chiến thắng duy nhất sống sót:{' '}
-              <strong className="text-amber-400 text-base block mt-1">
+              <strong style={{ color: '#fde047', display: 'block', fontSize: '15px', marginTop: '4px' }}>
                 {getPlayerName(gameView.winner)}
               </strong>
-            </p>
+            </div>
             <button
               type="button"
               onClick={onLeaveRoom}
-              className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-sm rounded-xl shadow-lg transition-transform active:scale-95"
+              className="btn-emerald action-btn-main"
+              style={{ marginTop: '10px' }}
             >
               Về Phòng Chờ
             </button>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 };

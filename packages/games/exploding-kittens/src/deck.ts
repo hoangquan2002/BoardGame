@@ -97,7 +97,7 @@ export function getCardCodeNameVi(code: EKCardCode): string {
     case 'CAT_HAIRY_POTATO':
       return 'Mèo Khoai Tây';
     case 'CAT_BEARD':
-      return 'Mèo Râu Riê';
+      return 'Mèo Râu Quai Nón';
     case 'CAT_RAINBOW_RALPHING':
       return 'Mèo Cầu Vồng';
   }

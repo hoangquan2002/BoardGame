@@ -25,6 +25,7 @@
 | R3 | Sửa lỗi kẹt ván khi bỏ bài thừa (> 6 lá) & Đổi bài giữa người thật | ✅ | Hoàn thành: nút Kết thúc lượt bật và ghi "bỏ N lá" khi tay > 6 lá mở DiscardModal; thanh thông báo nổi trade-notice xuất hiện $\le 3$s kèm nút Xem/Từ chối và menu-badge; 132/132 unit tests pass, E2E S0–S17 đạt 100% trên local. Dừng sau R3 chờ push và test URL thật |
 | UI-Casino | Nâng cấp toàn diện UI/UX Dark Casino Luxury Velvet & Gold Brass | ✅ | Hoàn thành qua 4 Sub-agent: (1) index.css tokens nỉ nhung + vàng kim; (2) Trang chủ & phòng chờ VIP luxury; (3) Bàn chơi sòng bài, Thể Trạng 3D, bài tay nhấc mượt, tất cả modal cao cấp; (4) 132/132 unit tests pass, E2E S0–S17 đạt 100%, 5 ảnh đối chứng đã chụp. |
 | Game-EK | Tích hợp Game mới Mèo Nổ (Exploding Kittens: Original Edition) | ✅ | Hoàn thành toàn diện theo chuẩn ADDING_NEW_GAME.md qua 4 Sub-agents: (1) 41 ảnh bài + cards.json 56 lá; (2) Engine thuần, state machine 8 pha, bot Normal & Hard; (3) UI sòng bài, Web Audio/Haptics, GameBoard/Modals, Game Selector; (4) 171/171 unit tests pass, lint 0 lỗi, build OK, 8/8 checklist đạt 100% |
+| EK-UI | Triển khai giao diện Mèo Nổ Dark Casino theo bản duyệt & Dịch 56 lá bài | ✅ | Hoàn thành 100%: (1) Phiên dịch tự nhiên, hài hước toàn bộ 56 lá bài trong `cards.json`, giữ nguyên tên tiếng Anh & ảnh gốc; (2) Triển khai toàn bộ CSS/React components từ mockup chuẩn, không cuộn trang (375px, 390px, 844px, 1280px); (3) Thẻ bài sạch, huy hiệu thứ tự chọn top-left, combo 3 lưới 12 thumbnail, modal gỡ bom/nhìn tương lai/nope 5s/zoom; (4) 171/171 tests pass, 0 lỗi lint, build OK. |
 | D3–D7 | Kế hoạch tiếp theo (design.md) | ⬜ | D3 thông báo + nhịp máy, D4 đồng hồ + thoát phòng, D5 máy Khó, D6 âm thanh/rung |
 
 ## Câu hỏi đang chờ người dùng
@@ -34,6 +35,11 @@
 - (không có)
 
 ## Nhật ký
+- 2026-10-27: Hoàn thành triển khai giao diện Mèo Nổ Dark Casino theo bản thiết kế duyệt (`scratch/ek-ui-mockup/index.html`) & Phiên dịch mô tả 56 lá bài:
+  + Dữ liệu lá bài (`cards.json`): Giữ 100% tên tiếng Anh gốc & ảnh gốc, dịch tự nhiên, hài hước toàn bộ 56 phụ đề tranh (`variant_subtitle_vi`) và mô tả luật chơi (`description_vi`) kèm điều kiện ghép Combo.
+  + Giao diện bàn chơi (`GameBoard.tsx`, `Card.tsx`, `index.css`): Không cuộn trang ở mọi kích thước màn hình (375x667, 390x844, 844x390, 1280x800). Lá bài nguyên vẹn không bị chữ/nút đè lên, hỗ trợ chọn nhiều lá có huy hiệu thứ tự `1`, `2` góc trên bên trái; dải thông tin chọn bài động; chồng rút 3D; chồng bài bỏ đếm số lá; dải thông báo sự kiện thay thế ID kỹ thuật bằng tên người chơi.
+  + Toàn bộ Modals: Cửa sổ Nope 5s phát sáng đỏ cam, Gỡ bom Defuse thanh trượt & 4 preset, Nhìn trước tương lai 3 lá có cảnh báo bom, Combo 3 lá với lưới 12 loại bài kèm thumbnail `38×53px`, Phóng to thẻ bài chi tiết `CardZoomModal` kèm 3 tags và luật tiếng Việt, Luật chơi `RulesModal`.
+  + Kiểm thử: `pnpm build` pass 100%, `pnpm lint` 0 lỗi 0 cảnh báo, `pnpm test` 171/171 tests pass (24 test files), đo đạc trình duyệt DevTools MCP đạt `scrollWidth <= innerWidth` và `scrollHeight <= innerHeight` 100% trên cả 4 kích thước. Lưu 10 ảnh đối chứng vào `gameplay_screenshots/exploding_kitten/`.
 - 2026-10-24: Hoàn thành tích hợp Game mới Mèo Nổ (`exploding-kittens`) theo đúng `ADDING_NEW_GAME.md` và `implementation_plan.md` qua 4 Subagents:
   + Subagent 1: Trích xuất & đồng bộ 41 ảnh bài gốc + `card-back.png` sang `assets/card-photos/exploding_kitten/` và `packages/client/public/games/exploding-kittens/cards/`; chuẩn hóa 56 lá bài với Description tiếng Việt chuẩn xác trong `cards.json`.
   + Subagent 2: Phát triển Game Engine thuần hàm `@boardgame/game-exploding-kittens` (pure state machine, cửa sổ Nope 5s, Attack cộng dồn, Combo 2/3/5 lá, che giấu bài ẩn), xây dựng 2 Bot AI (Normal & Hard), 23 unit tests + mô phỏng 200 ván bot không crash.

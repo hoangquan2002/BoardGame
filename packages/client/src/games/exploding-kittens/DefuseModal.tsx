@@ -29,95 +29,98 @@ export const DefuseModal: React.FC<DefuseModalProps> = ({ isOpen, maxIndex, onCo
     onConfirm(selectedIndex);
   };
 
+  const middleIndex = Math.floor(maxIndex / 2);
+
+  const getPositionText = (idx: number) => {
+    if (idx === 0) return 'Trên cùng (#1 - Người kế tiếp)';
+    if (idx === 1) return 'Vị trí #2 (Dưới lá đầu)';
+    if (idx === maxIndex) return `Dưới đáy (#${maxIndex + 1})`;
+    return `Vị trí #${idx + 1}`;
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
-      <div className="relative max-w-md w-full bg-gradient-to-b from-red-950 via-slate-900 to-black border-2 border-red-500 rounded-3xl p-6 shadow-2xl text-center space-y-5">
-        {/* Tiêu đề báo động */}
-        <div className="space-y-1">
-          <div className="text-4xl animate-bounce">💣💥</div>
-          <h2 className="text-2xl font-black text-red-400 tracking-wide uppercase">
-            RÚT TRÚNG MÈO NỔ!
-          </h2>
-          <p className="text-sm text-emerald-300 font-semibold bg-emerald-950/60 py-1.5 px-3 rounded-xl border border-emerald-500/30 inline-block">
-            ✨ Bạn có thẻ DEFUSE (Gỡ Bom) để sống sót!
-          </p>
+    <div className="modal-backdrop animate-fade-in" role="dialog" aria-modal="true">
+      <div className="modal-card casino-glass">
+        {/* Header */}
+        <div className="modal-header">
+          <div className="modal-title">💣 RÚT TRÚNG MÈO NỔ! — ĐÃ DÙNG GỠ BOM!</div>
+          <div className="modal-subtitle">
+            Bí mật nhét lại lá Mèo Nổ vào một vị trí trong chồng bài rút
+          </div>
         </div>
 
-        <p className="text-xs text-gray-300 leading-relaxed">
-          Hãy bí mật chọn vị trí trong chồng bài rút để nhét lại lá Mèo Nổ mà đối thủ không hề hay biết:
-        </p>
+        {/* Card Pair Showcase */}
+        <div className="defuse-showcase">
+          <div className="defuse-pair-card kitten" title="Lá Mèo Nổ vừa rút">
+            <img
+              src="/games/exploding-kittens/cards/Exploding-Kitten-TNT-Ship.jpg"
+              alt="Mèo Nổ"
+            />
+          </div>
+          <div className="defuse-arrow">➜ 🎴</div>
+          <div className="defuse-pair-card" title="Đã dùng lá Gỡ Bom để sống sót">
+            <img
+              src="/games/exploding-kittens/cards/Defuse-Via-Laser-Pointer.jpg"
+              alt="Gỡ Bom"
+            />
+          </div>
+        </div>
 
-        {/* Thanh trượt chọn vị trí */}
-        <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-400">0: Trên cùng (Bốc ngay)</span>
-            <span className="text-amber-400 font-bold text-base px-2 py-0.5 bg-amber-950/80 rounded border border-amber-500/30">
-              Vị trí #{selectedIndex + 1}
-            </span>
-            <span className="text-gray-400">{maxIndex}: Dưới đáy</span>
+        {/* Slider & Presets Box */}
+        <div className="slider-box">
+          <div className="slider-label-row">
+            <span style={{ color: '#94a3b8' }}>Vị trí chèn lá Mèo Nổ:</span>
+            <span className="slider-pos-highlight">{getPositionText(selectedIndex)}</span>
           </div>
 
           <input
             type="range"
+            className="range-slider"
             min={0}
             max={maxIndex}
             value={selectedIndex}
             onChange={(e) => setSelectedIndex(Number(e.target.value))}
-            className="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
           />
 
-          <div className="text-[11px] text-gray-400">
-            {selectedIndex === 0 && '🎯 Người kế tiếp rút bài sẽ đối mặt ngay với Mèo Nổ!'}
-            {selectedIndex === 1 && '🥈 Nằm ngay dưới lá đầu tiên!'}
-            {selectedIndex === maxIndex && '⚓ Nằm tận đáy chồng bài, rất an toàn!'}
-            {selectedIndex > 1 && selectedIndex < maxIndex && `📦 Nằm ở vị trí thứ ${selectedIndex + 1} từ trên xuống.`}
+          <div className="preset-grid">
+            <button
+              type="button"
+              className={`preset-btn ${selectedIndex === 0 ? 'active' : ''}`}
+              onClick={() => handlePreset(0)}
+            >
+              🎯 Trên cùng (0)
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${selectedIndex === 1 ? 'active' : ''}`}
+              onClick={() => handlePreset(1)}
+            >
+              🥈 Vị trí #2 (1)
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${selectedIndex === middleIndex ? 'active' : ''}`}
+              onClick={() => handlePreset(middleIndex)}
+            >
+              📦 Ở giữa ({middleIndex})
+            </button>
+            <button
+              type="button"
+              className={`preset-btn ${selectedIndex === maxIndex ? 'active' : ''}`}
+              onClick={() => handlePreset(maxIndex)}
+            >
+              ⚓ Dưới đáy ({maxIndex})
+            </button>
           </div>
         </div>
 
-        {/* Các nút chọn nhanh */}
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => handlePreset(0)}
-            className={`py-2 px-1 rounded-xl border font-bold transition-all ${
-              selectedIndex === 0
-                ? 'bg-amber-500 text-black border-amber-300 shadow-lg'
-                : 'bg-slate-800 hover:bg-slate-700 text-gray-200 border-slate-700'
-            }`}
-          >
-            🎯 Trên cùng (0)
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePreset(Math.min(1, maxIndex))}
-            className={`py-2 px-1 rounded-xl border font-bold transition-all ${
-              selectedIndex === 1
-                ? 'bg-amber-500 text-black border-amber-300 shadow-lg'
-                : 'bg-slate-800 hover:bg-slate-700 text-gray-200 border-slate-700'
-            }`}
-          >
-            🥈 Vị trí #2
-          </button>
-          <button
-            type="button"
-            onClick={() => handlePreset(maxIndex)}
-            className={`py-2 px-1 rounded-xl border font-bold transition-all ${
-              selectedIndex === maxIndex
-                ? 'bg-amber-500 text-black border-amber-300 shadow-lg'
-                : 'bg-slate-800 hover:bg-slate-700 text-gray-200 border-slate-700'
-            }`}
-          >
-            ⚓ Dưới đáy
-          </button>
-        </div>
-
-        {/* Nút xác nhận */}
+        {/* Confirm Action Button */}
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm uppercase tracking-wider rounded-2xl shadow-xl transition-all active:scale-95 border border-emerald-300"
+          className="btn-emerald action-btn-main"
         >
-          ✅ Chèn Mèo Nổ & Gỡ Bom!
+          ✅ Xác nhận nhét lá Mèo Nổ (Vị trí #{selectedIndex + 1})
         </button>
       </div>
     </div>

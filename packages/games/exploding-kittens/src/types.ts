@@ -181,6 +181,9 @@ export interface EKPlayerView {
     isOpen: boolean;
     originalActionType: string;
     originalPlayerId: string;
+    targetCard?: EKCard | null;
+    actionNameVi?: string;
+    comboType?: EKComboType | null;
     isCurrentlyNoped: boolean; // nopeCount % 2 !== 0
     nopeCount: number;
     secondsRemaining: number;
