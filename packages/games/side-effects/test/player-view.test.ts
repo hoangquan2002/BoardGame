@@ -131,4 +131,72 @@ describe('Side Effects PlayerView (Bảo mật thông tin ẩn) Tests (Task T2)'
     expect(viewC.trades[0]!.offerCardCount).toBe(1);
     expect(JSON.stringify(viewC).includes('trade-secret-a')).toBe(false);
   });
+
+  it('events: Lo âu & Nghiện cờ bạc & Đổi bài chỉ lộ loại lá cho 2 bên liên quan, người thứ 3 chỉ thấy số lượng', () => {
+    const rng = createRng('test-events-privacy');
+    const state = setupSideEffects(['A', 'B', 'C'], {}, rng);
+    state.activePlayerId = 'A';
+    const pA = state.players.find((p) => p.id === 'A')!;
+    const pB = state.players.find((p) => p.id === 'B')!;
+
+    pB.psyche[0]!.disorder.cardId = 'anxiety';
+    pB.psyche[0]!.drug = null;
+    pB.hand = [{ instanceId: 'secret-stolen-inst-1', cardId: 'lorazepam', type: 'drug' }];
+    pA.hand = [{ instanceId: 'ep-inst-1', cardId: 'episode', type: 'episode' }];
+
+    // A đánh Episode vào Lo âu của B -> sau đó lấy lá của B
+    const s1 = sideEffectsGame.apply(
+      state,
+      'A',
+      {
+        type: 'EPISODE',
+        episodeId: 'ep-inst-1',
+        targetPlayerId: 'B',
+        disorderId: pB.psyche[0]!.disorder.instanceId,
+      },
+      rng,
+    );
+    const s2 = sideEffectsGame.apply(
+      s1,
+      'A',
+      { type: 'RESOLVE_CHOICE', cardId: 'secret-stolen-inst-1' },
+      rng,
+    );
+
+    const viewA = sideEffectsGame.playerView(s2, 'A');
+    const viewB = sideEffectsGame.playerView(s2, 'B');
+    const viewC = sideEffectsGame.playerView(s2, 'C');
+
+    const stealEventA = viewA.events?.find((e) => e.type === 'ANXIETY_STEAL');
+    const stealEventB = viewB.events?.find((e) => e.type === 'ANXIETY_STEAL');
+    const stealEventC = viewC.events?.find((e) => e.type === 'ANXIETY_STEAL');
+
+    expect(stealEventA?.revealedCardIds).toEqual(['lorazepam']);
+    expect(stealEventB?.revealedCardIds).toEqual(['lorazepam']);
+    // Người ngoài C chỉ thấy count = 1, tuyệt đối không thấy tên lá hay instanceId
+    expect(stealEventC?.count).toBe(1);
+    expect(stealEventC?.revealedCardIds).toBeUndefined();
+    expect(JSON.stringify(viewC).includes('lorazepam')).toBe(false);
+    expect(JSON.stringify(viewC).includes('secret-stolen-inst-1')).toBe(false);
+  });
+
+  it('events: giới hạn cửa sổ trượt tối đa 20 sự kiện và seq tăng đơn điệu', () => {
+    const rng = createRng('test-events-cap');
+    let state = setupSideEffects(['A', 'B'], {}, rng);
+    for (let i = 0; i < 30; i++) {
+      const active = state.players.find((p) => p.id === state.activePlayerId)!;
+      if (active.hand.length > 6) {
+        const excess = active.hand.slice(0, active.hand.length - 6).map((c) => c.instanceId);
+        state = sideEffectsGame.apply(state, active.id, { type: 'DISCARD', cardIds: excess }, rng);
+      }
+      state = sideEffectsGame.apply(state, active.id, { type: 'END_TURN' }, rng);
+    }
+
+    const view = sideEffectsGame.playerView(state, 'A');
+    expect(view.events).toBeDefined();
+    expect(view.events!.length).toBeLessThanOrEqual(20);
+    for (let i = 1; i < view.events!.length; i++) {
+      expect(view.events![i]!.seq).toBeGreaterThan(view.events![i - 1]!.seq);
+    }
+  });
 });

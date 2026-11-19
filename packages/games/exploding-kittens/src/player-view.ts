@@ -1,5 +1,6 @@
 import { getCardById, getCardsByIds } from './deck.js';
 import type {
+  EKGameEventView,
   EKOpponentView,
   EKPendingDefuseInsert,
   EKPendingFavorGive,
@@ -126,6 +127,38 @@ export function createPlayerView(state: EKState, playerId: string): EKPlayerView
     knownTopCards = getCardsByIds(state.seeTheFutureState.cardIds);
   }
 
+  const eventViews: EKGameEventView[] = (state.events ?? []).map((ev) => {
+    const viewEv: EKGameEventView = {
+      seq: ev.seq,
+      type: ev.type,
+      actorId: ev.actorId,
+    };
+    if (ev.targetId !== undefined) viewEv.targetId = ev.targetId;
+    if (ev.cardId !== undefined) viewEv.card = getCardById(ev.cardId) ?? null;
+    if (ev.secondaryCardId !== undefined) {
+      viewEv.secondaryCard = getCardById(ev.secondaryCardId) ?? null;
+    }
+    if (ev.comboType !== undefined) viewEv.comboType = ev.comboType;
+    if (ev.requestedCardCode !== undefined) viewEv.requestedCardCode = ev.requestedCardCode;
+    if (ev.nopeCount !== undefined) viewEv.nopeCount = ev.nopeCount;
+    if (ev.isCurrentlyNoped !== undefined) viewEv.isCurrentlyNoped = ev.isCurrentlyNoped;
+    if (ev.turnsCount !== undefined) viewEv.turnsCount = ev.turnsCount;
+    if (ev.success !== undefined) viewEv.success = ev.success;
+    if (ev.wasAfterNopeWindow !== undefined) viewEv.wasAfterNopeWindow = ev.wasAfterNopeWindow;
+
+    if (ev.participantCardId !== undefined) {
+      const canSeeParticipantCard =
+        ev.type === 'DRAW_SAFE'
+          ? ev.actorId === playerId
+          : ev.actorId === playerId || ev.targetId === playerId;
+      if (canSeeParticipantCard) {
+        viewEv.revealedCard = getCardById(ev.participantCardId) ?? null;
+      }
+    }
+
+    return viewEv;
+  });
+
   return {
     myId: playerId,
     phase: state.phase,
@@ -148,5 +181,6 @@ export function createPlayerView(state: EKState, playerId: string): EKPlayerView
     winner: state.winner,
     turnCount: state.turnCount,
     lastActionDescriptionVi: state.lastActionDescriptionVi,
+    events: eventViews,
   };
 }

@@ -201,7 +201,14 @@ export function createAppServer(options: ServerOptions = {}) {
       return;
     }
 
-    const delay = options.botDelayMs ?? 1000;
+    const envBotDelay = process.env.BOT_DELAY_MS
+      ? parseInt(process.env.BOT_DELAY_MS, 10)
+      : undefined;
+    const configuredDelay =
+      options.botDelayMs ??
+      (envBotDelay !== undefined && !Number.isNaN(envBotDelay) ? envBotDelay : undefined);
+    const hasUrgentScheduledWindow = Boolean(game.scheduledAction?.(room.gameState));
+    const delay = configuredDelay ?? (hasUrgentScheduledWindow ? 800 : 2500);
     room.clearBotTimer();
 
     room.botTimer = setTimeout(() => {

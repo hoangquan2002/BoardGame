@@ -70,6 +70,7 @@ export const HandView: React.FC<HandViewProps> = ({
   return (
     <div
       ref={containerRef}
+      data-fx-anchor="se-self-hand"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -127,6 +128,7 @@ export const HandView: React.FC<HandViewProps> = ({
             <div
               key={card.instanceId}
               data-testid={`hand-card-${card.instanceId}`}
+              data-fx-anchor={`se-hand-card-${card.instanceId}`}
               data-card-index={idx}
               data-selected={isSelected ? 'true' : 'false'}
               onMouseEnter={() => setHoveredCardId(card.instanceId)}

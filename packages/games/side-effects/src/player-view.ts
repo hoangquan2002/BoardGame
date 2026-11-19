@@ -1,4 +1,5 @@
 import type {
+  SEGameEventView,
   SEPendingChoiceView,
   SEPlayerView,
   SEPlayerViewPlayer,
@@ -73,6 +74,36 @@ export function createPlayerView(state: SEState, playerId: string): SEPlayerView
       ? structuredClone(state.discardPile[state.discardPile.length - 1]!)
       : null;
 
+  const eventViews: SEGameEventView[] = (state.events ?? []).map((ev) => {
+    const isParticipant = ev.actorId === playerId || ev.targetId === playerId;
+    const viewEv: SEGameEventView = {
+      seq: ev.seq,
+      type: ev.type,
+      actorId: ev.actorId,
+    };
+    if (ev.targetId !== undefined) viewEv.targetId = ev.targetId;
+    if (ev.cardId !== undefined) viewEv.cardId = ev.cardId;
+    if (ev.disorderCardId !== undefined) viewEv.disorderCardId = ev.disorderCardId;
+    if (ev.disorderInstanceId !== undefined) viewEv.disorderInstanceId = ev.disorderInstanceId;
+    if (ev.actorId === playerId && ev.actorHandInstanceId !== undefined) {
+      viewEv.actorHandInstanceId = ev.actorHandInstanceId;
+    }
+    if (ev.count !== undefined) viewEv.count = ev.count;
+    if (ev.secondaryCount !== undefined) viewEv.secondaryCount = ev.secondaryCount;
+    if (ev.punishmentSummary !== undefined) viewEv.punishmentSummary = ev.punishmentSummary;
+    if (isParticipant && ev.participantCardIds && ev.participantCardIds.length > 0) {
+      viewEv.revealedCardIds = [...ev.participantCardIds];
+    }
+    if (
+      isParticipant &&
+      ev.participantSecondaryCardIds &&
+      ev.participantSecondaryCardIds.length > 0
+    ) {
+      viewEv.revealedSecondaryCardIds = [...ev.participantSecondaryCardIds];
+    }
+    return viewEv;
+  });
+
   return {
     playerIds: [...state.playerIds],
     players,
@@ -87,6 +118,7 @@ export function createPlayerView(state: SEState, playerId: string): SEPlayerView
     trades: tradeViews,
     winner: state.winner,
     logs: [...state.logs],
+    events: eventViews,
     options: structuredClone(state.options),
   };
 }

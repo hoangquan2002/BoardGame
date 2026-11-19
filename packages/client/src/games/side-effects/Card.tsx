@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { getCardInfoVi, type CardInfoVi } from '@boardgame/game-side-effects';
+import { feedback } from '../../app/feedback/index.js';
 
 export type CardSize = 'mini' | 'small' | 'normal' | 'zoom';
 
@@ -55,13 +56,7 @@ export const Card: React.FC<CardProps> = ({
 
     timerRef.current = setTimeout(() => {
       isHoldingRef.current = true;
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try {
-          navigator.vibrate(35);
-        } catch {
-          // ignore
-        }
-      }
+      feedback.vibrateCard();
       if (onHold) {
         onHold(info);
       }

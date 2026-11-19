@@ -99,6 +99,8 @@ export function setupSideEffects(
     inflictedThisTurn: [],
     winner: null,
     logs: [`Ván chơi bắt đầu. ${firstPlayerName} đi đầu tiên và rút ${firstPlayerDrawCount} lá.`],
+    events: [],
+    nextEventSeq: 1,
     options: {
       tremorsTimeoutSeconds,
       playerNames,

@@ -72,6 +72,72 @@ export interface SETradeView {
   giveCardCount: number;
 }
 
+export const SE_MAX_RECENT_EVENTS = 20;
+
+export type SEEventType =
+  | 'TREAT'
+  | 'THERAPY'
+  | 'GIVE_DISORDER'
+  | 'EPISODE'
+  | 'ANXIETY_STEAL'
+  | 'TREMORS_DISCARD'
+  | 'TREMORS_TIMEOUT'
+  | 'DISCARD'
+  | 'DRAW_TURN'
+  | 'SKIP_TURN'
+  | 'TURN_RESTRICTION'
+  | 'TRADE_PROPOSED'
+  | 'TRADE_RESPONDED'
+  | 'TRADE_REJECTED'
+  | 'TRADE_COMPLETED'
+  | 'TRADE_CANCELLED';
+
+export type SEEpisodePunishmentSummary =
+  | 'ANXIETY_PENDING'
+  | 'ANXIETY_EMPTY_HAND'
+  | 'TREMORS_PENDING'
+  | 'TREMORS_AUTO_DISCARD_HAND'
+  | 'GAMBLING_STEAL'
+  | 'GAMBLING_EMPTY_HAND'
+  | 'SUICIDAL_DISCARD_HAND'
+  | 'MADNESS_DISCARD_DRUGS'
+  | 'SKIP_TURN_APPLIED'
+  | 'PREVENT_PLAY_APPLIED'
+  | 'PREVENT_DRAW_APPLIED'
+  | 'ALREADY_INFLICTED';
+
+export interface SEInternalEvent {
+  seq: number;
+  type: SEEventType;
+  actorId: string;
+  targetId?: string;
+  cardId?: string;
+  disorderCardId?: string;
+  disorderInstanceId?: string;
+  actorHandInstanceId?: string;
+  count?: number;
+  secondaryCount?: number;
+  punishmentSummary?: SEEpisodePunishmentSummary;
+  participantCardIds?: string[];
+  participantSecondaryCardIds?: string[];
+}
+
+export interface SEGameEventView {
+  seq: number;
+  type: SEEventType;
+  actorId: string;
+  targetId?: string;
+  cardId?: string;
+  disorderCardId?: string;
+  disorderInstanceId?: string;
+  actorHandInstanceId?: string;
+  count?: number;
+  secondaryCount?: number;
+  punishmentSummary?: SEEpisodePunishmentSummary;
+  revealedCardIds?: string[];
+  revealedSecondaryCardIds?: string[];
+}
+
 export interface SEState {
   playerIds: string[];
   players: SEPlayer[];
@@ -86,6 +152,8 @@ export interface SEState {
   inflictedThisTurn: { victimId: string; effectType: string }[];
   winner: string | null;
   logs: string[];
+  events?: SEInternalEvent[];
+  nextEventSeq?: number;
   options: SEOptions;
 }
 
@@ -114,6 +182,7 @@ export interface SEPlayerView {
   trades: SETradeView[];
   winner: string | null;
   logs: string[];
+  events?: SEGameEventView[];
   options: SEOptions;
 }
 

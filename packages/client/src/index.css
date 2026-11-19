@@ -445,18 +445,19 @@ body {
 /* 2. Opponents Row */
 .opponents-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
   width: 100%;
 }
 
 .opponent-seat {
   min-width: 0;
-  border-radius: 10px;
-  padding: 6px 8px;
+  border-radius: 9px;
+  padding: 4px 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   position: relative;
   overflow: hidden;
 }
@@ -1478,6 +1479,508 @@ body {
   font-size: 12px;
   color: #e2e8f0;
   line-height: 1.45;
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUTS: HOME PAGE (SẢNH CHỌN GAME) & LOBBY ROOM (PHÒNG CHỜ)
+   ========================================================================== */
+
+/* --- Sảnh Chọn Game (Home Page) --- */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 10px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.home-restore-banner {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(234, 179, 8, 0.55);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(234, 179, 8, 0.18);
+}
+
+.home-main-card {
+  width: 100%;
+  border-radius: 20px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.home-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.home-validation-alert {
+  width: 100%;
+  padding: 9px 12px;
+  background-color: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 12px;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.home-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.home-col-games {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.home-game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.home-col-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.home-name-box {
+  width: 100%;
+}
+
+.home-buttons-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Home Page trên Màn Hình Rộng & Web PC (>= 768px) */
+@media (min-width: 768px) {
+  .home-container {
+    max-width: 980px;
+    padding: 24px 20px;
+    gap: 18px;
+  }
+
+  .home-main-card {
+    border-radius: 24px;
+    padding: 24px 26px;
+    gap: 18px;
+  }
+
+  .home-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: start;
+    gap: 24px;
+  }
+
+  .home-col-actions {
+    position: sticky;
+    top: 20px;
+    background: rgba(8, 22, 17, 0.78);
+    border: 1px solid rgba(212, 175, 55, 0.28);
+    border-radius: 18px;
+    padding: 20px 18px;
+    box-sizing: border-box;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-container {
+    max-width: 1040px;
+    padding: 28px 24px;
+  }
+}
+
+/* --- Phòng Chờ (Lobby Room Page) --- */
+.lobby-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 10px 24px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.lobby-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.lobby-col-info {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  padding: 16px 14px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.lobby-col-seats {
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  padding: 16px 14px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* Khối Mã phòng + QR code trên Mobile dọc: xếp cạnh nhau */
+.lobby-code-qr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.lobby-code-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-room-code {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  filter: drop-shadow(0 2px 8px rgba(234, 179, 8, 0.35));
+  margin: 0;
+  line-height: 1.1;
+}
+
+.lobby-copy-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.lobby-qr-side {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.lobby-qr-box {
+  padding: 6px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 2px solid rgba(212, 175, 55, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6), 0 0 14px rgba(234, 179, 8, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-qr-box canvas {
+  display: block;
+  border-radius: 4px;
+  width: 100px !important;
+  height: 100px !important;
+}
+
+.lobby-action-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  width: 100%;
+}
+
+/* Lobby Room Page trên Màn Hình Rộng & Web PC (>= 768px) */
+@media (min-width: 768px) {
+  .lobby-container {
+    max-width: 960px;
+    padding: 24px 20px 32px;
+    gap: 20px;
+  }
+
+  .lobby-grid {
+    display: grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    align-items: start;
+    gap: 20px;
+  }
+
+  .lobby-col-info {
+    padding: 22px 20px;
+    gap: 14px;
+  }
+
+  .lobby-col-seats {
+    padding: 22px 20px;
+    gap: 14px;
+  }
+
+  .lobby-code-qr-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .lobby-code-side {
+    align-items: center;
+    width: 100%;
+  }
+
+  .lobby-room-code {
+    font-size: 40px;
+    letter-spacing: 6px;
+    margin: 4px 0;
+  }
+
+  .lobby-copy-buttons {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .lobby-qr-box {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .lobby-qr-box canvas {
+    width: 130px !important;
+    height: 130px !important;
+  }
+}
+
+/* Sticky action footer cho màn hình thấp (chiều cao <= 700px và mobile) */
+@media (max-height: 700px) and (max-width: 767px) {
+  .lobby-action-footer {
+    position: sticky;
+    bottom: 0;
+    padding: 10px 12px calc(env(safe-area-inset-bottom, 8px) + 6px);
+    background: rgba(8, 20, 16, 0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.75);
+    z-index: 30;
+    margin-top: 8px;
+  }
+}
+
+/* Tối ưu hóa Landscape trên màn hình thấp (844x390, max-height: 500px) */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Home Page */
+  .home-container {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  .home-main-card {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .home-grid {
+    gap: 12px;
+  }
+  .home-col-actions {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  /* Lobby Room Page */
+  .lobby-container {
+    max-width: 100%;
+    padding: 6px 12px 8px;
+    gap: 8px;
+  }
+
+  .lobby-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .lobby-col-info,
+  .lobby-col-seats {
+    padding: 10px 12px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+
+  .lobby-code-qr-row {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .lobby-code-side {
+    align-items: flex-start !important;
+    gap: 4px;
+  }
+
+  .lobby-room-code {
+    font-size: 24px !important;
+    letter-spacing: 3px !important;
+    margin: 0 !important;
+  }
+
+  .lobby-copy-buttons {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .lobby-copy-buttons button {
+    min-height: 30px !important;
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+  }
+
+  .lobby-qr-box {
+    padding: 4px !important;
+    border-radius: 8px !important;
+  }
+
+  .lobby-qr-box canvas {
+    width: 84px !important;
+    height: 84px !important;
+  }
+
+  .lobby-seats-list {
+    max-height: 140px;
+    overflow-y: auto;
+    padding-right: 2px;
+    gap: 4px !important;
+  }
+
+  .lobby-seat-item {
+    padding: 5px 8px !important;
+    border-radius: 8px !important;
+  }
+
+  .lobby-action-footer {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .lobby-action-footer button {
+    min-height: 36px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* --- ACTION FX ANIMATIONS & HIGHLIGHTS --- */
+@keyframes fxBannerEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes fxImpactShake {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40% {
+    transform: translate3d(4px, 0, 0);
+  }
+  60% {
+    transform: translate3d(-3px, 0, 0);
+  }
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+}
+
+.action-fx-banner {
+  animation: fxBannerEnter 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-fx-actor='active'] {
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.72) !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+[data-fx-hit='emerald'] {
+  outline: 2px solid #34d399 !important;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.85) !important;
+}
+
+[data-fx-hit='sapphire'] {
+  outline: 2px solid #38bdf8 !important;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.85) !important;
+}
+
+[data-fx-hit='gold'] {
+  outline: 2px solid #facc15 !important;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.85) !important;
+}
+
+[data-fx-hit='amber'] {
+  outline: 2px solid #fbbf24 !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.9) !important;
+}
+
+[data-fx-hit='amber-shake'] {
+  outline: 2px solid #fbbf24 !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.9) !important;
+  animation: fxImpactShake 0.42s ease-in-out;
+}
+
+[data-fx-hit='ruby'] {
+  outline: 2px solid #f87171 !important;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.92) !important;
+}
+
+[data-fx-hit='ruby-shake'] {
+  outline: 2px solid #f87171 !important;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.92) !important;
+  animation: fxImpactShake 0.45s ease-in-out;
 }
 
 /* --- ACCESSIBILITY: REDUCED MOTION --- */

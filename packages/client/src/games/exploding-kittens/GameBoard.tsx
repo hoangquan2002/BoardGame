@@ -8,7 +8,9 @@ import {
   type EKPlayerView,
 } from '@boardgame/game-exploding-kittens';
 import { feedback } from '../../app/feedback/index.js';
+import { ActionFXOverlay } from '../../app/actionFX/index.js';
 import type { UserSession } from '../../net/session.js';
+import { mapExplodingKittensEventsToFX } from './actionFXMapper.js';
 import { Card } from './Card.js';
 import { CardZoomModal } from './CardZoomModal.js';
 import {
@@ -46,8 +48,21 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
   const [isDiscardListOpen, setIsDiscardListOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => feedback.isSoundEnabled());
+  const [vibrateEnabled, setVibrateEnabled] = useState(() => feedback.isVibrationEnabled());
   const [isSeeFutureDismissed, setIsSeeFutureDismissed] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(45);
+  const [hasActiveFXBanner, setHasActiveFXBanner] = useState(false);
+  const [isLandscape, setIsLandscape] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : false
+  );
+
+  useEffect(() => {
+    const onResize = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // States chọn mục tiêu phụ trợ
   const [pendingComboAction, setPendingComboAction] = useState<
@@ -58,6 +73,41 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
   >(null);
 
   const prevActivePlayerRef = useRef<string | null>(null);
+  const handFanRef = useRef<HTMLDivElement | null>(null);
+  const [handWidth, setHandWidth] = useState<number>(360);
+  const [measuredCardWidth, setMeasuredCardWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth >= 1024 && window.innerHeight >= 650) return 142;
+      if (window.innerHeight <= 700 && window.innerWidth <= 500) return 76;
+    }
+    return 84;
+  });
+
+  useEffect(() => {
+    const el = handFanRef.current;
+    if (!el) return;
+    const updateDimensions = () => {
+      if (el.clientWidth > 0) {
+        setHandWidth(el.clientWidth);
+      }
+      const firstCard = el.querySelector<HTMLElement>('.hand-card');
+      if (firstCard && firstCard.offsetWidth > 0) {
+        setMeasuredCardWidth(firstCard.offsetWidth);
+      } else if (typeof window !== 'undefined') {
+        if (window.innerWidth >= 1024 && window.innerHeight >= 650) {
+          setMeasuredCardWidth(142);
+        } else if (window.innerHeight <= 700 && window.innerWidth <= 500) {
+          setMeasuredCardWidth(76);
+        } else {
+          setMeasuredCardWidth(84);
+        }
+      }
+    };
+    updateDimensions();
+    const ro = new ResizeObserver(updateDimensions);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // --- Map tên người chơi từ RoomState ---
   const playerNameMap = useMemo(() => {
@@ -80,6 +130,14 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
 
   const isMyTurn = gameView.activePlayerId === session.playerId;
   const isAlive = gameView.alive;
+
+  const fxItems = useMemo(() => {
+    return mapExplodingKittensEventsToFX(
+      gameView.events,
+      session.playerId,
+      (id: string) => (id === session.playerId ? 'Bạn' : playerNameMap.get(id) ?? id),
+    );
+  }, [gameView.events, session.playerId, playerNameMap]);
 
   // Format action text: thay thế toàn bộ id kỹ thuật bằng tên hiển thị
   const formatActionText = (text: string | null | undefined): string => {
@@ -422,6 +480,33 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
       (gameView.topDiscard.imageFile ? `/games/exploding-kittens/cards/${gameView.topDiscard.imageFile}` : '')
     : null;
 
+  // Tính margin chồng so le linh hoạt cho bài trên tay
+  const cardCount = gameView.myHand.length;
+  const baseCardWidth =
+    measuredCardWidth ||
+    (typeof window !== 'undefined' && window.innerWidth >= 1024 && window.innerHeight >= 650
+      ? 142
+      : typeof window !== 'undefined' && window.innerHeight <= 700 && window.innerWidth <= 500
+      ? 76
+      : 84);
+  let dynamicMarginLeft = -46;
+
+  if (cardCount > 1) {
+    const availableSpan = Math.max(240, handWidth - 24);
+    const neededWidth = cardCount * baseCardWidth;
+    if (neededWidth <= availableSpan) {
+      dynamicMarginLeft = Math.min(8, Math.floor((availableSpan - neededWidth) / (cardCount - 1)));
+    } else {
+      const step = (availableSpan - baseCardWidth) / (cardCount - 1);
+      dynamicMarginLeft = Math.round(step - baseCardWidth);
+    }
+    // Giới hạn chắc chắn để tổng chiều rộng dãy bài không bao giờ vượt quá availableSpan
+    const maxAllowedMargin = Math.floor((availableSpan - baseCardWidth) / (cardCount - 1)) - baseCardWidth;
+    if (dynamicMarginLeft > maxAllowedMargin) {
+      dynamicMarginLeft = maxAllowedMargin;
+    }
+  }
+
   return (
     <main className="ek-table">
       {/* ========================================================
@@ -488,6 +573,7 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
             return (
               <article
                 key={opp.id}
+                data-fx-anchor={`ek-seat-${opp.id}`}
                 className={`opponent-seat casino-glass-panel ${
                   !opp.alive ? 'eliminated' : isOppActive ? 'active-turn' : ''
                 }`}
@@ -520,6 +606,7 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
             {/* Draw Deck */}
             <div className="pile-column">
               <div
+                data-fx-anchor="ek-draw-pile"
                 className="pile-card-wrap draw-stack-3d"
                 onClick={isMyTurn && gameView.phase === 'TURN_PLAY' ? handleDrawCard : undefined}
                 style={{
@@ -547,6 +634,7 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
             {/* Discard Pile */}
             <div className="pile-column">
               <div
+                data-fx-anchor="ek-discard-pile"
                 className="pile-card-wrap"
                 onClick={() => setIsDiscardListOpen(true)}
                 style={{ cursor: 'pointer' }}
@@ -594,8 +682,18 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
               onPassNope={handlePassNope}
             />
           ) : (
-            <div className="event-banner" role="status">
-              <span>{formatActionText(gameView.lastActionDescriptionVi)}</span>
+            <div
+              className="event-banner"
+              role="status"
+              style={{ opacity: hasActiveFXBanner ? 0.72 : 1, transition: 'opacity 0.2s ease' }}
+            >
+              <span>
+                {hasActiveFXBanner
+                  ? isMyTurn
+                    ? 'Lượt của bạn — đánh bài hoặc bấm Rút bài để kết thúc lượt'
+                    : `Đang chờ ${getPlayerName(gameView.activePlayerId)} đi...`
+                  : formatActionText(gameView.lastActionDescriptionVi)}
+              </span>
             </div>
           )}
         </section>
@@ -662,8 +760,8 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
             <span>💡 Chạm giữ hoặc chuột phải để phóng to</span>
           </div>
 
-          <div className="hand-fan">
-            {gameView.myHand.map((card: EKCard) => {
+          <div className="hand-fan" ref={handFanRef} data-fx-anchor="ek-self-hand">
+            {gameView.myHand.map((card: EKCard, idx: number) => {
               const isSelected = selectedCardIds.includes(card.id);
               const orderIndex =
                 isSelected && selectedCardIds.length >= 2
@@ -674,9 +772,14 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
                 <Card
                   key={card.id}
                   card={card}
+                  fxAnchor={`ek-hand-card-${card.id}`}
                   className="hand-card"
                   isSelected={isSelected}
                   orderBadge={orderIndex}
+                  style={{
+                    marginLeft: idx > 0 ? `${dynamicMarginLeft}px` : undefined,
+                    zIndex: isSelected ? 40 : idx + 1,
+                  }}
                   onClick={() => handleToggleCardSelect(card.id)}
                   onHold={(c) => setZoomedCard(c)}
                 />
@@ -860,6 +963,24 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
               </button>
               <button
                 type="button"
+                className="preset-btn"
+                onClick={toggleSound}
+              >
+                {soundEnabled ? '🔊 Âm thanh: Đang bật' : '🔇 Âm thanh: Đang tắt'}
+              </button>
+              <button
+                type="button"
+                className="preset-btn"
+                onClick={() => {
+                  const next = feedback.toggleVibration();
+                  setVibrateEnabled(next);
+                  if (next) feedback.vibrateCard();
+                }}
+              >
+                {vibrateEnabled ? '📳 Rung phản hồi: Đang bật' : '📴 Rung phản hồi: Đang tắt'}
+              </button>
+              <button
+                type="button"
                 className="btn-danger action-btn-main"
                 style={{ marginTop: '8px' }}
                 onClick={() => {
@@ -885,6 +1006,15 @@ export const GameBoard: React.FC<EKGameBoardProps> = ({
 
       {/* 11. Modal Luật Chơi */}
       <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
+
+      {/* Lớp Animation lá bài bay + Thanh thông báo hành động */}
+      <ActionFXOverlay
+        items={fxItems}
+        isLandscape={isLandscape}
+        landscapeLeftPercent={45}
+        topOffsetPx={isLandscape ? 10 : 44}
+        onActiveBannerChange={setHasActiveFXBanner}
+      />
 
       {/* 12. Modal Kết Thúc Ván Đấu (Winner) */}
       {gameView.winner && (

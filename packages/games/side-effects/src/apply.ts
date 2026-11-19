@@ -1,9 +1,26 @@
 import type { Rng } from '@boardgame/core';
 import { getDisorderDef, getDisorderNameVi, getDrugNameVi } from './deck.js';
-import type { CardInstance, SEAction, SEState } from './types.js';
+import {
+  SE_MAX_RECENT_EVENTS,
+  type CardInstance,
+  type SEAction,
+  type SEEpisodePunishmentSummary,
+  type SEInternalEvent,
+  type SEState,
+} from './types.js';
 
 export function getPlayerName(state: SEState, playerId: string): string {
   return state.options.playerNames?.[playerId] ?? playerId;
+}
+
+function pushSEEvent(state: SEState, event: Omit<SEInternalEvent, 'seq'>): void {
+  const seq = state.nextEventSeq ?? 1;
+  state.nextEventSeq = seq + 1;
+  const nextEvents = state.events ? [...state.events, { ...event, seq }] : [{ ...event, seq }];
+  state.events =
+    nextEvents.length > SE_MAX_RECENT_EVENTS
+      ? nextEvents.slice(-SE_MAX_RECENT_EVENTS)
+      : nextEvents;
 }
 
 export function applySideEffects(
@@ -18,11 +35,20 @@ export function applySideEffects(
     case 'CHOICE_TIMEOUT': {
       if (next.pendingChoice && next.pendingChoice.type === 'TREMORS_DISCARD') {
         const victim = next.players.find((p) => p.id === next.pendingChoice!.playerId)!;
+        const lostCount = victim.hand.length;
+        const lastCardId = victim.hand[victim.hand.length - 1]?.cardId;
         next.discardPile.push(...victim.hand);
         victim.hand = [];
         next.logs.push(
           `Hết thời gian! ${getPlayerName(next, victim.id)} mất toàn bộ bài trên tay do Chứng run.`,
         );
+        pushSEEvent(next, {
+          type: 'TREMORS_TIMEOUT',
+          actorId: victim.id,
+          disorderCardId: 'tremors',
+          count: lostCount,
+          cardId: lastCardId,
+        });
         next.pendingChoice = null;
         checkAndSetWinner(next);
       }
@@ -46,6 +72,14 @@ export function applySideEffects(
             next.logs.push(
               `${getPlayerName(next, attacker.id)} đã lấy 1 lá bài của ${getPlayerName(next, victim.id)}.`,
             );
+            pushSEEvent(next, {
+              type: 'ANXIETY_STEAL',
+              actorId: attacker.id,
+              targetId: victim.id,
+              disorderCardId: 'anxiety',
+              count: 1,
+              participantCardIds: [stolen.cardId],
+            });
           }
         }
         next.pendingChoice = null;
@@ -53,16 +87,27 @@ export function applySideEffects(
       } else if (choice.type === 'TREMORS_DISCARD') {
         const victim = next.players.find((p) => p.id === playerId)!;
         const cardIds = action.cardIds ?? (action.cardId ? [action.cardId] : []);
+        let discardedCount = 0;
+        let lastDiscardedCardId: string | undefined;
         for (const id of cardIds) {
           const idx = victim.hand.findIndex((c) => c.instanceId === id);
           if (idx !== -1) {
             const [discarded] = victim.hand.splice(idx, 1);
             next.discardPile.push(discarded);
+            discardedCount++;
+            lastDiscardedCardId = discarded.cardId;
           }
         }
         next.logs.push(
           `${getPlayerName(next, victim.id)} đã bỏ ${cardIds.length} lá bài do Chứng run.`,
         );
+        pushSEEvent(next, {
+          type: 'TREMORS_DISCARD',
+          actorId: victim.id,
+          disorderCardId: 'tremors',
+          count: discardedCount,
+          cardId: lastDiscardedCardId,
+        });
         next.pendingChoice = null;
         checkAndSetWinner(next);
       }
@@ -72,13 +117,24 @@ export function applySideEffects(
     case 'TREAT': {
       const player = next.players.find((p) => p.id === playerId)!;
       const drugIdx = player.hand.findIndex((c) => c.instanceId === action.drugId);
-      const [drugCard] = player.hand.splice(drugIdx, 1);
+      const [drugCard] = drugIdx !== -1 ? player.hand.splice(drugIdx, 1) : [];
       const slot = player.psyche.find((s) => s.disorder.instanceId === action.disorderId)!;
-      slot.drug = drugCard;
+      if (drugCard) {
+        slot.drug = drugCard;
+      }
       next.cardsPlayedThisTurn++;
       next.logs.push(
-        `${getPlayerName(next, player.id)} dùng Thuốc ${getDrugNameVi(drugCard.cardId)} điều trị ${getDisorderNameVi(slot.disorder.cardId)}.`,
+        `${getPlayerName(next, player.id)} dùng Thuốc ${getDrugNameVi(drugCard?.cardId ?? '')} điều trị ${getDisorderNameVi(slot.disorder.cardId)}.`,
       );
+      pushSEEvent(next, {
+        type: 'TREAT',
+        actorId: player.id,
+        targetId: player.id,
+        cardId: drugCard?.cardId,
+        disorderCardId: slot.disorder.cardId,
+        disorderInstanceId: slot.disorder.instanceId,
+        actorHandInstanceId: drugCard?.instanceId ?? action.drugId,
+      });
       checkAndSetWinner(next);
       return next;
     }
@@ -86,8 +142,10 @@ export function applySideEffects(
     case 'THERAPY': {
       const player = next.players.find((p) => p.id === playerId)!;
       const therapyIdx = player.hand.findIndex((c) => c.instanceId === action.therapyId);
-      const [therapyCard] = player.hand.splice(therapyIdx, 1);
-      next.discardPile.push(therapyCard);
+      const [therapyCard] = therapyIdx !== -1 ? player.hand.splice(therapyIdx, 1) : [];
+      if (therapyCard) {
+        next.discardPile.push(therapyCard);
+      }
 
       const slotIdx = player.psyche.findIndex((s) => s.disorder.instanceId === action.disorderId);
       const [slot] = player.psyche.splice(slotIdx, 1);
@@ -100,6 +158,15 @@ export function applySideEffects(
       next.logs.push(
         `${getPlayerName(next, player.id)} dùng Liệu Pháp loại bỏ Bệnh Lý ${getDisorderNameVi(slot.disorder.cardId)}.`,
       );
+      pushSEEvent(next, {
+        type: 'THERAPY',
+        actorId: player.id,
+        targetId: player.id,
+        cardId: therapyCard?.cardId ?? 'therapy',
+        disorderCardId: slot.disorder.cardId,
+        disorderInstanceId: slot.disorder.instanceId,
+        actorHandInstanceId: therapyCard?.instanceId ?? action.therapyId,
+      });
       checkAndSetWinner(next);
       return next;
     }
@@ -108,12 +175,23 @@ export function applySideEffects(
       const player = next.players.find((p) => p.id === playerId)!;
       const target = next.players.find((p) => p.id === action.targetPlayerId)!;
       const disorderIdx = player.hand.findIndex((c) => c.instanceId === action.disorderCardId);
-      const [disorderCard] = player.hand.splice(disorderIdx, 1);
-      target.psyche.push({ disorder: disorderCard, drug: null });
+      const [disorderCard] = disorderIdx !== -1 ? player.hand.splice(disorderIdx, 1) : [];
+      if (disorderCard) {
+        target.psyche.push({ disorder: disorderCard, drug: null });
+      }
       next.cardsPlayedThisTurn++;
       next.logs.push(
-        `${getPlayerName(next, player.id)} đã đưa Bệnh Lý ${getDisorderNameVi(disorderCard.cardId)} cho ${getPlayerName(next, target.id)}.`,
+        `${getPlayerName(next, player.id)} đã đưa Bệnh Lý ${getDisorderNameVi(disorderCard?.cardId ?? '')} cho ${getPlayerName(next, target.id)}.`,
       );
+      pushSEEvent(next, {
+        type: 'GIVE_DISORDER',
+        actorId: player.id,
+        targetId: target.id,
+        cardId: disorderCard?.cardId,
+        disorderCardId: disorderCard?.cardId,
+        disorderInstanceId: disorderCard?.instanceId ?? action.disorderCardId,
+        actorHandInstanceId: disorderCard?.instanceId ?? action.disorderCardId,
+      });
       checkAndSetWinner(next);
       return next;
     }
@@ -122,8 +200,10 @@ export function applySideEffects(
       const attacker = next.players.find((p) => p.id === playerId)!;
       const target = next.players.find((p) => p.id === action.targetPlayerId)!;
       const episodeIdx = attacker.hand.findIndex((c) => c.instanceId === action.episodeId);
-      const [episodeCard] = attacker.hand.splice(episodeIdx, 1);
-      next.discardPile.push(episodeCard);
+      const [episodeCard] = episodeIdx !== -1 ? attacker.hand.splice(episodeIdx, 1) : [];
+      if (episodeCard) {
+        next.discardPile.push(episodeCard);
+      }
       next.cardsPlayedThisTurn++;
 
       const slot = target.psyche.find((s) => s.disorder.instanceId === action.disorderId)!;
@@ -132,21 +212,43 @@ export function applySideEffects(
         `${getPlayerName(next, attacker.id)} đánh Triệu Chứng vào ${getDisorderNameVi(disorderType)} của ${getPlayerName(next, target.id)}.`,
       );
 
-      applyPunishment(next, attacker, target, disorderType, rng);
+      const outcome = applyPunishment(next, attacker, target, disorderType, rng);
+      pushSEEvent(next, {
+        type: 'EPISODE',
+        actorId: attacker.id,
+        targetId: target.id,
+        cardId: episodeCard?.cardId ?? 'episode',
+        disorderCardId: disorderType,
+        disorderInstanceId: slot.disorder.instanceId,
+        actorHandInstanceId: episodeCard?.instanceId ?? action.episodeId,
+        punishmentSummary: outcome?.summary,
+        count: outcome?.count,
+        participantCardIds: outcome?.stolenCardIds,
+      });
       checkAndSetWinner(next);
       return next;
     }
 
     case 'DISCARD': {
       const player = next.players.find((p) => p.id === playerId)!;
+      let discardedCount = 0;
+      let lastDiscardedCardId: string | undefined;
       for (const id of action.cardIds) {
         const idx = player.hand.findIndex((c) => c.instanceId === id);
         if (idx !== -1) {
           const [discarded] = player.hand.splice(idx, 1);
           next.discardPile.push(discarded);
+          discardedCount++;
+          lastDiscardedCardId = discarded.cardId;
         }
       }
       next.logs.push(`${getPlayerName(next, player.id)} đã bỏ ${action.cardIds.length} lá bài.`);
+      pushSEEvent(next, {
+        type: 'DISCARD',
+        actorId: player.id,
+        count: discardedCount,
+        cardId: lastDiscardedCardId,
+      });
       return next;
     }
 
@@ -157,6 +259,11 @@ export function applySideEffects(
     }
 
     case 'PROPOSE_TRADE': {
+      const proposer = next.players.find((p) => p.id === playerId);
+      const offeredTypeIds = action.offerCardIds
+        .map((id) => proposer?.hand.find((c) => c.instanceId === id)?.cardId)
+        .filter((cid): cid is string => Boolean(cid));
+
       const tradeId = `trade_${next.turnNumber}_${next.logs.length + 1}_${rng.int(100000)}`;
       next.trades.push({
         tradeId,
@@ -168,6 +275,13 @@ export function applySideEffects(
       next.logs.push(
         `${getPlayerName(next, playerId)} đề xuất giao dịch với ${getPlayerName(next, action.targetPlayerId)}.`,
       );
+      pushSEEvent(next, {
+        type: 'TRADE_PROPOSED',
+        actorId: playerId,
+        targetId: action.targetPlayerId,
+        count: action.offerCardIds.length,
+        participantCardIds: offeredTypeIds,
+      });
       return next;
     }
 
@@ -182,12 +296,30 @@ export function applySideEffects(
         next.logs.push(
           `${getPlayerName(next, playerId)} đã từ chối giao dịch của ${getPlayerName(next, trade.proposerId)}.`,
         );
+        pushSEEvent(next, {
+          type: 'TRADE_REJECTED',
+          actorId: playerId,
+          targetId: trade.proposerId,
+        });
       } else {
-        trade.giveCardIds = [...(action.giveCardIds ?? [])];
+        const responder = next.players.find((p) => p.id === playerId);
+        const giveIds = [...(action.giveCardIds ?? [])];
+        const givenTypeIds = giveIds
+          .map((id) => responder?.hand.find((c) => c.instanceId === id)?.cardId)
+          .filter((cid): cid is string => Boolean(cid));
+
+        trade.giveCardIds = giveIds;
         trade.status = 'RESPONDED';
         next.logs.push(
           `${getPlayerName(next, playerId)} đã đồng ý đề xuất và phản hồi giao dịch với ${getPlayerName(next, trade.proposerId)}.`,
         );
+        pushSEEvent(next, {
+          type: 'TRADE_RESPONDED',
+          actorId: playerId,
+          targetId: trade.proposerId,
+          count: giveIds.length,
+          participantCardIds: givenTypeIds,
+        });
       }
       return next;
     }
@@ -203,6 +335,11 @@ export function applySideEffects(
         next.logs.push(
           `${getPlayerName(next, playerId)} đã huỷ giao dịch với ${getPlayerName(next, trade.targetPlayerId)}.`,
         );
+        pushSEEvent(next, {
+          type: 'TRADE_CANCELLED',
+          actorId: playerId,
+          targetId: trade.targetPlayerId,
+        });
       } else {
         const proposer = next.players.find((p) => p.id === trade.proposerId)!;
         const target = next.players.find((p) => p.id === trade.targetPlayerId)!;
@@ -229,6 +366,15 @@ export function applySideEffects(
         next.logs.push(
           `${getPlayerName(next, proposer.id)} và ${getPlayerName(next, target.id)} đã hoàn tất giao dịch.`,
         );
+        pushSEEvent(next, {
+          type: 'TRADE_COMPLETED',
+          actorId: proposer.id,
+          targetId: target.id,
+          count: offerCards.length,
+          secondaryCount: giveCards.length,
+          participantCardIds: offerCards.map((c) => c.cardId),
+          participantSecondaryCardIds: giveCards.map((c) => c.cardId),
+        });
         checkAndSetWinner(next);
       }
       return next;
@@ -237,12 +383,25 @@ export function applySideEffects(
     case 'CANCEL_TRADE': {
       const tradeIdx = next.trades.findIndex((t) => t.tradeId === action.tradeId);
       if (tradeIdx !== -1) {
+        const trade = next.trades[tradeIdx]!;
+        const otherId = trade.proposerId === playerId ? trade.targetPlayerId : trade.proposerId;
         next.trades.splice(tradeIdx, 1);
         next.logs.push(`${getPlayerName(next, playerId)} đã huỷ giao dịch.`);
+        pushSEEvent(next, {
+          type: 'TRADE_CANCELLED',
+          actorId: playerId,
+          targetId: otherId,
+        });
       }
       return next;
     }
   }
+}
+
+interface PunishmentOutcome {
+  summary: SEEpisodePunishmentSummary;
+  count?: number;
+  stolenCardIds?: string[];
 }
 
 function applyPunishment(
@@ -251,10 +410,10 @@ function applyPunishment(
   target: SEState['players'][0],
   disorderType: string,
   rng: Rng,
-): void {
+): PunishmentOutcome | null {
   const disorderDef = getDisorderDef(disorderType);
   if (!disorderDef) {
-    return;
+    return null;
   }
   const effect = disorderDef.punishment.effect;
   const attackerName = getPlayerName(state, attacker.id);
@@ -265,24 +424,27 @@ function applyPunishment(
     case 'ATTACKER_STEALS_CHOSEN_CARD': {
       if (target.hand.length === 0) {
         state.logs.push(`${targetName} không có bài trên tay nên ${disorderNameVi} không có tác dụng.`);
+        return { summary: 'ANXIETY_EMPTY_HAND', count: 0 };
       } else {
         state.pendingChoice = {
           type: 'ANXIETY_STEAL',
           playerId: attacker.id,
           victimId: target.id,
         };
+        return { summary: 'ANXIETY_PENDING', count: 1 };
       }
-      break;
     }
 
     case 'DISCARD_CARDS_OR_ENTIRE_HAND': {
       const count = effect.params.count;
       if (target.hand.length <= count) {
+        const lostCount = target.hand.length;
         state.discardPile.push(...target.hand);
         target.hand = [];
         state.logs.push(
           `${targetName} có không quá 3 lá nên phải bỏ toàn bộ bài trên tay do ${disorderNameVi}.`,
         );
+        return { summary: 'TREMORS_AUTO_DISCARD_HAND', count: lostCount };
       } else {
         state.pendingChoice = {
           type: 'TREMORS_DISCARD',
@@ -290,8 +452,8 @@ function applyPunishment(
           attackerId: attacker.id,
           timeoutSeconds: state.options.tremorsTimeoutSeconds,
         };
+        return { summary: 'TREMORS_PENDING', count };
       }
-      break;
     }
 
     case 'ATTACKER_STEALS_RANDOM_CARDS': {
@@ -304,30 +466,38 @@ function applyPunishment(
         state.logs.push(
           `${attackerName} đã lấy ngẫu nhiên ${count} lá bài từ tay ${targetName} do ${disorderNameVi}.`,
         );
+        return {
+          summary: 'GAMBLING_STEAL',
+          count,
+          stolenCardIds: stolen.map((c) => c.cardId),
+        };
       } else {
         state.logs.push(`${targetName} không có bài trên tay nên ${disorderNameVi} không có tác dụng.`);
+        return { summary: 'GAMBLING_EMPTY_HAND', count: 0 };
       }
-      break;
     }
 
     case 'DISCARD_ENTIRE_HAND': {
+      const lostCount = target.hand.length;
       state.discardPile.push(...target.hand);
       target.hand = [];
       state.logs.push(`${targetName} phải bỏ toàn bộ bài trên tay do ${disorderNameVi}.`);
-      break;
+      return { summary: 'SUICIDAL_DISCARD_HAND', count: lostCount };
     }
 
     case 'DISCARD_ALL_DRUGS_FROM_PSYCHE': {
+      let removedCount = 0;
       for (const s of target.psyche) {
         if (s.drug !== null) {
           state.discardPile.push(s.drug);
           s.drug = null;
+          removedCount++;
         }
       }
       state.logs.push(
         `Mọi lá Thuốc trong Thể Trạng của ${targetName} bị loại bỏ do ${disorderNameVi}.`,
       );
-      break;
+      return { summary: 'MADNESS_DISCARD_DRUGS', count: removedCount };
     }
 
     case 'SKIP_TURN': {
@@ -339,12 +509,13 @@ function applyPunishment(
         target.skipTurns += rounds;
         state.inflictedThisTurn.push({ victimId: target.id, effectType: 'SKIP_TURN' });
         state.logs.push(`${targetName} sẽ bị mất 1 lượt tiếp theo do ${disorderNameVi}.`);
+        return { summary: 'SKIP_TURN_APPLIED', count: rounds };
       } else {
         state.logs.push(
           `${targetName} đã bị ${disorderNameVi} trong lượt này nên không cộng dồn thêm.`,
         );
+        return { summary: 'ALREADY_INFLICTED', count: 0 };
       }
-      break;
     }
 
     case 'PREVENT_PLAY_CARDS': {
@@ -359,12 +530,13 @@ function applyPunishment(
           effectType: 'PREVENT_PLAY_CARDS',
         });
         state.logs.push(`${targetName} sẽ không thể đánh bài ở lượt tiếp theo do ${disorderNameVi}.`);
+        return { summary: 'PREVENT_PLAY_APPLIED', count: rounds };
       } else {
         state.logs.push(
           `${targetName} đã bị ${disorderNameVi} trong lượt này nên không cộng dồn thêm.`,
         );
+        return { summary: 'ALREADY_INFLICTED', count: 0 };
       }
-      break;
     }
 
     case 'PREVENT_DRAW': {
@@ -378,14 +550,16 @@ function applyPunishment(
         state.logs.push(
           `${targetName} sẽ không được rút bài ở lượt tiếp theo do ${disorderNameVi}.`,
         );
+        return { summary: 'PREVENT_DRAW_APPLIED', count: rounds };
       } else {
         state.logs.push(
           `${targetName} đã bị ${disorderNameVi} trong lượt này nên không cộng dồn thêm.`,
         );
+        return { summary: 'ALREADY_INFLICTED', count: 0 };
       }
-      break;
     }
   }
+  return null;
 }
 
 export function drawCards(
@@ -448,6 +622,11 @@ function advanceTurn(state: SEState, rng: Rng): void {
       state.logs.push(
         `${getPlayerName(state, nextPlayer.id)} bị Trầm cảm, mất lượt này.`,
       );
+      pushSEEvent(state, {
+        type: 'SKIP_TURN',
+        actorId: nextPlayer.id,
+        disorderCardId: 'depression',
+      });
       nextIndex = (nextIndex + 1) % n;
       attempts++;
       continue;
@@ -465,6 +644,11 @@ function advanceTurn(state: SEState, rng: Rng): void {
     state.logs.push(
       `${getPlayerName(state, activePlayer.id)} bị Liệt dương, không thể đánh bài trong lượt này.`,
     );
+    pushSEEvent(state, {
+      type: 'TURN_RESTRICTION',
+      actorId: activePlayer.id,
+      disorderCardId: 'impotence',
+    });
   } else {
     state.preventPlayCards = false;
   }
@@ -474,10 +658,22 @@ function advanceTurn(state: SEState, rng: Rng): void {
     state.logs.push(
       `${getPlayerName(state, activePlayer.id)} bị Chứng biếng ăn, không được rút bài đầu lượt.`,
     );
+    pushSEEvent(state, {
+      type: 'TURN_RESTRICTION',
+      actorId: activePlayer.id,
+      disorderCardId: 'anorexia',
+    });
   } else {
     const drawn = drawCards(state, activePlayer.id, 2, rng);
     state.logs.push(
       `${getPlayerName(state, activePlayer.id)} bắt đầu lượt và rút ${drawn} lá bài.`,
     );
+    if (drawn > 0) {
+      pushSEEvent(state, {
+        type: 'DRAW_TURN',
+        actorId: activePlayer.id,
+        count: drawn,
+      });
+    }
   }
 }

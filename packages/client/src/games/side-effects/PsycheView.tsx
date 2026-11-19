@@ -63,6 +63,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
 
   return (
     <div
+      data-fx-anchor={isSelf ? 'se-self-psyche' : undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -139,6 +140,7 @@ export const PsycheView: React.FC<PsycheViewProps> = ({
                 }
               }}
               data-testid={`psyche-slot-${slot.disorder.instanceId}`}
+              data-fx-anchor={isSelf ? `se-self-slot-${slot.disorder.instanceId}` : undefined}
               data-target={isTargetable ? 'true' : undefined}
               style={{
                 position: 'relative',

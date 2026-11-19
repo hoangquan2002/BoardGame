@@ -90,6 +90,65 @@ export type EKPendingState =
   | EKPendingFiveDiffPick
   | EKPendingDefuseInsert;
 
+export const EK_MAX_RECENT_EVENTS = 20;
+
+export type EKEventType =
+  | 'ACTION_PENDING_NOPE'
+  | 'NOPE_PLAYED'
+  | 'ACTION_NOPED'
+  | 'ATTACK_RESOLVED'
+  | 'SKIP_RESOLVED'
+  | 'SHUFFLE_RESOLVED'
+  | 'SEE_FUTURE_RESOLVED'
+  | 'FAVOR_REQUESTED'
+  | 'FAVOR_EMPTY'
+  | 'FAVOR_GIVEN'
+  | 'COMBO_2_RESOLVED'
+  | 'COMBO_3_RESOLVED'
+  | 'COMBO_5_PROMPT'
+  | 'DISCARD_PICKED'
+  | 'DRAW_SAFE'
+  | 'EXPLODING_DEFUSED'
+  | 'PLAYER_EXPLODED'
+  | 'KITTEN_INSERTED';
+
+export interface EKInternalEvent {
+  seq: number;
+  type: EKEventType;
+  actorId: string;
+  targetId?: string;
+  /** Publicly visible card ID (e.g. played to discardPile or Exploding Kitten) */
+  cardId?: string;
+  secondaryCardId?: string;
+  comboType?: EKComboType;
+  requestedCardCode?: EKCardCode;
+  nopeCount?: number;
+  isCurrentlyNoped?: boolean;
+  turnsCount?: number;
+  success?: boolean;
+  wasAfterNopeWindow?: boolean;
+  /** Secret transferred card ID visible ONLY to actorId & targetId */
+  participantCardId?: string;
+}
+
+export interface EKGameEventView {
+  seq: number;
+  type: EKEventType;
+  actorId: string;
+  targetId?: string;
+  card?: EKCard | null;
+  secondaryCard?: EKCard | null;
+  comboType?: EKComboType;
+  requestedCardCode?: EKCardCode;
+  nopeCount?: number;
+  isCurrentlyNoped?: boolean;
+  turnsCount?: number;
+  success?: boolean;
+  wasAfterNopeWindow?: boolean;
+  /** Present ONLY when viewer is actorId or targetId */
+  revealedCard?: EKCard | null;
+}
+
 export interface EKState {
   players: Record<string, EKPlayerState>;
   playerOrder: string[]; // Danh sách thứ tự người chơi
@@ -106,6 +165,8 @@ export interface EKState {
   winner: string | null;
   turnCount: number;
   lastActionDescriptionVi?: string;
+  events?: EKInternalEvent[];
+  nextEventSeq?: number;
 }
 
 export type EKAction =
@@ -207,6 +268,7 @@ export interface EKPlayerView {
   winner: string | null;
   turnCount: number;
   lastActionDescriptionVi?: string;
+  events?: EKGameEventView[];
 }
 
 export const SYSTEM_PLAYER_ID = '__system__';

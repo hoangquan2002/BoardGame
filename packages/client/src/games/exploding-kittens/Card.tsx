@@ -18,6 +18,7 @@ export interface CardProps {
   style?: React.CSSProperties;
   className?: string;
   testId?: string;
+  fxAnchor?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -34,6 +35,7 @@ export const Card: React.FC<CardProps> = ({
   style,
   className = '',
   testId,
+  fxAnchor,
 }) => {
   const [imgError, setImgError] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -105,6 +107,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       data-testid={testId}
+      data-fx-anchor={fxAnchor}
       data-size={size}
       className={`relative select-none cursor-pointer transition-all duration-200 overflow-visible ${
         isSelected ? 'selected' : ''

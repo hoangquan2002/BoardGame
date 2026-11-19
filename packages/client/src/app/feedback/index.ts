@@ -6,10 +6,30 @@
 const STORAGE_KEY_SOUND = 'boardgame_sound_enabled';
 const STORAGE_KEY_VIBRATE = 'boardgame_vibrate_enabled';
 
+export type FeedbackSoundKey =
+  | 'yourTurn'
+  | 'cardPlay'
+  | 'cardDraw'
+  | 'heal'
+  | 'harmAlert'
+  | 'tradeInvite'
+  | 'tick'
+  | 'victory'
+  | 'defeat'
+  | 'error';
+
+function isReducedMotionPreferred(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 class FeedbackService {
   private audioCtx: AudioContext | null = null;
   private soundEnabled: boolean = true;
   private vibrateEnabled: boolean = true;
+  private unlockBound: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -25,7 +45,27 @@ class FeedbackService {
       } catch {
         // Ignored in restricted environments
       }
+      this.setupFirstInteractionUnlock();
     }
+  }
+
+  /** Mở khoá Web Audio trên iOS Safari ngay lần chạm/nhấn phím đầu tiên */
+  private setupFirstInteractionUnlock(): void {
+    if (this.unlockBound || typeof window === 'undefined') return;
+    this.unlockBound = true;
+
+    const unlock = () => {
+      const ctx = this.getAudioContext();
+      if (ctx && ctx.state === 'running') {
+        window.removeEventListener('pointerdown', unlock);
+        window.removeEventListener('touchstart', unlock);
+        window.removeEventListener('keydown', unlock);
+      }
+    };
+
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
   }
 
   private getAudioContext(): AudioContext | null {
@@ -78,6 +118,7 @@ class FeedbackService {
   // --- Vibration Engine ---
   public vibrate(pattern: number | number[]): void {
     if (!this.vibrateEnabled) return;
+    if (isReducedMotionPreferred()) return;
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(pattern);
@@ -113,11 +154,11 @@ class FeedbackService {
 
   /** Âm báo tới lượt người chơi (Hai nốt chuông trong trẻo E5 -> B5) */
   public playYourTurn(): void {
+    this.vibrateYourTurn();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateYourTurn();
     const now = ctx.currentTime;
     
     // Note 1: E5 (659.25 Hz)
@@ -147,11 +188,11 @@ class FeedbackService {
 
   /** Tiếng Nope "Bụp!" đanh thép dập tắt hành động */
   public playNope(): void {
+    this.vibrateNope();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateNope();
     const now = ctx.currentTime;
     
     const osc = ctx.createOscillator();
@@ -195,11 +236,11 @@ class FeedbackService {
 
   /** Tiếng gỡ bom thành công thở phào (Chime ngân vang C5 - E5 - G5 - C6) */
   public playDefuse(): void {
+    this.vibrateDefuse();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateDefuse();
     const now = ctx.currentTime;
     const freqs = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
     
@@ -222,11 +263,11 @@ class FeedbackService {
 
   /** Tiếng còi cảnh báo rút phải bom / nguy cấp */
   public playWarningSiren(): void {
+    this.vibrateWarning();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateWarning();
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -249,11 +290,11 @@ class FeedbackService {
 
   /** Tiếng bom nổ ầm vang (Noise + Low-frequency thump) */
   public playExplosion(): void {
+    this.vibrateExplosion();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateExplosion();
     const now = ctx.currentTime;
 
     // Sub bass drop
@@ -298,11 +339,11 @@ class FeedbackService {
 
   /** Tiếng lách cách rút bài / gõ bài nhẹ */
   public playCardDraw(): void {
+    this.vibrateCard();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateCard();
     const now = ctx.currentTime;
     
     const osc = ctx.createOscillator();
@@ -322,11 +363,11 @@ class FeedbackService {
 
   /** Tiếng đánh lá bài xuống sòng */
   public playCardPlay(): void {
+    this.vibrateCard();
     if (!this.soundEnabled) return;
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
-    this.vibrateCard();
     const now = ctx.currentTime;
 
     const osc = ctx.createOscillator();
@@ -373,6 +414,176 @@ class FeedbackService {
       osc.start(startTime);
       osc.stop(startTime + n.dur + 0.05);
     });
+  }
+
+  /** Âm chữa bệnh / dùng Liệu Pháp thành công (C5 -> G5 ấm áp) */
+  public playHeal(): void {
+    this.vibrate(35);
+    if (!this.soundEnabled) return;
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 523.25, offset: 0, dur: 0.16 },
+      { freq: 783.99, offset: 0.1, dur: 0.28 },
+    ];
+    for (const n of notes) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(n.freq, now + n.offset);
+      gain.gain.setValueAtTime(0.22, now + n.offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.offset + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + n.offset);
+      osc.stop(now + n.offset + n.dur + 0.02);
+    }
+  }
+
+  /** Âm cảnh báo khi mình bị đánh Triệu Chứng / bị đưa Bệnh Lý / bị lấy bài */
+  public playHarmAlert(): void {
+    if (!this.soundEnabled) {
+      this.vibrate([80, 45, 110]);
+      return;
+    }
+    const ctx = this.getAudioContext();
+    this.vibrate([80, 45, 110]);
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 440, offset: 0, dur: 0.14 },
+      { freq: 311.13, offset: 0.12, dur: 0.26 },
+    ];
+    for (const n of notes) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(n.freq, now + n.offset);
+      gain.gain.setValueAtTime(0.2, now + n.offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.offset + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + n.offset);
+      osc.stop(now + n.offset + n.dur + 0.02);
+    }
+  }
+
+  /** Âm báo có lời mời đổi bài gửi tới mình */
+  public playTradeInvite(): void {
+    if (!this.soundEnabled) {
+      this.vibrate([45, 35, 45]);
+      return;
+    }
+    const ctx = this.getAudioContext();
+    this.vibrate([45, 35, 45]);
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 783.99, offset: 0, dur: 0.14 },
+      { freq: 1174.66, offset: 0.11, dur: 0.24 },
+    ];
+    for (const n of notes) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(n.freq, now + n.offset);
+      gain.gain.setValueAtTime(0.18, now + n.offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.offset + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + n.offset);
+      osc.stop(now + n.offset + n.dur + 0.02);
+    }
+  }
+
+  /** Âm kết thúc ván khi người khác thắng */
+  public playDefeat(): void {
+    if (!this.soundEnabled) return;
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 392.0, offset: 0, dur: 0.16 },
+      { freq: 329.63, offset: 0.15, dur: 0.18 },
+      { freq: 261.63, offset: 0.31, dur: 0.36 },
+    ];
+    for (const n of notes) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.freq, now + n.offset);
+      gain.gain.setValueAtTime(0.22, now + n.offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.offset + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + n.offset);
+      osc.stop(now + n.offset + n.dur + 0.03);
+    }
+  }
+
+  /** Âm báo lỗi thao tác / action bị từ chối */
+  public playError(): void {
+    if (!this.soundEnabled) {
+      this.vibrate(45);
+      return;
+    }
+    const ctx = this.getAudioContext();
+    this.vibrate(45);
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(190, now);
+    osc.frequency.exponentialRampToValueAtTime(115, now + 0.14);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.16);
+  }
+
+  /** Phát âm thanh theo khoá sự kiện chuẩn hoá */
+  public playByKey(key: FeedbackSoundKey): void {
+    switch (key) {
+      case 'yourTurn':
+        this.playYourTurn();
+        break;
+      case 'cardPlay':
+        this.playCardPlay();
+        break;
+      case 'cardDraw':
+        this.playCardDraw();
+        break;
+      case 'heal':
+        this.playHeal();
+        break;
+      case 'harmAlert':
+        this.playHarmAlert();
+        break;
+      case 'tradeInvite':
+        this.playTradeInvite();
+        break;
+      case 'tick':
+        this.playTick();
+        break;
+      case 'victory':
+        this.playVictory();
+        break;
+      case 'defeat':
+        this.playDefeat();
+        break;
+      case 'error':
+        this.playError();
+        break;
+    }
   }
 }
 

@@ -134,6 +134,7 @@ export function createMockGameData(searchParams: URLSearchParams): {
     trades: [],
     winner: searchParams.get('winner') ? (searchParams.get('winner') === 'other' ? activePlayers[1]?.id ?? 'p2' : myId) : null,
     logs: ['Ván chơi mẫu bản phác giao diện mới'],
+    events: [],
     options: { tremorsTimeoutSeconds: 7 },
   };
 

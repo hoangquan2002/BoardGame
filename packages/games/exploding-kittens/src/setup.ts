@@ -71,5 +71,7 @@ export function setupGame(playerIds: string[], _options: unknown, rng: Rng): EKS
     winner: null,
     turnCount: 1,
     lastActionDescriptionVi: 'Trò chơi bắt đầu!',
+    events: [],
+    nextEventSeq: 1,
   };
 }

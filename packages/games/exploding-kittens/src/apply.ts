@@ -1,7 +1,9 @@
 import type { Rng } from '@boardgame/core';
 import { getCardById, getCardCodeNameVi } from './deck.js';
 import {
+  EK_MAX_RECENT_EVENTS,
   type EKAction,
+  type EKInternalEvent,
   type EKPendingDefuseInsert,
   type EKPendingFavorGive,
   type EKPendingFiveDiffPick,
@@ -10,6 +12,16 @@ import {
   type EKState,
   NOPE_TIMEOUT_SECONDS,
 } from './types.js';
+
+function pushEKEvent(state: EKState, event: Omit<EKInternalEvent, 'seq'>): void {
+  const seq = state.nextEventSeq ?? 1;
+  state.nextEventSeq = seq + 1;
+  const nextEvents = state.events ? [...state.events, { ...event, seq }] : [{ ...event, seq }];
+  state.events =
+    nextEvents.length > EK_MAX_RECENT_EVENTS
+      ? nextEvents.slice(-EK_MAX_RECENT_EVENTS)
+      : nextEvents;
+}
 
 export function getNextAlivePlayerId(
   order: string[],
@@ -49,15 +61,31 @@ function shouldAutoResolveNope(state: EKState): boolean {
   return potentialNopers.every((pid) => passedSet.has(pid));
 }
 
-function resolveNopeWindow(next: EKState, rng: Rng): void {
+function resolveNopeWindow(next: EKState, rng: Rng, wasAfterNopeWindow: boolean): void {
   if (!next.pendingState || next.pendingState.type !== 'NOPE_WINDOW') return;
   const { originalPlayerId, originalAction, nopeCount } = next.pendingState as EKPendingNopeWindow;
   const isNoped = nopeCount % 2 !== 0;
   next.pendingState = null;
 
+  const actionCardId =
+    originalAction.type === 'PLAY_ACTION_CARD'
+      ? originalAction.cardId
+      : originalAction.type === 'PLAY_COMBO'
+        ? originalAction.cardIds[0]
+        : undefined;
+  const comboType = originalAction.type === 'PLAY_COMBO' ? originalAction.comboType : undefined;
+
   if (isNoped) {
     next.phase = 'TURN_PLAY';
     next.lastActionDescriptionVi = `Hành động của ${originalPlayerId} đã bị Chặn thành công (Noped)!`;
+    pushEKEvent(next, {
+      type: 'ACTION_NOPED',
+      actorId: originalPlayerId,
+      cardId: actionCardId,
+      comboType,
+      nopeCount,
+      wasAfterNopeWindow: true,
+    });
     return;
   }
 
@@ -78,6 +106,14 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       next.turnCount += 1;
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${originalPlayerId} tấn công! ${nextPlayerId} phải đi ${turnsForNext} lượt.`;
+      pushEKEvent(next, {
+        type: 'ATTACK_RESOLVED',
+        actorId: originalPlayerId,
+        targetId: nextPlayerId,
+        cardId: card.id,
+        turnsCount: turnsForNext,
+        wasAfterNopeWindow,
+      });
       return;
     }
 
@@ -86,6 +122,13 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       if (next.turnsRemaining > 0) {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalPlayerId} đã bỏ 1 lượt (còn lại ${next.turnsRemaining} lượt).`;
+        pushEKEvent(next, {
+          type: 'SKIP_RESOLVED',
+          actorId: originalPlayerId,
+          cardId: card.id,
+          turnsCount: next.turnsRemaining,
+          wasAfterNopeWindow,
+        });
       } else {
         const nextPlayerId = getNextAlivePlayerId(next.playerOrder, next.players, next.activePlayerId);
         next.activePlayerId = nextPlayerId;
@@ -93,6 +136,14 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
         next.turnCount += 1;
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalPlayerId} đã bỏ lượt. Đến lượt ${nextPlayerId}.`;
+        pushEKEvent(next, {
+          type: 'SKIP_RESOLVED',
+          actorId: originalPlayerId,
+          targetId: nextPlayerId,
+          cardId: card.id,
+          turnsCount: 0,
+          wasAfterNopeWindow,
+        });
       }
       return;
     }
@@ -102,6 +153,12 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       next.seeTheFutureState = null;
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${originalPlayerId} đã xáo trộn chồng bài rút!`;
+      pushEKEvent(next, {
+        type: 'SHUFFLE_RESOLVED',
+        actorId: originalPlayerId,
+        cardId: card.id,
+        wasAfterNopeWindow,
+      });
       return;
     }
 
@@ -113,6 +170,12 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       };
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${originalPlayerId} đã nhìn trước tương lai 3 lá bài!`;
+      pushEKEvent(next, {
+        type: 'SEE_FUTURE_RESOLVED',
+        actorId: originalPlayerId,
+        cardId: card.id,
+        wasAfterNopeWindow,
+      });
       return;
     }
 
@@ -121,6 +184,13 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       if (!target || target.hand.length === 0) {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalAction.targetPlayerId} không có bài trên tay, ${originalPlayerId} không nhận được gì.`;
+        pushEKEvent(next, {
+          type: 'FAVOR_EMPTY',
+          actorId: originalPlayerId,
+          targetId: originalAction.targetPlayerId,
+          cardId: card.id,
+          wasAfterNopeWindow,
+        });
         return;
       }
 
@@ -131,6 +201,13 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
         targetPlayerId: originalAction.targetPlayerId!,
       };
       next.lastActionDescriptionVi = `Chờ ${originalAction.targetPlayerId} chọn 1 lá bài đưa cho ${originalPlayerId}.`;
+      pushEKEvent(next, {
+        type: 'FAVOR_REQUESTED',
+        actorId: originalPlayerId,
+        targetId: originalAction.targetPlayerId,
+        cardId: card.id,
+        wasAfterNopeWindow,
+      });
       return;
     }
   }
@@ -141,6 +218,15 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       if (!target || target.hand.length === 0) {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalAction.targetPlayerId} không có bài trên tay để rút.`;
+        pushEKEvent(next, {
+          type: 'COMBO_2_RESOLVED',
+          actorId: originalPlayerId,
+          targetId: originalAction.targetPlayerId,
+          cardId: actionCardId,
+          comboType: 'TWO_OF_A_KIND',
+          success: false,
+          wasAfterNopeWindow,
+        });
         return;
       }
 
@@ -151,6 +237,16 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       }
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${originalPlayerId} đã rút mù 1 lá bài từ ${originalAction.targetPlayerId}.`;
+      pushEKEvent(next, {
+        type: 'COMBO_2_RESOLVED',
+        actorId: originalPlayerId,
+        targetId: originalAction.targetPlayerId,
+        cardId: actionCardId,
+        comboType: 'TWO_OF_A_KIND',
+        success: Boolean(stolenCardId),
+        participantCardId: stolenCardId,
+        wasAfterNopeWindow,
+      });
       return;
     }
 
@@ -167,9 +263,30 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
         }
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalPlayerId} đã xin thành công lá ${getCardCodeNameVi(originalAction.requestedCardCode)} từ ${originalAction.targetPlayerId}!`;
+        pushEKEvent(next, {
+          type: 'COMBO_3_RESOLVED',
+          actorId: originalPlayerId,
+          targetId: originalAction.targetPlayerId,
+          cardId: actionCardId,
+          comboType: 'THREE_OF_A_KIND',
+          requestedCardCode: originalAction.requestedCardCode,
+          success: true,
+          participantCardId: stolenCardId,
+          wasAfterNopeWindow,
+        });
       } else {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${originalAction.targetPlayerId} không có lá ${getCardCodeNameVi(originalAction.requestedCardCode)}. ${originalPlayerId} không nhận được gì!`;
+        pushEKEvent(next, {
+          type: 'COMBO_3_RESOLVED',
+          actorId: originalPlayerId,
+          targetId: originalAction.targetPlayerId,
+          cardId: actionCardId,
+          comboType: 'THREE_OF_A_KIND',
+          requestedCardCode: originalAction.requestedCardCode,
+          success: false,
+          wasAfterNopeWindow,
+        });
       }
       return;
     }
@@ -181,6 +298,14 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
       if (selectableCards.length === 0) {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = 'Không có lá bài hợp lệ trong chồng bài bỏ để lấy.';
+        pushEKEvent(next, {
+          type: 'COMBO_5_PROMPT',
+          actorId: originalPlayerId,
+          cardId: actionCardId,
+          comboType: 'FIVE_DIFFERENT',
+          success: false,
+          wasAfterNopeWindow,
+        });
         return;
       }
 
@@ -190,6 +315,14 @@ function resolveNopeWindow(next: EKState, rng: Rng): void {
         pickerId: originalPlayerId,
       };
       next.lastActionDescriptionVi = `Chờ ${originalPlayerId} chọn 1 lá bài từ chồng bài bỏ.`;
+      pushEKEvent(next, {
+        type: 'COMBO_5_PROMPT',
+        actorId: originalPlayerId,
+        cardId: actionCardId,
+        comboType: 'FIVE_DIFFERENT',
+        success: true,
+        wasAfterNopeWindow,
+      });
       return;
     }
   }
@@ -229,7 +362,14 @@ export function applyGame(
 
       // Kiểm tra nếu trên bàn không ai có lá Nope thì tự động resolve
       if (shouldAutoResolveNope(next)) {
-        resolveNopeWindow(next, rng);
+        resolveNopeWindow(next, rng, false);
+      } else {
+        pushEKEvent(next, {
+          type: 'ACTION_PENDING_NOPE',
+          actorId: playerId,
+          targetId: action.targetPlayerId,
+          cardId: action.cardId,
+        });
       }
       break;
     }
@@ -263,7 +403,17 @@ export function applyGame(
       }
 
       if (shouldAutoResolveNope(next)) {
-        resolveNopeWindow(next, rng);
+        resolveNopeWindow(next, rng, false);
+      } else {
+        pushEKEvent(next, {
+          type: 'ACTION_PENDING_NOPE',
+          actorId: playerId,
+          targetId: 'targetPlayerId' in action ? action.targetPlayerId : undefined,
+          cardId: action.cardIds[0],
+          comboType: action.comboType,
+          requestedCardCode:
+            action.comboType === 'THREE_OF_A_KIND' ? action.requestedCardCode : undefined,
+        });
       }
       break;
     }
@@ -277,14 +427,24 @@ export function applyGame(
       }
 
       if (next.pendingState && next.pendingState.type === 'NOPE_WINDOW') {
+        const targetOriginalId = next.pendingState.originalPlayerId;
         next.pendingState.nopeCount += 1;
         next.pendingState.passedPlayerIds = [];
         next.pendingState.timeoutSeconds = NOPE_TIMEOUT_SECONDS;
         const isNoped = next.pendingState.nopeCount % 2 !== 0;
         next.lastActionDescriptionVi = `${playerId} đánh lá Chặn (Nope)! (Tổng Nope: ${next.pendingState.nopeCount} -> ${isNoped ? 'Bị chặn' : 'Thực thi'})`;
 
+        pushEKEvent(next, {
+          type: 'NOPE_PLAYED',
+          actorId: playerId,
+          targetId: targetOriginalId,
+          cardId: action.cardId,
+          nopeCount: next.pendingState.nopeCount,
+          isCurrentlyNoped: isNoped,
+        });
+
         if (shouldAutoResolveNope(next)) {
-          resolveNopeWindow(next, rng);
+          resolveNopeWindow(next, rng, true);
         }
       }
       break;
@@ -296,14 +456,14 @@ export function applyGame(
           next.pendingState.passedPlayerIds.push(playerId);
         }
         if (shouldAutoResolveNope(next)) {
-          resolveNopeWindow(next, rng);
+          resolveNopeWindow(next, rng, true);
         }
       }
       break;
     }
 
     case 'RESOLVE_NOPE_WINDOW': {
-      resolveNopeWindow(next, rng);
+      resolveNopeWindow(next, rng, true);
       break;
     }
 
@@ -318,6 +478,12 @@ export function applyGame(
       next.pendingState = null;
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${targetPlayerId} đã đưa 1 lá bài cho ${proposerId}.`;
+      pushEKEvent(next, {
+        type: 'FAVOR_GIVEN',
+        actorId: targetPlayerId,
+        targetId: proposerId,
+        participantCardId: action.cardId,
+      });
       break;
     }
 
@@ -332,6 +498,11 @@ export function applyGame(
       next.pendingState = null;
       next.phase = 'TURN_PLAY';
       next.lastActionDescriptionVi = `${pickerId} đã lấy 1 lá bài từ chồng bài bỏ về tay.`;
+      pushEKEvent(next, {
+        type: 'DISCARD_PICKED',
+        actorId: pickerId,
+        cardId: action.cardId,
+      });
       break;
     }
 
@@ -348,6 +519,12 @@ export function applyGame(
         if (next.turnsRemaining > 0) {
           next.phase = 'TURN_PLAY';
           next.lastActionDescriptionVi = `${playerId} rút 1 lá an toàn (vẫn còn ${next.turnsRemaining} lượt).`;
+          pushEKEvent(next, {
+            type: 'DRAW_SAFE',
+            actorId: playerId,
+            turnsCount: next.turnsRemaining,
+            participantCardId: drawnCardId,
+          });
         } else {
           const nextPlayerId = getNextAlivePlayerId(next.playerOrder, next.players, next.activePlayerId);
           next.activePlayerId = nextPlayerId;
@@ -355,6 +532,13 @@ export function applyGame(
           next.turnCount += 1;
           next.phase = 'TURN_PLAY';
           next.lastActionDescriptionVi = `${playerId} rút bài an toàn. Đến lượt ${nextPlayerId}.`;
+          pushEKEvent(next, {
+            type: 'DRAW_SAFE',
+            actorId: playerId,
+            targetId: nextPlayerId,
+            turnsCount: 0,
+            participantCardId: drawnCardId,
+          });
         }
       } else {
         // Rút phải Mèo Nổ!
@@ -373,12 +557,23 @@ export function applyGame(
             defuseCardId: defuseCardId!,
           };
           next.lastActionDescriptionVi = `BÙM! ${playerId} rút phải Mèo Nổ nhưng đã dùng Defuse! Đang chọn vị trí nhét lại...`;
+          pushEKEvent(next, {
+            type: 'EXPLODING_DEFUSED',
+            actorId: playerId,
+            cardId: drawnCardId,
+            secondaryCardId: defuseCardId,
+          });
         } else {
           // Không có Defuse -> Bị loại!
           next.discardPile.push(...player.hand, drawnCardId);
           player.hand = [];
           player.alive = false;
           next.lastActionDescriptionVi = `💥 BÙM! ${playerId} rút phải Mèo Nổ và KHÔNG có Defuse! ${playerId} ĐÃ BỊ LOẠI!`;
+          pushEKEvent(next, {
+            type: 'PLAYER_EXPLODED',
+            actorId: playerId,
+            cardId: drawnCardId,
+          });
 
           checkWinner(next);
           if (next.winner === null) {
@@ -404,6 +599,11 @@ export function applyGame(
       if (next.turnsRemaining > 0) {
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${pId} đã nhét lại Mèo Nổ thành công! Vẫn còn phải đi tiếp ${next.turnsRemaining} lượt.`;
+        pushEKEvent(next, {
+          type: 'KITTEN_INSERTED',
+          actorId: pId,
+          turnsCount: next.turnsRemaining,
+        });
       } else {
         const nextPlayerId = getNextAlivePlayerId(next.playerOrder, next.players, next.activePlayerId);
         next.activePlayerId = nextPlayerId;
@@ -411,6 +611,12 @@ export function applyGame(
         next.turnCount += 1;
         next.phase = 'TURN_PLAY';
         next.lastActionDescriptionVi = `${pId} đã nhét lại Mèo Nổ thành công. Đến lượt ${nextPlayerId}.`;
+        pushEKEvent(next, {
+          type: 'KITTEN_INSERTED',
+          actorId: pId,
+          targetId: nextPlayerId,
+          turnsCount: 0,
+        });
       }
       break;
     }

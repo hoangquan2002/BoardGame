@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { feedback } from './app/feedback/index.js';
 import { OfflineBanner } from './app/OfflineBanner.js';
 import { Toast } from './app/Toast.js';
 import { clientGameRegistry, DEFAULT_GAME_ID } from './games/registry.js';
@@ -14,8 +15,8 @@ export const App: React.FC = () => {
     }
     return new URLSearchParams();
   }, []);
-  const isMock = searchParams.get('mock') === '1';
-  const mockGameId = searchParams.get('game') ?? DEFAULT_GAME_ID;
+  const isMock = searchParams.get('mock') === '1' || searchParams.get('preview') === 'ek';
+  const mockGameId = searchParams.get('game') ?? (searchParams.get('preview') === 'ek' ? 'exploding-kittens' : DEFAULT_GAME_ID);
   const mockPlugin = useMemo(() => clientGameRegistry.getOrDefault(mockGameId), [mockGameId]);
 
   const mockGameData = useMemo(() => {
@@ -44,8 +45,48 @@ export const App: React.FC = () => {
     sendAction,
   } = useSession();
 
-  // Nếu là mock mode, hiển thị chính GameBoard thật với mock data
+  const prevErrorToastRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (errorToast && errorToast !== prevErrorToastRef.current) {
+      feedback.playError();
+    }
+    prevErrorToastRef.current = errorToast;
+  }, [errorToast]);
+
+  // Nếu là mock mode, hiển thị GameBoard hoặc LobbyRoomPage thật với mock data
   if (isMock && mockGameData) {
+    if (searchParams.get('view') === 'home') {
+      return (
+        <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
+          <HomePage
+            isLoading={false}
+            onCreateRoom={async () => true}
+            onJoinRoom={async () => true}
+          />
+        </div>
+      );
+    }
+
+    if (searchParams.get('view') === 'lobby') {
+      const mockLobbyState = { ...mockGameData.roomState, status: 'lobby' as const };
+      return (
+        <div style={{ minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
+          <LobbyRoomPage
+            roomState={mockLobbyState}
+            session={mockGameData.session}
+            isLoading={false}
+            onStartRoom={async () => true}
+            onAddBot={async () => true}
+            onRemoveBot={async () => true}
+            onLeaveRoom={async () => {
+              window.location.href = '/';
+              return true;
+            }}
+          />
+        </div>
+      );
+    }
+
     const MockBoard = mockPlugin.BoardComponent;
     return (
       <MockBoard
@@ -73,7 +114,7 @@ export const App: React.FC = () => {
         flexDirection: 'column',
         minHeight: '100vh',
         width: '100%',
-        maxWidth: isPlaying ? '1100px' : '480px',
+        maxWidth: isPlaying ? '1200px' : '1040px',
         margin: '0 auto',
         boxSizing: 'border-box',
         paddingTop: 'env(safe-area-inset-top)',

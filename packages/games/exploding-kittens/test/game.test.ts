@@ -538,5 +538,58 @@ describe('Exploding Kittens Pure Engine', () => {
       expect(view.drawDeckCount).toBe(35);
       expect((view as unknown as { drawDeck?: unknown }).drawDeck).toBeUndefined();
     });
+
+    it('events: Favor/Combo 2/Draw Safe/Defuse Insert không lộ lá ẩn hay vị trí chèn bom cho người ngoài', () => {
+      let state = setupGame(players3, {}, rng);
+      state.activePlayerId = 'alice';
+      // Đảm bảo không ai cầm Nope để action tự phân giải ngay
+      for (const pid of players3) {
+        state.players[pid]!.hand = state.players[pid]!.hand.filter(
+          (cid) => getCardById(cid)?.code !== 'NOPE'
+        );
+      }
+
+      const favorCard = ALL_EK_CARDS.find((c) => c.code === 'FAVOR')!;
+      const skipCard = ALL_EK_CARDS.find((c) => c.code === 'SKIP')!;
+      const ekCard = ALL_EK_CARDS.find((c) => c.code === 'EXPLODING_KITTEN')!;
+      const defuseCard = ALL_EK_CARDS.find((c) => c.code === 'DEFUSE')!;
+
+      state.players['alice']!.hand = [favorCard.id, defuseCard.id];
+      state.players['bob']!.hand = [skipCard.id];
+      state.drawDeck[0] = ekCard.id;
+
+      // 1. Alice đánh Favor vào Bob -> Bob đưa lá Skip
+      state = applyGame(
+        state,
+        'alice',
+        { type: 'PLAY_ACTION_CARD', cardId: favorCard.id, targetPlayerId: 'bob' },
+        rng
+      );
+      state = applyGame(state, 'bob', { type: 'GIVE_FAVOR_CARD', cardId: skipCard.id }, rng);
+
+      const viewAlice = createPlayerView(state, 'alice');
+      const viewBob = createPlayerView(state, 'bob');
+      const viewCharlie = createPlayerView(state, 'charlie');
+
+      const favorEvAlice = viewAlice.events?.find((e) => e.type === 'FAVOR_GIVEN');
+      const favorEvBob = viewBob.events?.find((e) => e.type === 'FAVOR_GIVEN');
+      const favorEvCharlie = viewCharlie.events?.find((e) => e.type === 'FAVOR_GIVEN');
+
+      expect(favorEvAlice?.revealedCard?.id).toBe(skipCard.id);
+      expect(favorEvBob?.revealedCard?.id).toBe(skipCard.id);
+      // Charlie là người ngoài: KHÔNG được biết lá bài Bob đưa cho Alice
+      expect(favorEvCharlie?.revealedCard).toBeUndefined();
+      expect(JSON.stringify(favorEvCharlie).includes(skipCard.id)).toBe(false);
+
+      // 2. Alice rút phải Mèo Nổ, dùng Defuse và chèn lại ở vị trí bí mật index = 3
+      state = applyGame(state, 'alice', { type: 'DRAW_CARD' }, rng);
+      expect(state.phase).toBe('DEFUSE_INSERT');
+      state = applyGame(state, 'alice', { type: 'DEFUSE_INSERT', insertIndex: 3 }, rng);
+
+      const viewCharlieAfterInsert = createPlayerView(state, 'charlie');
+      const insertEv = viewCharlieAfterInsert.events?.find((e) => e.type === 'KITTEN_INSERTED');
+      expect(insertEv).toBeDefined();
+      expect('insertIndex' in (insertEv as unknown as Record<string, unknown>)).toBe(false);
+    });
   });
 });

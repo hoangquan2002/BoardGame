@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type {
   CardInstance,
   SEPendingChoiceView,
   SEPlayerViewPlayer,
 } from '@boardgame/game-side-effects';
+import { feedback } from '../../app/feedback/index.js';
 import { CardView } from './CardView.js';
 
 export interface PendingChoiceModalProps {
@@ -49,6 +50,22 @@ export const PendingChoiceModal: React.FC<PendingChoiceModalProps> = ({
 
   const isMe = choice.playerId === myPlayerId;
   const actorName = playerNames[choice.playerId] || choice.playerId;
+  const lastTickedSecondRef = useRef<number | null>(null);
+
+  // Tích tắc đếm ngược 3 giây cuối khi bị Chứng run
+  useEffect(() => {
+    if (
+      choice.type === 'TREMORS_DISCARD' &&
+      isMe &&
+      timeLeft !== null &&
+      timeLeft > 0 &&
+      timeLeft <= 3 &&
+      lastTickedSecondRef.current !== timeLeft
+    ) {
+      lastTickedSecondRef.current = timeLeft;
+      feedback.playTick();
+    }
+  }, [choice.type, isMe, timeLeft]);
 
   // Trường hợp: ANXIETY_STEAL (Lo âu: Kẻ gây hại lấy 1 lá từ tay nạn nhân)
   if (choice.type === 'ANXIETY_STEAL') {

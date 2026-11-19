@@ -10,6 +10,10 @@ import {
   type SETradeView,
 } from '@boardgame/game-side-effects';
 import type { UserSession } from '../../net/session.js';
+import { ActionFXOverlay } from '../../app/actionFX/index.js';
+import { feedback } from '../../app/feedback/index.js';
+import { mapSideEffectsEventsToFX } from './actionFXMapper.js';
+import { resolveSideEffectsSounds, type SESoundSnapshot } from './soundMapping.js';
 import { CardZoomModal } from './CardZoomModal.js';
 import { DiscardModal } from './DiscardModal.js';
 import { GameLogList, GameLogsModal } from './GameLogsModal.js';
@@ -46,6 +50,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [zoomedCardId, setZoomedCardId] = useState<string | null>(null);
   const [showRules, setShowRules] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => feedback.isSoundEnabled());
+  const [vibrateEnabled, setVibrateEnabled] = useState(() => feedback.isVibrationEnabled());
 
   // Kích thước cửa sổ trình duyệt
   const [windowDimensions, setWindowDimensions] = useState(() => {
@@ -235,6 +241,37 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   );
   const incomingTrade = hasIncomingTrade ? myActiveTrade : null;
 
+  // Hệ thống phản hồi âm thanh & rung dựa trên chuyển đổi trạng thái và events (D6 / T7)
+  const prevSoundSnapRef = useRef<SESoundSnapshot | null>(null);
+  const lastSoundEventSeqRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const events = gameView.events ?? [];
+    const maxSeq = events.reduce((acc, ev) => (ev.seq > acc ? ev.seq : acc), 0);
+    const currSnap: SESoundSnapshot = {
+      activePlayerId: gameView.activePlayerId,
+      winner: gameView.winner,
+      hasIncomingTrade,
+    };
+
+    const newEvents =
+      lastSoundEventSeqRef.current === null
+        ? []
+        : events.filter((ev) => ev.seq > lastSoundEventSeqRef.current!);
+
+    const keys = resolveSideEffectsSounds(prevSoundSnapRef.current, currSnap, newEvents, myId);
+    prevSoundSnapRef.current = currSnap;
+    lastSoundEventSeqRef.current = maxSeq;
+
+    keys.forEach((key, idx) => {
+      if (idx === 0) {
+        feedback.playByKey(key);
+      } else {
+        setTimeout(() => feedback.playByKey(key), idx * 160);
+      }
+    });
+  }, [gameView.activePlayerId, gameView.winner, gameView.events, hasIncomingTrade, myId]);
+
   // Thông báo kết thúc đổi bài (Phần 2.B mục 4)
   const [tradeResultMessage, setTradeResultMessage] = useState<string | null>(null);
   const prevTradesRef = useRef<SETradeView[]>(gameView.trades);
@@ -293,6 +330,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   }, [gameView.trades, gameView.logs, myId, playerNames]);
 
   const handleSelectCard = (instanceId: string) => {
+    feedback.vibrateCard();
     if (selectedCardId === instanceId) {
       setSelectedCardId(null);
     } else {
@@ -368,6 +406,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (!card) return null;
     return getCardInfoVi(card.cardId);
   }, [selectedCardId, myHand]);
+
+  const fxItems = useMemo(() => {
+    return mapSideEffectsEventsToFX(gameView.events, myId, playerNames);
+  }, [gameView.events, myId, playerNames]);
+
+  const fxTopOffsetPx = useMemo(() => {
+    if (hasIncomingTrade && !showTradeModal) {
+      return isLandscape ? 96 : 104;
+    }
+    if (tradeResultMessage) {
+      return 86;
+    }
+    return isLandscape ? 8 : 38;
+  }, [hasIncomingTrade, showTradeModal, tradeResultMessage, isLandscape]);
 
   const renderSelectedCardInfo = () => {
     if (!selectedInfo) {
@@ -679,6 +731,48 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 📜 Nhật ký ván chơi
               </button>
               <button
+                type="button"
+                data-testid="toggle-sound-menu-item"
+                onClick={() => {
+                  setSoundEnabled(feedback.toggleSound());
+                }}
+                style={{
+                  padding: '8px 10px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: soundEnabled ? '#34d399' : '#94a3b8',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                }}
+              >
+                {soundEnabled ? '🔊 Âm thanh: Bật' : '🔇 Âm thanh: Tắt'}
+              </button>
+              <button
+                type="button"
+                data-testid="toggle-vibrate-menu-item"
+                onClick={() => {
+                  const next = feedback.toggleVibration();
+                  setVibrateEnabled(next);
+                  if (next) feedback.vibrateCard();
+                }}
+                style={{
+                  padding: '8px 10px',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  color: vibrateEnabled ? '#34d399' : '#94a3b8',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                }}
+              >
+                {vibrateEnabled ? '📳 Rung: Bật' : '📴 Rung: Tắt'}
+              </button>
+              <button
                 onClick={async () => {
                   setShowMenu(false);
                   if (window.confirm('Máy sẽ chơi thay bạn, bạn có chắc chắn muốn thoát ván không?')) {
@@ -849,7 +943,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        <span data-fx-anchor="se-draw-pile" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
           <span
             style={{
               display: 'inline-block',
@@ -864,7 +958,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           Rút <strong style={{ color: '#facc15' }}>{gameView.drawPileCount}</strong>
         </span>
         <span>·</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+        <span data-fx-anchor="se-discard-pile" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
           <span
             style={{
               display: 'inline-block',
@@ -1254,6 +1348,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         isOpen={showRules}
         onClose={() => setShowRules(false)}
         isMyTurn={isMyTurn}
+      />
+
+      {/* Lớp Animation lá bài bay + Thanh thông báo hành động */}
+      <ActionFXOverlay
+        items={fxItems}
+        isLandscape={isLandscape}
+        landscapeLeftPercent={isDesktop ? 34 : 43}
+        topOffsetPx={fxTopOffsetPx}
       />
     </div>
   );
